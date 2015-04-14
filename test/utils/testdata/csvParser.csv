@@ -1,3 +1,3 @@
-FirstName,LastName,Email,PhoneNumber,AdminRights
+first_name,last_name,email,phone_number,admin_rights
 Rory,Sedgwick,bigboy1101@gmail.com,01111999111,false
 Dave,BeachSwimSuit,yahoo@excel.word,01234567890,true

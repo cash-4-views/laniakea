@@ -6,24 +6,30 @@ var Hapi  	  = require('hapi'),
 var server = new Hapi.Server();
 
 server.connection({
-    host: 'localhost',
-    port: 8000
+		host: 'localhost',
+		port: 8000
 });
 
-server.route({
-    method: 'GET',
-    path: '/',
-    handler: function (request, reply) {
-    	var file = Path.resolve(__dirname, './sampledata/report.csv');
+server.route([
+	{
+		path: '/',
+		method: 'GET',
+		handler: function (request, reply) {
+			var file = Path.resolve(__dirname, './sampledata/report.csv');
 
-    	fs.readFile(file, function(err, contents){
-    		if (err){
-    			return console.log(err);
-    		} else {
-    			reply(csvParser(contents));
-    		}
-    	});
-    }
- });
+			fs.readFile(file, function(err, contents){
+				if (err){
+					return console.log(err);
+				} else {
+					reply(csvParser(contents));
+				}
+			});
+		}
+	},
+	{
+		path: "/",
+		method: "PUT",
+	}
+]);
 
  module.exports = server;

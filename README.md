@@ -1,6 +1,6 @@
-# laniakea
+# wood_chipper
 
-A youtube report generator with the following features:
+A reporting platform for providing youtube reports with the following features:
  * Parses csv/xls data, splitting it into per-client slices
  * Generates per-client reports, and stores them
  * Allows an admin to manually edit and approve reports
@@ -9,7 +9,7 @@ A youtube report generator with the following features:
  	* makes the report available for download at the client's account page
  * Client registration must be done manually by the admin
 
-Further features include:
+Further potential features include:
  * From their account page, a client may upload videos to their official youtube channel. However, this also does the following:
  	* Archives a copy of this video in our database,
  	* Archives metadata about this video in our database
@@ -26,7 +26,7 @@ Further features include:
 ## How to use
 ```
 git clone
-cd laniakeia
+cd wood_chipper
 npm install
 npm start
 ```

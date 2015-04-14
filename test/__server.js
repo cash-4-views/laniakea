@@ -9,7 +9,8 @@ Test("/, unauthenticated", function(t) {
 		method : "GET"
 	};
 
-	Shot.inject(server, opts, function(err, res) {
+	Shot.inject(server, opts, function(res) {
+		console.log(res.statusCode);
 		t.plan(1);
 		t.assert(res.statusCode, 200, "returns a 200 status code");
 	});

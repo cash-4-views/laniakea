@@ -4,11 +4,11 @@
   "description": "Software for YouTube monthly report-generation",
   "main": "index.js",
   "scripts": {
-    "test": "node ./__tests__/* | tape"
+    "test": "node ./test/* | tape"
   },
   "devDependencies": {
     "shot": "^1.4.2",
-    "tape": "^3.5.0"
+    "tape": "^4.0.0"
   },
   "dependencies": {
     "hapi": "^8.4.0"

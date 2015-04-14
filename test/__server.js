@@ -14,4 +14,5 @@ Test("/, unauthenticated", function(t) {
 		t.plan(1);
 		t.assert(res.statusCode, 200, "returns a 200 status code");
 	});
+
 });

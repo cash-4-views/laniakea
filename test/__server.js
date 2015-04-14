@@ -1,17 +1,15 @@
-var Test 	= require("tape");
-var Shot 	= require("shot");
-var server  = require("../api/server.js");
+var Test 	= require("tape"),
+	server  = require("../api/server.js");
 
-Test("/, unauthenticated", function(t) {
-
+Test("/", function(t) {
 	"use strict";
 
 	var opts = {
 		url	   : "/",
-		method : "GET"
+		method : "get"
 	};
 
-	Shot.inject(server, opts, function(res) {
+	server.inject(opts, function(res) {
 		t.plan(1);
 		t.assert(res.statusCode, 200, "returns a 200 status code");
 	});

@@ -1,4 +1,4 @@
-# laniakeia
+# laniakea
 
 A youtube report generator with the following features:
  * Parses csv/xls data, splitting it into per-client slices

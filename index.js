@@ -1,3 +1,3 @@
-var server = require('./api/server.js');
+var server = require("./api/server.js");
 
-server.start(console.log("server started"));
+server.start(console.log("server running"));

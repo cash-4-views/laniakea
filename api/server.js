@@ -1,4 +1,4 @@
 var Hapi = require("hapi");
-var Server = new Hapi.server();
+var server = new Hapi.Server();
 
-module.exports = Server;
+module.exports = server;

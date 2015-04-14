@@ -7,11 +7,11 @@
     "test": "node ./__tests__/* | tape"
   },
   "devDependencies": {
-  	"tape": "^3.5.0",
-    "shot": "^1.4.2"
+    "shot": "^1.4.2",
+    "tape": "^3.5.0"
   },
   "dependencies": {
-  	"hapi": "^8.4.0"
+    "hapi": "^8.4.0"
   },
   "author": "",
   "license": "ISC"

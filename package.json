@@ -1,7 +1,8 @@
 {
-  "name": "laniakeia",
+  "name": "laniakea",
   "version": "1.0.0",
   "description": "Software for YouTube monthly report-generation",
+  "repository": "https://github.com/cash-4-views/wood_chipper.git",
   "main": "index.js",
   "scripts": {
     "test": "node ./__tests__/* | tape"

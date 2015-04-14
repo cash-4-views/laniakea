@@ -1,5 +1,5 @@
 {
-  "name": "laniakea",
+  "name": "wood_chipper",
   "version": "1.0.0",
   "description": "Software for YouTube monthly report-generation",
   "repository": "https://github.com/cash-4-views/wood_chipper.git",
@@ -14,6 +14,6 @@
   "dependencies": {
     "hapi": "^8.4.0"
   },
-  "author": "",
+  "author": "cash-4-views",
   "license": "ISC"
 }

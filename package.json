@@ -5,14 +5,16 @@
   "repository": "https://github.com/cash-4-views/wood_chipper.git",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/* | tape"
+    "test": "node ./test/*",
+    "t": "node ./test/* | faucet"
   },
   "devDependencies": {
-    "shot": "^1.4.2",
     "tape": "^4.0.0"
   },
   "dependencies": {
-    "hapi": "^8.4.0"
+    "azure-storage": "^0.4.3",
+    "hapi": "^8.4.0",
+    "jade": "^1.9.2"
   },
   "author": "cash-4-views",
   "license": "ISC"

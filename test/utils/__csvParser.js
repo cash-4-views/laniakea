@@ -1,20 +1,22 @@
-var Test = require("tape"),
+var Test 	  = require("tape"),
 	csvParser = require("../../api/utils/csvParser.js");
 
-Test("The csvToJSON function", function(t) {
+Test("The csvParser function", function(t) {
+	"use strict";
 
-	var fs = require("fs");
+	var fs   = require("fs"),
+		path = require("path"),
+		file = path.resolve(__dirname, "./testdata/csvParser.csv");
+
 	var chippedCSV = [
-		{FirstName: "Rory", LastName: "Sedgwick", Email: "bigboy1101@gmail.com", PhoneNumber: "01111999111", AdminRights: false},
-		{FirstName: "Dave", LastName: "BeachSwimSuit", Email: "yahoo@excel.word", PhoneNumber: "01243567890", AdminRights: true}
+		{first_name: "Rory", last_name: "Sedgwick", email: "bigboy1101@gmail.com", phone_number: "01111999111", admin_rights: "false"},
+		{first_name: "Dave", last_name: "BeachSwimSuit", email: "yahoo@excel.word", phone_number: "01234567890", admin_rights: "true"}
 	];
 
-	fs.readFile("./testdata/csvParser.csv", function(err, contents) {
+	fs.readFile(file, function(err, contents) {
+		t.plan(2);
 		t.error(err, "shouldnt be no error in here boy");
-
-		var output = csvToJSON(contents);
-		t.deepEqual(output, chippedCSV, "should return an array of objects deeply equal to the input");
-		t.end();
+		t.deepEqual(csvParser(contents), chippedCSV, "should return an array of objects deeply equal to the input");
 	});
 
 });

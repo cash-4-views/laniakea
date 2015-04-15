@@ -74,7 +74,6 @@ Test("/login posting, unauthenticated, incorrect details", function(t) {
 	};
 
 	server.inject(opts, function(res) {
-		console.log(res.statusCode);
 		t.equals(res.statusCode, 302, "returns a 302 redirect status code");
 		t.notOk(res.headers["set-cookie"], "doesn't set the user's cookie");
 		t.equals(res.headers.location, "/", "redirects the user to the login page");
@@ -159,4 +158,123 @@ Test("/logout, with auth", function(t) {
 
 // Account page testing
 
-// Admin page testing
+// Admin testing
+Test("/addAccount posting, unauthenticated", function(t) {
+	"use strict";
+
+	var opts = {
+		url: "/addAccount",
+		method: "POST",
+		payload: {
+			username : "jonathonwoss",
+			customid : "a9dal2",
+			password : "wibblewobble111",
+			email 	 : "wibblewobbel@wobble.com",
+			phone 	 : "01112223334"
+		}
+	};
+
+	server.inject(opts, function(res) {
+		t.equals(res.statusCode, 302, "returns a 302 redirect status code");
+		t.equals(res.headers.location, "/", "redirects the user to the homepage");
+
+		var login = {
+			url: "/login",
+			method: "POST",
+			payload: {
+				username: opts.payload.username,
+				password: opts.payload.password
+			}
+		};
+
+		server.inject(login, function(res2) {
+			t.comment("trying to log in with the dodgy user, ");
+			t.notOk(res2.headers["set-cookie"], "fails to set the user's cookie as they haven't registered");
+			t.end();
+		});
+	});
+});
+
+
+Test("/addAccount posting, authenticated, non-admin", function(t) {
+	"use strict";
+
+	var opts = {
+		url: "/addAccount",
+		method: "POST",
+		credentials: {
+			username: "TimmyTesterUser"
+		},
+		payload: {
+			username : "jonathonwoss",
+			customid : "a9dal2",
+			password : "wibblewobble111",
+			email 	 : "wibblewobbel@wobble.com",
+			phone 	 : "01112223334"
+		}
+	};
+
+	server.inject(opts, function(res) {
+		t.equals(res.statusCode, 302, "returns a 302 redirect status code");
+		t.equals(res.headers.location, "/", "redirects the user to the homepage");
+
+		var login = {
+			url: "/login",
+			method: "POST",
+			payload: {
+				username: opts.payload.username,
+				password: opts.payload.password
+			}
+		};
+
+		server.inject(login, function(res2) {
+			t.comment("trying to log in with the dodgy user, ");
+			t.notOk(res2.headers["set-cookie"], "fails to set the user's cookie as they haven't registered");
+			t.end();
+		});
+	});
+
+});
+
+
+Test("/addAccount posting, authenticated, admin", function(t) {
+	"use strict";
+
+	var opts = {
+		url: "/addAccount",
+		method: "POST",
+		credentials: {
+			username : "TimmyTesterAdmin",
+			admin 	 : true
+		},
+		payload: {
+			username : "jonathonwoss",
+			customid : "a9dal2",
+			password : "wibblewobble111",
+			email 	 : "wibblewobbel@wobble.com",
+			phone 	 : "01112223334"
+		}
+	};
+
+	server.inject(opts, function(res) {
+		t.equals(res.statusCode, 200, "returns a 200 success status code");
+		t.ok(res.payload.match("account successfully created"), "replies with a 'success' message");
+
+		var login = {
+			url: "/login",
+			method: "POST",
+			payload: {
+				username: opts.payload.username,
+				password: opts.payload.password
+			}
+		};
+
+		server.inject(login, function(res2) {
+			t.comment("trying to log in with the newly created user, ");
+			t.equals(res2.statusCode, 302, "successfully returns a 302 redirect status code");
+			t.ok(res2.headers["set-cookie"][0].length > 100, "successfully sets the user's cookie");
+			t.equals(res2.headers.location, "/account", "successfully redirects the newly made user to their account page");
+			t.end();
+		});
+	});
+});

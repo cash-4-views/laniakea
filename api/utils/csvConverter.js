@@ -1,8 +1,8 @@
 
 function csvConverter(objArray) {
-    console.log(Buffer.isBuffer(objArray));
+    "use strict";
+
     var array = typeof objArray !== 'object' ? JSON.parse(objArray) : objArray;
-    console.log(array);
     var str = '';
     var len = array.length;
 
@@ -16,6 +16,7 @@ function csvConverter(objArray) {
 
         str += line + '\r\n';
     }
+    console.log(str);
     return str;
 }
 

@@ -1,7 +1,7 @@
 var Hapi = require('hapi');
 var fs = require("fs");
 var csvParser = require('./utils/csvParser');
-var csvConverter = require("./utils/jsonToCSV");
+var csvConverter = require("./utils/csvConverter");
 var Path = require('path');
 
 var server = new Hapi.Server();

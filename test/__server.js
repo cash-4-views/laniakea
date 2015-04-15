@@ -28,6 +28,7 @@ Test("/, unauthenticated", function(t) {
 
 });
 
+// Authenticated route tests
 Test("/, authenticated", function(t) {
 	"use strict";
 	t.plan(2);
@@ -41,30 +42,27 @@ Test("/, authenticated", function(t) {
 	};
 
 	t.test("as a non-admin user", function(st) {
-		st.plan(2);
-		opts.credentials.admin_status = false;
 
 		server.inject(opts, function(res) {
 			st.equals(res.statusCode, 302, "returns a 302 redirect status code");
 			st.equals(res.headers.location, "/account", "redirects the user to their account page");
+			st.end();
 		});
 	});
 
 	t.test("as an admin user", function(st) {
-		st.plan(2);
-		opts.credentials.admin_status = true;
+		opts.credentials.admin = true;
 
 		server.inject(opts, function(res) {
 			st.equals(res.statusCode, 302, "returns a 302 redirect status code");
 			st.equals(res.headers.location, "/admin", "redirects the admin to their dashboard");
+			st.end();
 		});
 	});
-
 });
 
-Test("/login posting, unauthenticated", function(t) {
+Test("/login posting, unauthenticated, incorrect details", function(t) {
 	"use strict";
-	t.plan(3);
 
 	var opts = {
 		url	   : "/login",
@@ -75,72 +73,90 @@ Test("/login posting, unauthenticated", function(t) {
 		}
 	};
 
-	t.test("with incorrect details", function(st) {
-		st.plan(3);
-
-		server.inject(opts, function(res) {
-			st.equals(res.statusCode, 403, "returns a 403 bad status code");
-			st.notOk(res.headers["Set-Cookie"], "doesn't set the user's cookie");
-			st.notOk(res.headers.location, "doesn't redirect the user");
-		});
+	server.inject(opts, function(res) {
+		console.log(res.statusCode);
+		t.equals(res.statusCode, 302, "returns a 302 redirect status code");
+		t.notOk(res.headers["set-cookie"], "doesn't set the user's cookie");
+		t.equals(res.headers.location, "/", "redirects the user to the login page");
+		t.end();
 	});
-
-	t.test("as a non-admin user, with correct details", function(st) {
-		st.plan(3);
-		opts.payload.username = "TimmyTesterUser";
-		opts.payload.password = "userpassword";
-
-		server.inject(opts, function(res) {
-			st.equals(res.statusCode, 302, "returns a 302 redirect status code");
-			st.ok(res.headers["Set-Cookie"], "sets the user's cookie");
-			st.equals(res.headers.location, "/account", "redirects the user to their account page");
-		});
-	});
-
-	t.test("as an admin user, with correct details", function(st) {
-		st.plan(3);
-		opts.payload.username = "TimmyTesterAdmin";
-		opts.payload.password = "adminpassword";
-
-		server.inject(opts, function(res) {
-			st.equals(res.statusCode, 302, "returns a 302 redirect status code");
-			st.ok(res.headers["Set-Cookie"], "sets the user's cookie");
-			st.equals(res.headers.location, "/admin", "redirects the admin to their dashboard");
-		});
-	});
-
 });
 
-Test("/logout", function(t) {
+Test("/login posting, unauthenticated, correct details, non-admin", function(t) {
 	"use strict";
-	t.plan(2);
+
+	var opts = {
+		url	   : "/login",
+		method : "POST",
+		payload: {
+			username: "tim",
+			password: "slim",
+		}
+	};
+
+	server.inject(opts, function(res) {
+		t.equals(res.statusCode, 302, "returns a 302 redirect status code");
+		t.ok(res.headers["set-cookie"][0].length > 100, "sets the user's cookie");
+		t.equals(res.headers.location, "/account", "redirects the user to their account page");
+		t.end();
+	});
+});
+
+Test("/login posting, unauthenticated, correct details, admin", function(t) {
+	"use strict";
+
+	var opts = {
+		url	   : "/login",
+		method : "POST",
+		payload: {
+			username: "jim",
+			password: "whim",
+		}
+	};
+
+	server.inject(opts, function(res) {
+		t.equals(res.statusCode, 302, "returns a 302 redirect status code");
+		t.ok(res.headers["set-cookie"][0].length > 100, "sets the user's cookie");
+		t.equals(res.headers.location, "/admin", "redirects the admin to their dashboard");
+		t.end();
+	});
+});
+
+Test("/logout, without auth", function(t) {
+	"use strict";
 
 	var opts = {
 		url	   : "/logout",
 		method : "GET"
 	};
 
-	t.test("without authentication", function(st) {
-		st.plan(2);
 
-		server.inject(opts, function(res) {
-			st.equals(res.statusCode, 302, "returns a 302 redirect status code");
-			st.equals(res.headers.location, "/", "redirects the user to the homepage");
-		});
+	server.inject(opts, function(res) {
+		t.equals(res.statusCode, 302, "returns a 302 redirect status code");
+		t.equals(res.headers.location, "/", "redirects the user to the homepage");
+		t.end();
 	});
-
-	t.test("with authentication", function(res) {
-		st.plan(2);
-		opts.credentials = {
-			username: "TimmyTesterUser",
-			password: "userpassword"
-		};
-
-		server.inject(opts, function(res) {
-			st.equals(res.statusCode, 302, "returns a 302 redirect status code");
-			st.ok(res.headers["Set-Cookie"], "clears the user's cookie");
-			st.equals(res.headers.location, "/", "redirects the user to the homepage");
-		});
-	});
-
 });
+
+Test("/logout, with auth", function(t) {
+	"use strict";
+
+	var opts = {
+		url: "/logout",
+		method: "GET",
+		credentials: {
+			username: "TimmyTesterUser",
+		}
+	};
+
+	server.inject(opts, function(res) {
+		t.equals(res.statusCode, 302, "returns a 302 redirect status code");
+		t.ok(res.headers["set-cookie"][0].match("Expires=Thu, 01 Jan 1970"), "clears the user's cookie");
+		t.equals(res.headers.location, "/", "redirects the user to the homepage");
+		t.end();
+	});
+});
+
+// Account page testing
+
+// Admin page testing

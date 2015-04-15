@@ -76,6 +76,8 @@ Test("/login posting, unauthenticated", function(t) {
 	};
 
 	t.test("with incorrect details", function(st) {
+		st.plan(3);
+
 		server.inject(opts, function(res) {
 			st.equals(res.statusCode, 403, "returns a 403 bad status code");
 			st.notOk(res.headers["Set-Cookie"], "doesn't set the user's cookie");

@@ -21,6 +21,7 @@ server.register(require("hapi-auth-cookie"), function(err) {
 		isSecure: false
 	});
 
+	server.auth.default("session");
 });
 
 server.views({
@@ -41,57 +42,104 @@ server.views({
 var accounts = {
 	jim: {
 		username: "jim",
-		password: "whim",
+		password: "$2a$10$EE6BpR8M4xMqf9h/OPD3l.uI3SR9QKri36pTa7TAfSiYzZjLqtu9u",
 		admin: true
 	},
 	tim: {
 		username: "tim",
-		password: "slim"
+		password: "$2a$10$AQChk8U3WuCOEuks0ew/N.MNF2kxyQp8OSbjrAA4G42WEYaH/u51u"
 	}
 };
 
 var home = function(req, reply) {
+	"use strict";
+
 	if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
 	else if(req.auth.isAuthenticated) return reply.redirect("/account");
 	else return reply.view("login");
 };
 
 var login = function(req, reply) {
+	"use strict";
+
 	var password = req.payload.password,
 			username = req.payload.username,
 			account  = accounts[username];
 
-
 	if (!req.payload || !password || !username) return reply.redirect("/");
 	else if (!account) return reply.redirect("/");
-	else if (account.password === password) {
-		var profile = {
-			username: account.username,
-		};
-		req.auth.session.clear();
+	else {
+		bcrypt.compare(password, account.password, function(err, success) {
 
-		if (account.admin) {
-			profile.admin = true;
-			req.auth.session.set(profile);
-			return reply.redirect("/admin");
-		} else {
-			req.auth.session.set(profile);
-			return reply.redirect("/account");
-		}
+			if (err || !success) return reply("password error, please try again");
+			else if (success) {
+				var profile = {
+					username: account.username,
+				};
+				req.auth.session.clear();
+
+				if (account.admin) {
+					profile.admin = true;
+					req.auth.session.set(profile);
+					return reply.redirect("/admin");
+				} else {
+					req.auth.session.set(profile);
+					return reply.redirect("/account");
+				}
+			}
+		});
+
 	}
 };
 
+var addAccount = function(req, reply) {
+	"use strict";
+
+	var	username = req.payload.username,
+			customid = req.payload.customid,
+			password = req.payload.password,
+			email 	 = req.payload.email,
+			phone 	 = req.payload.phone;
+
+	if (!req.auth.credentials.admin) return reply.redirect("/");
+	else if (!req.payload || !customid || !password || !username || !email || !phone) return reply("missing field");
+	else if (accounts[username]) return reply("account already exists");
+	else {
+		bcrypt.hash(password, null, null, function(err, hash) {
+			if(err) return reply("error hashing password, ", hash);
+
+			var newAccount = {
+				username : username,
+				customid : customid,
+				password : hash,
+				email 	 : email,
+				phone 	 : phone
+			};
+
+			accounts[username] = newAccount;
+			return reply("account successfully created!");
+		});
+	}
+
+};
+
 var logout = function(req, reply) {
+	"use strict";
+
 	req.auth.session.clear();
 	return reply.redirect('/');
 };
 
 var account = function(req, reply) {
+	"use strict";
+
 	if(req.auth.credentials.admin) return reply.redirect("/admin");
 	else return reply.view("account");
 };
 
 var admin = function(req, reply) {
+	"use strict";
+
 	if(!req.auth.credentials.admin) return reply.redirect("/account");
 	else return reply.view("admin");
 };
@@ -119,7 +167,16 @@ server.route([
 		path: "/login",
 		method: "POST",
 		config: {
-			handler: login
+			handler: login,
+			auth: {
+				mode: "try",
+				strategy: "session"
+			},
+			plugins: {
+				"hapi-auth-cookie": {
+					redirectTo: false
+				}
+			}
 		}
 	},
 
@@ -127,10 +184,15 @@ server.route([
 		path: "/logout",
 		method: "GET",
 		config: {
-			handler: logout,
-			auth: {
-				strategy: "session"
-			}
+			handler: logout
+		}
+	},
+
+	{
+		path: "/addAccount",
+		method: "POST",
+		config: {
+			handler: addAccount
 		}
 	},
 
@@ -138,10 +200,7 @@ server.route([
 		path: "/account",
 		method: "GET",
 		config: {
-			handler: account,
-			auth: {
-				strategy: "session"
-			}
+			handler: account
 		}
 	},
 
@@ -149,10 +208,7 @@ server.route([
 		path: "/admin",
 		method: "GET",
 		config: {
-			handler: admin,
-			auth: {
-				strategy: "session"
-			}
+			handler: admin
 		}
 	}
 

@@ -4,30 +4,62 @@ var csvParser = require('./utils/csvParser');
 var csvConverter = require("./utils/jsonToCSV");
 var Path = require('path');
 
-
-// Create a server instance
 var server = new Hapi.Server();
 
-// Create a connection which will listen on port 8000
 server.connection({
-    host: 'localhost',
-    port: 8000
+	port: process.env.PORT || 8000
 });
 
-// Add a GET endpoint /
-server.route({
-    method: 'GET',
-    path: '/',
-    handler: function (request, reply) {
-    	var file = Path.resolve(__dirname, './sampledata/report.csv');
-    	fs.readFile(file, function(err, contents) {
-    		if (err) {
-    			return console.log(err);
-    		} else {
-                reply(csvParser(contents));
-                }
-    		});
-    	}
-    });
+server.views({
+
+	engines: {
+		jade: require("jade")
+	},
+
+	compileOptions: {
+		pretty: true
+	},
+
+	relativeTo: __dirname,
+	path: 		  "./views",
+	isCached: false
+
+});
+
+server.route([
+
+	{
+		path: "/",
+		method: "GET",
+		handler: function (req, reply) {
+			reply.view("login");
+		}
+	},
+
+	{
+		path: "/login",
+		method: "POST",
+		handler: function(req, reply) {
+			return;
+		}
+	},
+
+	{
+		path: "/signup",
+		method: "POST",
+		handler: function(req, reply) {
+
+		}
+	},
+
+	{
+		path: "/logout",
+		method: "GET",
+		handler: function(req, reply) {
+
+		}
+	}
+
+]);
 
  module.exports = server;

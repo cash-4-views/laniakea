@@ -1,4 +1,5 @@
 function csvParser(rawCSV){
+  "use strict";
 
   var videoRegEx  = /\n(?=Video ID)/g;
   var legendRegEx = /\n\n(?=Legend)/g;

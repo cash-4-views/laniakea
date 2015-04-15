@@ -130,7 +130,7 @@ Test("/logout", function(t) {
 	});
 
 	t.test("with authentication", function(res) {
-		st.plan(2);
+		st.plan(3);
 		opts.credentials = {
 			username: "TimmyTesterUser",
 			password: "userpassword"

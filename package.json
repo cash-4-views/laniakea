@@ -9,6 +9,7 @@
     "t": "node ./test/* | faucet"
   },
   "devDependencies": {
+    "mailgun-js": "^0.6.9",
     "tape": "^4.0.0"
   },
   "dependencies": {

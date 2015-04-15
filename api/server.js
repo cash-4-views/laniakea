@@ -1,8 +1,10 @@
-var Hapi = require('hapi');
-var fs = require("fs");
-var csvParser = require('./utils/csvParser');
-var csvConverter = require("./utils/jsonToCSV");
-var Path = require('path');
+var Hapi 				 = require('hapi'),
+		fs 					 = require("fs"),
+		Path 				 = require('path'),
+		bcrypt 			 = require("bcrypt-nodejs"),
+		config 			 = require("./config"),
+		csvParser 	 = require('./utils/csvParser'),
+		csvConverter = require("./utils/jsonToCSV");
 
 var server = new Hapi.Server();
 
@@ -10,53 +12,203 @@ server.connection({
 	port: process.env.PORT || 8000
 });
 
+server.register(require("hapi-auth-cookie"), function(err) {
+
+	server.auth.strategy("session", "cookie", {
+		password: config.cookie.password,
+		cookie: "cookie_off_the_old_block",
+		redirectTo: "/",
+		isSecure: false
+	});
+
+	server.auth.default("session");
+});
+
 server.views({
 
 	engines: {
 		jade: require("jade")
 	},
-
 	compileOptions: {
 		pretty: true
 	},
-
 	relativeTo: __dirname,
 	path: 		  "./views",
 	isCached: false
 
 });
 
+
+var accounts = {
+	jim: {
+		username: "jim",
+		password: "$2a$10$EE6BpR8M4xMqf9h/OPD3l.uI3SR9QKri36pTa7TAfSiYzZjLqtu9u",
+		admin: true
+	},
+	tim: {
+		username: "tim",
+		password: "$2a$10$AQChk8U3WuCOEuks0ew/N.MNF2kxyQp8OSbjrAA4G42WEYaH/u51u"
+	}
+};
+
+var home = function(req, reply) {
+	"use strict";
+
+	if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
+	else if(req.auth.isAuthenticated) return reply.redirect("/account");
+	else return reply.view("login");
+};
+
+var login = function(req, reply) {
+	"use strict";
+
+	var password = req.payload.password,
+			username = req.payload.username,
+			account  = accounts[username];
+
+	if (!req.payload || !password || !username) return reply.redirect("/");
+	else if (!account) return reply.redirect("/");
+	else {
+		bcrypt.compare(password, account.password, function(err, success) {
+
+			if (err || !success) return reply("password error, please try again");
+			else if (success) {
+				var profile = {
+					username: account.username,
+				};
+				req.auth.session.clear();
+
+				if (account.admin) {
+					profile.admin = true;
+					req.auth.session.set(profile);
+					return reply.redirect("/admin");
+				} else {
+					req.auth.session.set(profile);
+					return reply.redirect("/account");
+				}
+			}
+		});
+
+	}
+};
+
+var addAccount = function(req, reply) {
+	"use strict";
+
+	var	username = req.payload.username,
+			customid = req.payload.customid,
+			password = req.payload.password,
+			email 	 = req.payload.email,
+			phone 	 = req.payload.phone;
+
+	if (!req.auth.credentials.admin) return reply.redirect("/");
+	else if (!req.payload || !customid || !password || !username || !email || !phone) return reply("missing field");
+	else if (accounts[username]) return reply("account already exists");
+	else {
+		bcrypt.hash(password, null, null, function(err, hash) {
+			if(err) return reply("error hashing password, ", hash);
+
+			var newAccount = {
+				username : username,
+				customid : customid,
+				password : hash,
+				email 	 : email,
+				phone 	 : phone
+			};
+
+			accounts[username] = newAccount;
+			return reply("account successfully created!");
+		});
+	}
+
+};
+
+var logout = function(req, reply) {
+	"use strict";
+
+	req.auth.session.clear();
+	return reply.redirect('/');
+};
+
+var account = function(req, reply) {
+	"use strict";
+
+	if(req.auth.credentials.admin) return reply.redirect("/admin");
+	else return reply.view("account");
+};
+
+var admin = function(req, reply) {
+	"use strict";
+
+	if(!req.auth.credentials.admin) return reply.redirect("/account");
+	else return reply.view("admin");
+};
+
 server.route([
 
 	{
 		path: "/",
 		method: "GET",
-		handler: function (req, reply) {
-			reply.view("login");
+		config: {
+			handler: home,
+			auth: {
+				mode: "try",
+				strategy: "session"
+			},
+			plugins: {
+				"hapi-auth-cookie": {
+					redirectTo: false
+				}
+			}
 		}
 	},
 
 	{
 		path: "/login",
 		method: "POST",
-		handler: function(req, reply) {
-			return;
-		}
-	},
-
-	{
-		path: "/signup",
-		method: "POST",
-		handler: function(req, reply) {
-
+		config: {
+			handler: login,
+			auth: {
+				mode: "try",
+				strategy: "session"
+			},
+			plugins: {
+				"hapi-auth-cookie": {
+					redirectTo: false
+				}
+			}
 		}
 	},
 
 	{
 		path: "/logout",
 		method: "GET",
-		handler: function(req, reply) {
+		config: {
+			handler: logout
+		}
+	},
 
+	{
+		path: "/addAccount",
+		method: "POST",
+		config: {
+			handler: addAccount
+		}
+	},
+
+	{
+		path: "/account",
+		method: "GET",
+		config: {
+			handler: account
+		}
+	},
+
+	{
+		path: "/admin",
+		method: "GET",
+		config: {
+			handler: admin
 		}
 	}
 

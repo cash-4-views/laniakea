@@ -5,16 +5,18 @@
   "repository": "https://github.com/cash-4-views/wood_chipper.git",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/*",
-    "t": "node ./test/* | faucet"
+    "test": "node ./test/* | tap-spec"
   },
   "devDependencies": {
     "mailgun-js": "^0.6.9",
+    "tap-spec": "^3.0.0",
     "tape": "^4.0.0"
   },
   "dependencies": {
     "azure-storage": "^0.4.3",
+    "bcrypt-nodejs": "0.0.3",
     "hapi": "^8.4.0",
+    "hapi-auth-cookie": "^2.0.0",
     "jade": "^1.9.2"
   },
   "author": "cash-4-views",

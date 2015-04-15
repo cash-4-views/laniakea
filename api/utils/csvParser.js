@@ -1,6 +1,18 @@
 function csvParser(rawCSV){
 
-  var csv   = rawCSV.toString();
+  var videoRegEx  = /\n(?=Video ID)/g;
+  var legendRegEx = /\n\n(?=Legend)/g;
+
+  var csv = rawCSV.toString();
+
+  var splitA = csv.split(videoRegEx);
+
+  var section1 = splitA[1];
+
+  var splitB = section1.split(legendRegEx);
+
+  csv = splitB[0];
+
   var lines = csv.split("\n");
 
   var result  = [];

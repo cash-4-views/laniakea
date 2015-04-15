@@ -1,6 +1,7 @@
 var Hapi = require('hapi');
 var fs = require("fs");
 var csvParser = require('./utils/csvParser');
+var csvConverter = require("./utils/jsonToCSV");
 var Path = require('path');
 
 
@@ -13,20 +14,20 @@ server.connection({
     port: 8000
 });
 
-// Add a GET endpoint /hello
+// Add a GET endpoint /
 server.route({
     method: 'GET',
     path: '/',
     handler: function (request, reply) {
     	var file = Path.resolve(__dirname, './sampledata/report.csv');
-    	fs.readFile(file, function(err, contents){
-    		if (err){
+    	fs.readFile(file, function(err, contents) {
+    		if (err) {
     			return console.log(err);
     		} else {
-    			reply(csvParser(contents));
-    		}
-    	});
-    }
- });
+                reply(csvParser(contents));
+                }
+    		});
+    	}
+    });
 
  module.exports = server;

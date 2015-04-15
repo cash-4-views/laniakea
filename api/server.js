@@ -1,29 +1,64 @@
-var Hapi  	  = require('hapi'),
-	fs   	  = require("fs"),
-	Path 	  = require('path'),
-	csvParser = require('./utils/csvParser');
+var Hapi  	  = require("hapi"),
+		fs   	  	= require("fs"),
+		Path 	  	= require("path"),
+		csvParser = require("./utils/csvParser");
 
 var server = new Hapi.Server();
 
 server.connection({
-    host: 'localhost',
-    port: 8000
+	port: process.env.PORT || 8000
 });
 
-server.route({
-    method: 'GET',
-    path: '/',
-    handler: function (request, reply) {
-    	var file = Path.resolve(__dirname, './sampledata/report.csv');
+server.views({
 
-    	fs.readFile(file, function(err, contents){
-    		if (err){
-    			return console.log(err);
-    		} else {
-    			reply(csvParser(contents));
-    		}
-    	});
-    }
- });
+	engines: {
+		jade: require("jade")
+	},
+
+	compileOptions: {
+		pretty: true
+	},
+
+	relativeTo: __dirname,
+	path: 		  "./views",
+	isCached: false
+
+});
+
+server.route([
+
+	{
+		path: "/",
+		method: "GET",
+		handler: function (req, reply) {
+			reply.view("login");
+		}
+	},
+
+	{
+		path: "/login",
+		method: "POST",
+		handler: function(req, reply) {
+			return;
+		}
+	},
+
+	{
+		path: "/signup",
+		method: "POST",
+		handler: function(req, reply) {
+
+		}
+	},
+
+	{
+		path: "/logout",
+		method: "GET",
+		handler: function(req, reply) {
+
+		}
+	}
+
+]);
 
  module.exports = server;

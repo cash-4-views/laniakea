@@ -5,7 +5,11 @@ var Hapi 				 = require('hapi'),
 		bcrypt 			 = require("bcrypt-nodejs"),
 		config 			 = require("./config"),
 		csvParser 	 = require('./utils/csvParser'),
-		csvConverter = require("./utils/csvConverter");
+		csvConverter = require("./utils/csvConverter"),
+		api_key   	 = config.mailgun.apiKey,
+		domain    	 = config.mailgun.domain,
+		Mailgun   	 = require("mailgun-js"),
+		messages		 = require("./messages/messages");
 
 var server = new Hapi.Server();
 
@@ -52,6 +56,7 @@ var accounts = {
 	}
 };
 
+
 var home = function(req, reply) {
 	"use strict";
 
@@ -60,9 +65,9 @@ var home = function(req, reply) {
 	else return reply.view("login");
 };
 
+
 var login = function(req, reply) {
 	"use strict";
-
 	var password = req.payload.password,
 			username = req.payload.username,
 			account  = accounts[username];
@@ -74,6 +79,7 @@ var login = function(req, reply) {
 
 			if (err || !success) return reply("password error, please try again");
 			else if (success) {
+
 				var profile = {
 					username: account.username,
 				};
@@ -89,7 +95,6 @@ var login = function(req, reply) {
 				}
 			}
 		});
-
 	}
 };
 
@@ -118,6 +123,22 @@ var addAccount = function(req, reply) {
 			};
 
 			accounts[username] = newAccount;
+
+			var newMember = {
+				subscribed: true,
+				address: email,
+				name: username,
+				vars: {}
+			};
+
+			messages.addToMailingList(newMember, function(err) {
+				if (err) console.log("list error: " + err);
+			});
+
+			messages.sendEmail("approve", newAccount, function(err) {
+				if (err) console.log("error: " + err);
+			});
+
 			return reply("account successfully created!");
 		});
 	}

@@ -10,7 +10,8 @@ module.exports = {
 				password: process.env.COOKIESECRET || creds.cookie.cookie_secret
 	},
 	mailgun : {
-				apiKey   	: process.env.MGAPIKEY  || creds.mailgun.mgApiKey,
+				apiKey   	: creds.mailgun.mgApiKey,
+				domain		: process.env.DOMAIN 		|| creds.mailgun.mgDomain,
 				mailLists : process.env.MAILLISTS || creds.mailgun.mailLists
 
 	}

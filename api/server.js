@@ -18,6 +18,7 @@ server.connection({
 });
 
 server.register(require("hapi-auth-cookie"), function(err) {
+	"use strict";
 
 	server.auth.strategy("session", "cookie", {
 		password: config.cookie.password,
@@ -105,7 +106,8 @@ var addAccount = function(req, reply) {
 			customid = req.payload.customid,
 			password = req.payload.password,
 			email 	 = req.payload.email,
-			phone 	 = req.payload.phone;
+			phone 	 = req.payload.phone,
+			admin 	 = false;
 
 	if (!req.auth.credentials.admin) return reply.redirect("/");
 	else if (!req.payload || !customid || !password || !username || !email || !phone) return reply("missing field");

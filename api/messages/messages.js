@@ -6,6 +6,7 @@ var mailLists = config.mailgun.mailLists;
 var list = mailgun.lists("members@sandbox4922452d57df45d891c470ce3aa4ee3e.mailgun.org");
 
 list.info(function(err, data){
+	"use strict";
 	if (err) console.log("list err: " + err);
 	// console.log(data);
 });
@@ -37,7 +38,6 @@ var messageTemplates = {
     notify: function (message, data) {
 		"use strict";
 
-		// console.log(mailLists);
       message.subject = "Monthly report available";
       message.text    = "The PREVIOUS_MONTH revenue report is now available. Please visit 'https://www.w00d_chipper/login' to download it.";
       return message;

@@ -9,7 +9,8 @@ var Hapi 				 = require('hapi'),
 		api_key   	 = config.mailgun.apiKey,
 		domain    	 = config.mailgun.domain,
 		Mailgun   	 = require("mailgun-js"),
-		messages		 = require("./messages/messages");
+		messages		 = require("./messages/messages"),
+		path 				 = require("path");
 
 var server = new Hapi.Server();
 
@@ -168,7 +169,42 @@ var admin = function(req, reply) {
 	else return reply.view("admin");
 };
 
+var notify = function(req, reply) {
+	"use strict";
+
+	var dummy = {
+		username : "thisguy",
+		to       : "dave@beechware.com",
+		email    : "rory.sedgwick@gmail.com",
+		subject  : "",
+		text     : "",
+	};
+
+	messages.sendEmail("notify", dummy, function(err) {
+		console.log("notification sent");
+		if (err) console.log("notify error :" + err);
+	});
+
+	console.log("ajax request received");
+};
+
 server.route([
+
+	{
+    path: "/{param}",
+    method: "GET",
+    handler: {
+        directory: {
+            path: Path.join(__dirname) + "../../public"
+        }
+	    }
+	 },
+
+	 {
+	 	path : "/notify",
+	 	method : "GET",
+	 	handler : notify
+	 },
 
 	{
 		path: "/",

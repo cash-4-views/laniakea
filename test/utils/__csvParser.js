@@ -1,12 +1,12 @@
-var Test 	  = require("tape"),
-	csvParser = require("../../api/utils/csvParser.js");
+var Test 	  	= require("tape"),
+		csvParser = require("../../api/utils/csvParser.js");
 
 Test("The csvParser function", function(t) {
 	"use strict";
 
 	var fs   = require("fs"),
-		path = require("path"),
-		file = path.resolve(__dirname, "./testdata/csvParser.csv");
+			path = require("path"),
+			file = path.resolve(__dirname, "./testdata/csvParser.csv");
 
 	var chippedCSV = [
 		{first_name: "Rory", last_name: "Sedgwick", email: "bigboy1101@gmail.com", phone_number: "01111999111", admin_rights: "false"},

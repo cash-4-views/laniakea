@@ -1,5 +1,5 @@
-var entityGen 			= require("azure-storage").TableUtilities.entityGenerator,
-		azureObjCreator = require("../utils/azureObjCreator");
+var azure  					= require("azure-storage"),
+		objectAzurifier = require("../utils/objectAzurifier");
 
 function Account(storageClient, tableName) {
 	"use strict";
@@ -14,36 +14,49 @@ function Account(storageClient, tableName) {
 
 Account.prototype = {
 
-	findAccount: function(username, callback) {
+	getAccounts: function(callback) {
 		"use strict";
+		var self = this;
 
-		this.storageClient.retrieveEntity(this.tableName, this.partitionKey, username, function entitiesQueried(err, result) {
+		var query = new azure.TableQuery()
+											.select(["username", "customid", "email", "phone"])
+											.where("PartitionKey == ?", self.partitionKey);
+
+		self.storageClient.queryEntities(self.tableName, query, null, function(err, result, response) {
 			if(err) return callback(err);
 			else return callback(null, result.entries);
 		});
 	},
 
-	addAccount: function(item, callback) {
+	getSingleAccount: function(username, callback) {
 		"use strict";
+		var self = this;
 
-		var azureAccountObject = {
-			PartitionKey: entityGen.String("users"),
-			RowKey  : entityGen.String(item.username),
-			admin 	: entityGen.Boolean(item.admin)
-		};
+		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, username, function entityQueried(err, entity) {
+			if(err) return callback(err);
+			else {
+				return callback(null, entity);
+			}
+		});
+	},
 
-		azureObjCreator(azureAccountObject, function(processedObject) {
-			this.storageClient.insertEntity(this.tableName, processedObject, function entityInserted(err) {
+	createSingleAccount: function(item, callback) {
+		"use strict";
+		var self = this;
+
+		objectAzurifier(self.partitionKey, "username", item, function(processedAccount) {
+			self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
 				if(err) return callback(err);
 				else return callback(null);
 			});
 		});
 	},
 
-	updateAccount: function(rKey, updateObj, callback) {
+	updateSingleAccount: function(rKey, updateObj, callback) {
 		"use strict";
+		var self = this;
 
-		this.storageClient.retrieveEntity(this.tableName, this.partitionKey, rKey, function entityQueried(err, entity) {
+		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, rKey, function entityQueried(err, entity) {
 			if(err) return callback(err);
 			var field;
 
@@ -51,7 +64,7 @@ Account.prototype = {
 				entity[field] = updateObj[field];
 			}
 
-			this.storageClient.updateEntity(this.tableName, entity, function entityUpdated(err) {
+			self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
 				if(err) return callback(err);
 				else return callback(null);
 			});

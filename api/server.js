@@ -2,11 +2,19 @@ var Hapi 				 = require('hapi'),
 		fs 					 = require("fs"),
 		Path 				 = require('path'),
 		bcrypt 			 = require("bcrypt-nodejs"),
+		azure 			 = require("azure-storage"),
+		Account 		 = require("./models/Account"),
+		Report 			 = require("./models/Report"),
+		ApprovedList = require("./models/ApprovedList"),
 		config 			 = require("./config"),
 		csvParser 	 = require('./utils/csvParser'),
 		csvConverter = require("./utils/jsonToCSV");
 
-var server = new Hapi.Server();
+var tableSvc = azure.createTableService(config.database.dbacc, config.database.dbkey),
+		account  = new Account(tableSvc, config.database.atable),
+		report   = new Report(tableSvc, config.database.rtable),
+		approved = new ApprovedList(tableSvc, config.database.rtable),
+		server   = new Hapi.Server();
 
 server.connection({
 	port: process.env.PORT || 8000
@@ -39,20 +47,7 @@ server.views({
 
 });
 
-
-var accounts = {
-	jim: {
-		username: "jim",
-		password: "$2a$10$EE6BpR8M4xMqf9h/OPD3l.uI3SR9QKri36pTa7TAfSiYzZjLqtu9u",
-		admin: true
-	},
-	tim: {
-		username: "tim",
-		password: "$2a$10$AQChk8U3WuCOEuks0ew/N.MNF2kxyQp8OSbjrAA4G42WEYaH/u51u"
-	}
-};
-
-var home = function(req, reply) {
+var homeHandler = function(req, reply) {
 	"use strict";
 
 	if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
@@ -60,90 +55,241 @@ var home = function(req, reply) {
 	else return reply.view("login");
 };
 
-var login = function(req, reply) {
+var loginHandler = function(req, reply) {
 	"use strict";
 
-	var password = req.payload.password,
-			username = req.payload.username,
-			account  = accounts[username];
+	var deets = req.payload;
 
-	if (!req.payload || !password || !username) return reply.redirect("/");
-	else if (!account) return reply.redirect("/");
-	else {
-		bcrypt.compare(password, account.password, function(err, success) {
+	if(!deets.password || !deets.username) return reply("Missing username or password");
 
-			if (err || !success) return reply("password error, please try again");
-			else if (success) {
-				var profile = {
-					username: account.username,
-				};
-				req.auth.session.clear();
+	var opts = {
+		url: "/api/v1/accounts/" + deets.username,
+		method: "GET",
+		credentials: {
+			username: deets.username
+		}
+	};
 
-				if (account.admin) {
-					profile.admin = true;
-					req.auth.session.set(profile);
-					return reply.redirect("/admin");
-				} else {
-					req.auth.session.set(profile);
-					return reply.redirect("/account");
+	server.inject(opts, function(res) {
+		if(!res) {
+			return reply("Error with logging in pal:", err);
+		} else {
+			console.log(res.payload);
+			var returnedAccount = res.result;
+			bcrypt.compare(deets.password, returnedAccount.password, function(err, res) {
+				if(err) return reply("Whoops error");
+				else if (!res) return reply("Dodgy password pal");
+				else {
+
+					var profile = {
+						username: returnedAccount.username,
+						customid: returnedAccount.customid,
+					};
+					req.auth.session.clear();
+
+					if(returnedAccount.admin) {
+						profile.admin = true;
+						req.auth.session.set(profile);
+						return reply.redirect("/admin");
+					} else {
+						req.auth.session.set(profile);
+						return reply.redirect("/account");
+					}
 				}
-			}
-		});
-
-	}
+			});
+		}
+	});
 };
 
-var addAccount = function(req, reply) {
+var addAccountHandler = function(req, reply) {
 	"use strict";
 
-	var	username = req.payload.username,
-			customid = req.payload.customid,
-			password = req.payload.password,
-			email 	 = req.payload.email,
-			phone 	 = req.payload.phone,
-			admin 	 = false;
+	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
 
-	if (!req.auth.credentials.admin) return reply.redirect("/");
-	else if (!req.payload || !customid || !password || !username || !email || !phone) return reply("missing field");
-	else if (accounts[username]) return reply("account already exists");
-	else {
-		bcrypt.hash(password, null, null, function(err, hash) {
-			if(err) return reply("error hashing password, ", hash);
+	var opts = {
+		url: "/api/v1/accounts",
+		method: "POST",
+		credentials: {
+			admin: true
+		},
+		payload: req.payload
+	};
 
-			var newAccount = {
-				username : username,
-				customid : customid,
-				password : hash,
-				email 	 : email,
-				phone 	 : phone
-			};
-
-			accounts[username] = newAccount;
-			return reply("account successfully created!");
-		});
-	}
+	server.inject(opts, function(err) {
+		if(err) return reply("Whoops, there was an error creating that account: ", err);
+		else return reply("Account successfully created");
+	});
 
 };
 
-var logout = function(req, reply) {
+var logoutHandler = function(req, reply) {
 	"use strict";
 
 	req.auth.session.clear();
 	return reply.redirect('/');
 };
 
-var account = function(req, reply) {
+var accountHandler = function(req, reply) {
 	"use strict";
 
 	if(req.auth.credentials.admin) return reply.redirect("/admin");
-	else return reply.view("account");
+
+	var customid = req.auth.credentials.customid;
+
+	var opts = {
+		url: "/api/v1/approvedlist/" + customid,
+		method: "GET",
+		credentials: {
+			admin: true
+		}
+	};
+
+	server.inject(opts, function(res) {
+		return reply.view("account", {user: req.auth.credentials, approvedlist: res.result});
+	});
 };
 
-var admin = function(req, reply) {
+var adminHandler = function(req, reply) {
 	"use strict";
 
 	if(!req.auth.credentials.admin) return reply.redirect("/account");
 	else return reply.view("admin");
+};
+
+
+// API - Accounts
+var getAccounts = function(req, reply) {
+	"use strict";
+
+	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+	account.getAccounts(function(err, accounts) {
+		if(err) return reply(err);
+		else return reply(null, accounts);
+	});
+};
+
+var createSingleAccount = function(req, reply) {
+	"use strict";
+
+	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+	// Use JOI for validation
+	bcrypt.hash(req.payload.password, null, null, function(err, hash) {
+		if(err) return reply("error hashing password, ", hash);
+
+		var newAccount = {
+			username : req.payload.username,
+			customid : req.payload.customid,
+			password : hash,
+			email 	 : req.payload.email,
+			phone 	 : req.payload.phone,
+			admin 	 : false
+		};
+
+		account.createSingleAccount(newAccount, function(err) {
+			if(err) return reply(err.statusCode + ": " + err.code);
+			else return reply("Account successfully created");
+		});
+	});
+};
+
+var getSingleAccount = function(req, reply) {
+	"use strict";
+
+	var username = req.params.username;
+
+	if(!req.auth.credentials.admin && req.params.username !== req.auth.credentials.username) {
+		return reply("You're not authorised to do that");
+	}
+
+	account.getSingleAccount(username, function(err, account) {
+		if(err) {
+			console.log(err);
+			return reply(null);
+		}
+		return reply(account);
+	});
+};
+
+
+// API - Reports
+var getSingleReport = function(req, reply) {
+	"use strict";
+
+	var PKey 		 = req.params.YYYY + "_" + req.params.MM;
+	var customid = req.params.customid;
+
+	if(!customid) {
+		if(!req.auth.credentials.admin)return reply("You're not authorised to do that");
+
+		else report.getSingleReport(PKey, null, function(err, totalResults) {
+			if(err) return reply(err);
+			return reply(totalResults);
+		});
+
+	} else if(customid !== req.auth.credentials.customid) {
+		return reply("That is not your report to take");
+
+	} else {
+		report.getSingleReport(PKey, customid, function(err, totalResults) {
+		if(err) return reply(err);
+		return reply(totalResults);
+		});
+
+	}
+};
+
+var updateSingleReport = function(req, reply) {
+	"use strict";
+
+	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+	var PKey 		  = req.params.YYYY + "_" + req.params.MM,
+			updateObj = {},
+			fieldToUpdate;
+
+	for(fieldToUpdate in req.payload) {
+		updateObj[fieldToUpdate] = req.payload[fieldToUpdate];
+	}
+
+	report.updateSingleReportRow(PKey, req.params.videoid, updateObj, function(err) {
+		if(err) return reply(err);
+		else return reply(null);
+	});
+};
+
+// API - Approved
+var getApproved = function(req, reply) {
+	"use strict";
+
+	var customid = req.params.customid,
+			YYYY_MM  = req.params[YYYY_MM];
+
+	if(!req.auth.credentials.admin && customid !== req.auth.credentials.customid) {
+		return reply("You're not authorised to do that");
+	} else {
+		approved.getApproved(customid, YYYY_MM, function(err, approvedList) {
+			if(err) return reply(err);
+			else return reply(approvedList);
+		});
+	}
+};
+
+var updateApproved = function(req, reply) {
+	"use strict";
+
+	var customid = req.params.customid,
+			YYYY_MM  = req.params[YYYY_MM];
+
+	if(!req.auth.credentials.admin) {
+		return reply("You're not authorised to do that");
+	} else {
+		approved.updateApproved(customid, YYYY_MM, function(err) {
+			if(err) return reply(err);
+			else return reply("successfully approved");
+		});
+	}
 };
 
 server.route([
@@ -152,7 +298,7 @@ server.route([
 		path: "/",
 		method: "GET",
 		config: {
-			handler: home,
+			handler: homeHandler,
 			auth: {
 				mode: "try",
 				strategy: "session"
@@ -169,7 +315,7 @@ server.route([
 		path: "/login",
 		method: "POST",
 		config: {
-			handler: login,
+			handler: loginHandler,
 			auth: {
 				mode: "try",
 				strategy: "session"
@@ -186,7 +332,7 @@ server.route([
 		path: "/logout",
 		method: "GET",
 		config: {
-			handler: logout
+			handler: logoutHandler
 		}
 	},
 
@@ -194,7 +340,7 @@ server.route([
 		path: "/addAccount",
 		method: "POST",
 		config: {
-			handler: addAccount
+			handler: addAccountHandler
 		}
 	},
 
@@ -202,7 +348,7 @@ server.route([
 		path: "/account",
 		method: "GET",
 		config: {
-			handler: account
+			handler: accountHandler
 		}
 	},
 
@@ -210,7 +356,65 @@ server.route([
 		path: "/admin",
 		method: "GET",
 		config: {
-			handler: admin
+			handler: adminHandler
+		}
+	},
+
+	// barebones api for our eyes only ;)
+	// accounts
+	{
+		path: "/api/v1/accounts",
+		method: "GET",
+		config: {
+			handler: getAccounts,
+		}
+	},
+
+	{
+		path: "/api/v1/accounts",
+		method: "POST",
+		config: {
+			handler: createSingleAccount
+		}
+	},
+
+	{
+		path: "/api/v1/accounts/{username}",
+		method: "GET",
+		config: {
+			handler: getSingleAccount
+		}
+	},
+	// reports
+	{
+		path: "/api/v1/reports/{YYYY}/{MM}/{customid?}",
+		method: "GET",
+		config: {
+			handler: getSingleReport
+		}
+	},
+
+	{
+		path: "/api/v1/reports/{YYYY}/{MM}/{videoid}",
+		method: "PUT",
+		config: {
+			handler: updateSingleReport
+		}
+	},
+	// approved
+	{
+		path: "/api/v1/approvedlist/{customid}/{YYYY_MM?}",
+		method: "GET",
+		config: {
+			handler: getApproved
+		}
+	},
+
+	{
+		path: "/api/v1/approvedlist/{customid}/{YYYY_MM}",
+		method: "POST",
+		config: {
+			handler: updateApproved
 		}
 	}
 

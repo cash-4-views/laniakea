@@ -16,3 +16,8 @@ body
 			input(type="submit")
 			button(type="button" id="btn")
 		script(type="text/javascript", src="/notification.js")
+
+	form(action='/api/v1/reports', method='post', enctype='multipart/form-data')
+			input(type='file', name='upload-report')
+			input(type='submit', value='Upload')
+

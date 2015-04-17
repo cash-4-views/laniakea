@@ -1,15 +1,12 @@
 
 var Hapi 				 = require('hapi'),
 		fs 					 = require("fs"),
-		Path 				 = require('path'),
 		bcrypt 			 = require("bcrypt-nodejs"),
 		azure 			 = require("azure-storage"),
 		Account 		 = require("./models/Account"),
 		Report 			 = require("./models/Report"),
 		ApprovedList = require("./models/ApprovedList"),
 		config 			 = require("./config"),
-		csvParser 	 = require('./utils/csvParser'),
-		csvConverter = require("./utils/csvConverter"),
 		api_key   	 = config.mailgun.apiKey,
 		domain    	 = config.mailgun.domain,
 		Mailgun   	 = require("mailgun-js"),
@@ -95,8 +92,8 @@ var loginHandler = function(req, reply) {
 		if(!res) {
 			return reply("Error with logging in pal:", err);
 		} else {
-			console.log(res.payload);
 			var returnedAccount = res.result;
+			// console.log(res.result);
 			bcrypt.compare(deets.password, returnedAccount.password, function(err, res) {
 				if(err) return reply("Whoops error");
 				else if (!res) return reply("Dodgy password pal");
@@ -125,20 +122,18 @@ var loginHandler = function(req, reply) {
 var addAccountHandler = function(req, reply) {
 	"use strict";
 
-	var	username = req.payload.username,
-			customid = req.payload.customid,
-			password = req.payload.password,
-			email 	 = req.payload.email,
-			phone 	 = req.payload.phone,
-			admin 	 = false;
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
 
-	if (!req.auth.credentials.admin) return reply.redirect("/");
-	else if (!req.payload || !customid || !password || !username || !email || !phone) return reply("missing field");
-	else if (accounts[username]) return reply("account already exists");
-	else {
-		bcrypt.hash(password, null, null, function(err, hash) {
-			if(err) return reply("error hashing password, ", hash);
+		var opts = {
+			url: "/api/v1/accounts",
+			method: "POST",
+			credentials: {
+				admin: true
+			},
+			payload: req.payload
+		};
 
+		server.inject(opts, function(err) {
 			var newAccount = {
 				username : username,
 				customid : customid,
@@ -156,32 +151,17 @@ var addAccountHandler = function(req, reply) {
 				vars: {}
 			};
 
-			messages.addToMailingList(newMember, function(err) {
-				if (err) console.log("list error: " + err);
-			});
+			if(err) return reply("Whoops, there was an error creating that account: ", err);
+			else {
+				messages.addToMailingList(newMember, function(err) {
+					if (err) console.log("list error: " + err);
+				});
 
-			messages.sendEmail("approve", newAccount, function(err) {
-				if (err) console.log("error: " + err);
-			});
-
-			return reply("account successfully created!");
-		});
-	}
-
-	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
-
-	var opts = {
-		url: "/api/v1/accounts",
-		method: "POST",
-		credentials: {
-			admin: true
-		},
-		payload: req.payload
-	};
-
-	server.inject(opts, function(err) {
-		if(err) return reply("Whoops, there was an error creating that account: ", err);
-		else return reply("Account successfully created");
+				messages.sendEmail("approve", newAccount, function(err) {
+					if (err) console.log("error: " + err);
+				});
+				return reply("Account successfully created");
+		}
 	});
 };
 
@@ -219,6 +199,7 @@ var adminHandler = function(req, reply) {
 	else return reply.view("admin");
 };
 
+
 var notify = function(req, reply) {
 	"use strict";
 
@@ -237,6 +218,7 @@ var notify = function(req, reply) {
 
 	console.log("ajax request received");
 };
+
 
 // API - Accounts
 var getAccounts = function(req, reply) {
@@ -295,6 +277,35 @@ var getSingleAccount = function(req, reply) {
 
 
 // API - Reports
+var createSingleReport = function(req, reply) {
+	"use strict";
+
+	var uploadInfo = req.payload['upload-report'].hapi;
+
+	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+	if(uploadInfo.headers["content-type"] !== "text/csv") return reply("Not a csv");
+
+	var date = uploadInfo.filename.match(/_([\d]{8})_/i)[1];
+
+	var YYYY_MM = date.slice(0, 4) + "_" + date.slice(4, 6);
+	var uploadStream = req.payload["upload-report"];
+
+	var body = '';
+
+  uploadStream.on('data', function (chunk) {
+    body += chunk;
+  });
+
+  uploadStream.on('end', function () {
+    var data = body;
+    report.createBatchedReports(YYYY_MM, data, function(err) {
+    	if(err) return reply(err);
+    	else reply("success!");
+    });
+	});
+
+};
+
 var getSingleReport = function(req, reply) {
 	"use strict";
 
@@ -380,7 +391,7 @@ server.route([
     method: "GET",
     handler: {
         directory: {
-            path: Path.join(__dirname) + "../../public"
+            path: path.join(__dirname) + "../../public"
         }
 	    }
 	 },
@@ -483,6 +494,19 @@ server.route([
 		}
 	},
 	// reports
+	{
+		path: "/api/v1/reports",
+		method: "POST",
+		config: {
+			handler: createSingleReport,
+			payload:{
+        maxBytes: 100000000,
+        output:'stream',
+        parse: true
+      }
+		}
+	},
+
 	{
 		path: "/api/v1/reports/{YYYY}/{MM}/{customid?}",
 		method: "GET",

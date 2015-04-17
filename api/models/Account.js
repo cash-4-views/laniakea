@@ -1,5 +1,6 @@
 var azure  					= require("azure-storage"),
-		objectAzurifier = require("../utils/objectAzurifier");
+		objectAzurifier = require("../utils/objectAzurifier"),
+		deAzurifier 		= require("../utils/deAzurifier");
 
 function Account(storageClient, tableName) {
 	"use strict";
@@ -35,7 +36,7 @@ Account.prototype = {
 		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, username, function entityQueried(err, entity) {
 			if(err) return callback(err);
 			else {
-				return callback(null, entity);
+				return deAzurifier(entity, callback);
 			}
 		});
 	},
@@ -44,9 +45,9 @@ Account.prototype = {
 		"use strict";
 		var self = this;
 
-		objectAzurifier(self.partitionKey, "username", item, function(processedAccount) {
+		objectAzurifier(self.partitionKey, "username", item, function(error, processedAccount) {
 			self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
-				if(err) return callback(err);
+ 				if(err) return callback(err);
 				else return callback(null);
 			});
 		});

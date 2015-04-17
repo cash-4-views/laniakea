@@ -71,55 +71,53 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
+		var batchHolder = [];
+		var reportsInOneBatch = 99;
+		var timestampPrep = Date.now();
+		var n = 0;
+
 		csvTrimmer(csvReport, null, null, function(err, trimmedCSV) {
 			if(err) return callback(err);
 
 			Baby.parse(trimmedCSV, {
 				header: true,
+				step: function(row) {
+					if(n === 0 && !batchHolder[n]) console.log(row);
+					objectAzurifier(YYYY_MM, "Video ID", row.data[0], function(err, azurifiedObj) {
+						if (!batchHolder[n]) {
+							batchHolder[n] = new azure.TableBatch();
+						}	else if (batchHolder[n].size() === reportsInOneBatch) {
+							n += 1;
+							batchHolder[n] = new azure.TableBatch();
+						}
+						return batchHolder[n].insertEntity(azurifiedObj);
+					});
+				},
 				complete: function(results) {
-					console.log("Parsing complete! ", results.data.length, " objects created. Errors: ", results.errors);
-					var reportsArray = results.data;
-					// Each batch can only hold 100 operations, so we make a container for our batches
-					var batchHolder = [];
-					// Calculate the number of batches we need so we can perform multiple write operations at once;
-					var numberOfReports = reportsArray.length;
-					var reportsInOneBatch = 100;
-					var numberOfBatches = Math.ceil(numberOfReports/reportsInOneBatch);
-					// Split the reportsArray into batches
-					var n, splitReportsArray = [];
+					console.log("Parsing complete! Errors: ", results.errors);
+					console.log("Trimming, parsing and batching took ", Date.now()-timestampPrep, "/ms");
+					console.log("Starting batch upload: ");
+					var totalBatchSize = 0;
 
-					for (n = 0; n < numberOfBatches; n += 1) {
-						splitReportsArray[n] = reportsArray.slice(n*reportsInOneBatch, n*reportsInOneBatch + reportsInOneBatch);
-						batchHolder[n] = new azure.TableBatch();
-						console.log(batchHolder.length, n);
-					}
-
-					splitReportsArray.forEach(function(ele, ind) {
-						var m, len = ele.length;
-						var timestamp = Date.now();
-						console.log(batchHolder[ind]);
-
-						function batchInserter(error, processedReport) {
-							if(error) return console.log(error);
-							console.log("inserted into batch ", ind);
-							return batchHolder[ind].insertEntity(processedReport);
+					batchHolder.forEach(function(batch, index) {
+						var timestampBatch = Date.now();
+						totalBatchSize += batch.size();
+						if(batchHolder.length === index+1) {
+							console.log("The total number of row headers is: ", results.meta.fields.length);
+							console.log("The total number of batches is: ", batchHolder.length);
+							console.log("The total number of batch operations is: ", totalBatchSize);
 						}
-
-						for (m = 0; m < len; n+=1) {
-							objectAzurifier(YYYY_MM, "Video ID", ele[m], batchInserter);
-						}
-						// Change this to async operation
-						self.storageClient.executeBatch(self.tableName, batchHolder[ind], function(err, result, response) {
-							if(err) {
-								console.log(err);
-								return callback(err);
-							} else {
-								return console.log("batch ", ind, " completed in: ", Date.now()-timestamp);
-							}
-						});
-
+						// self.storageClient.executeBatch(self.tableName, batchHolder[index], function(err, result, response) {
+						// 	if(err) {
+						// 		console.log(err);
+						// 		return callback(err);
+						// 	} else {
+						// 		return console.log("batch ", index, " completed in: ", Date.now()-timestampBatch);
+						// 	}
+						// });
 					});
 				}
+
 			});
 		});
 	},

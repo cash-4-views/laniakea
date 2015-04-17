@@ -13,10 +13,12 @@
   },
   "dependencies": {
     "azure-storage": "^0.4.3",
+    "babyparse": "^0.4.3",
     "bcrypt-nodejs": "0.0.3",
     "hapi": "^8.4.0",
     "hapi-auth-cookie": "^2.0.0",
-    "jade": "^1.9.2"
+    "jade": "^1.9.2",
+    "papaparse": "^4.1.0"
   },
   "author": "cash-4-views",
   "license": "ISC"

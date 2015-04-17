@@ -1,5 +1,7 @@
 var azure  					= require("azure-storage"),
-		objectAzurifier = require("../utils/objectAzurifier");
+		Baby 					  = require("babyparse"),
+		objectAzurifier = require("../utils/objectAzurifier"),
+		csvTrimmer 			= require("../utils/csvTrimmer");
 
 function Report(storageClient, tableName) {
 	"use strict";
@@ -57,7 +59,7 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		objectAzurifier(YYYY_MM, "Video ID", report, function(processedReport) {
+		objectAzurifier(YYYY_MM, "Video ID", report, function(error, processedReport) {
 			self.storageClient.insertEntity(self.tableName, processedReport, function entityInserted(err) {
 				if(err) return callback(err);
 				else return callback(null);
@@ -65,45 +67,60 @@ Report.prototype = {
 		});
 	},
 
-	createBatchedReports: function(YYYY_MM, reportsArray, callback) {
+	createBatchedReports: function(YYYY_MM, csvReport, callback) {
 		"use strict";
 		var self = this;
 
-		// Each batch can only hold 100 operations, so we make a container for our batches
-		var batchHolder = [];
-		// Calculate the number of batches we need so we can perform multiple write operations at once;
-		var numberOfReports = reportsArray.length;
-		var reportsInOneBatch = 100;
-		var numberOfBatches = Math.ceil(numberOfReports/reportsInOneBatch);
-		// Split the reportsArray into batches
-		var n, splitReportsArray = [];
+		csvTrimmer(csvReport, null, null, function(err, trimmedCSV) {
+			if(err) return callback(err);
 
-		for (n = 0; n < numberOfBatches; n += 1) {
-			splitReportsArray[n] = reportsArray.slice(n*reportsInOneBatch, n*reportsInOneBatch + reportsInOneBatch);
-			batchHolder[n] = new azure.TableBatch();
-		}
+			Baby.parse(trimmedCSV, {
+				header: true,
+				complete: function(results) {
+					console.log("Parsing complete! ", results.data.length, " objects created. Errors: ", results.errors);
+					var reportsArray = results.data;
+					// Each batch can only hold 100 operations, so we make a container for our batches
+					var batchHolder = [];
+					// Calculate the number of batches we need so we can perform multiple write operations at once;
+					var numberOfReports = reportsArray.length;
+					var reportsInOneBatch = 100;
+					var numberOfBatches = Math.ceil(numberOfReports/reportsInOneBatch);
+					// Split the reportsArray into batches
+					var n, splitReportsArray = [];
 
-		splitReportsArray.forEach(function(ele, ind) {
-			var m, len = ele.length;
-			var timestamp = Date.now();
+					for (n = 0; n < numberOfBatches; n += 1) {
+						splitReportsArray[n] = reportsArray.slice(n*reportsInOneBatch, n*reportsInOneBatch + reportsInOneBatch);
+						batchHolder[n] = new azure.TableBatch();
+						console.log(batchHolder.length, n);
+					}
 
-			function batchInserter(processedReport) {
-				return batchHolder[ind].insertEntity(processedReport);
-			}
+					splitReportsArray.forEach(function(ele, ind) {
+						var m, len = ele.length;
+						var timestamp = Date.now();
+						console.log(batchHolder[ind]);
 
-			for (m = 0; m < len; n+=1) {
-				objectAzurifier(YYYY_MM, "Video ID", ele[m], batchInserter);
-			}
-			// Change this to async operation
-			self.storageClient.executeBatch(self.tableName, batchHolder[ind], function(err, result, response) {
-				if(err) {
-					console.log(err);
-					return callback(err);
-				} else {
-					return console.log("batch ", ind, " completed in: ", Date.now()-timestamp);
+						function batchInserter(error, processedReport) {
+							if(error) return console.log(error);
+							console.log("inserted into batch ", ind);
+							return batchHolder[ind].insertEntity(processedReport);
+						}
+
+						for (m = 0; m < len; n+=1) {
+							objectAzurifier(YYYY_MM, "Video ID", ele[m], batchInserter);
+						}
+						// Change this to async operation
+						self.storageClient.executeBatch(self.tableName, batchHolder[ind], function(err, result, response) {
+							if(err) {
+								console.log(err);
+								return callback(err);
+							} else {
+								return console.log("batch ", ind, " completed in: ", Date.now()-timestamp);
+							}
+						});
+
+					});
 				}
 			});
-
 		});
 	},
 

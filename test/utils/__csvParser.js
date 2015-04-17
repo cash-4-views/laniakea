@@ -1,5 +1,5 @@
 var Test 	  	= require("tape"),
-		csvParser = require("../../api/utils/csvParser.js");
+		csvParser = require("../../api/utils/csvParser");
 
 Test("The csvParser function", function(t) {
 	"use strict";

@@ -7,6 +7,9 @@ Test("csvConverter", function(t) {
 
     var csv = csvConverter(sampleJSON);
 
+		console.log(sampleJSON);
+		console.log(csv);
+
     t.test("the input should", function(st) {
         st.equals(typeof sampleJSON, "object", "be an object");
         st.equals(Object.prototype.toString.call(sampleJSON), "[object Array]", "be an array");

@@ -9,6 +9,7 @@ function csvParser(rawCSV){
   var splitA = csv.split(videoRegEx);
 
   var section1 = splitA[1];
+  console.log(splitA[1]);
 
   var splitB = section1.split(legendRegEx);
 

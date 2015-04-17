@@ -53,7 +53,6 @@ server.views({
 
 });
 
-<<<<<<< HEAD
 
 var accounts = {
 	jim: {
@@ -76,7 +75,6 @@ var homeHandler = function(req, reply) {
 	else if(req.auth.isAuthenticated) return reply.redirect("/account");
 	else return reply.view("login");
 };
-
 
 var loginHandler = function(req, reply) {
 	"use strict";
@@ -238,6 +236,7 @@ var notify = function(req, reply) {
 	});
 
 	console.log("ajax request received");
+};
 
 // API - Accounts
 var getAccounts = function(req, reply) {

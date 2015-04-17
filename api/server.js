@@ -6,9 +6,7 @@ var Hapi 				 = require('hapi'),
 		Account 		 = require("./models/Account"),
 		Report 			 = require("./models/Report"),
 		ApprovedList = require("./models/ApprovedList"),
-		config 			 = require("./config"),
-		csvParser 	 = require('./utils/csvParser'),
-		csvConverter = require("./utils/jsonToCSV");
+		config 			 = require("./config");
 
 var tableSvc = azure.createTableService(config.database.dbacc, config.database.dbkey),
 		account  = new Account(tableSvc, config.database.atable),
@@ -156,7 +154,6 @@ var adminHandler = function(req, reply) {
 	else return reply.view("admin");
 };
 
-
 // API - Accounts
 var getAccounts = function(req, reply) {
 	"use strict";
@@ -214,6 +211,35 @@ var getSingleAccount = function(req, reply) {
 
 
 // API - Reports
+var createSingleReport = function(req, reply) {
+	"use strict";
+
+	var uploadInfo = req.payload['upload-report'].hapi;
+
+	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+	if(uploadInfo.headers["content-type"] !== "text/csv") return reply("Not a csv");
+
+	var date = uploadInfo.filename.match(/_([\d]{8})_/i)[1];
+
+	var YYYY_MM = date.slice(0, 4) + "_" + date.slice(4, 6);
+	var uploadStream = req.payload["upload-report"];
+
+	var body = '';
+
+  uploadStream.on('data', function (chunk) {
+    body += chunk;
+  });
+
+  uploadStream.on('end', function () {
+    var data = body;
+    report.createBatchedReports(YYYY_MM, data, function(err) {
+    	if(err) return reply(err);
+    	else reply("success!");
+    });
+	});
+
+};
+
 var getSingleReport = function(req, reply) {
 	"use strict";
 
@@ -386,6 +412,19 @@ server.route([
 		}
 	},
 	// reports
+	{
+		path: "/api/v1/reports",
+		method: "POST",
+		config: {
+			handler: createSingleReport,
+			payload:{
+        maxBytes: 100000000,
+        output:'stream',
+        parse: true
+      }
+		}
+	},
+
 	{
 		path: "/api/v1/reports/{YYYY}/{MM}/{customid?}",
 		method: "GET",

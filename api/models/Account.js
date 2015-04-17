@@ -61,7 +61,10 @@ Account.prototype = {
 			var field;
 
 			for (field in updateObj) {
-				entity[field] = updateObj[field];
+				if(updateObj.hasOwnProperty(field)) {
+					if(!entity[field]) entity[field] = {};
+					entity[field]._ = updateObj[field];
+				}
 			}
 
 			self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {

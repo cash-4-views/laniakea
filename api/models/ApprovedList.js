@@ -44,7 +44,8 @@ ApprovedList.prototype = {
 					else return callback(null);
 				});
 			} else {
-				entity[YYYY_MM] = YYYY_MM;
+				if(!entity[YYYY_MM]) entity[YYYY_MM] = {};
+				entity[YYYY_MM]._ = YYYY_MM;
 
 				self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
 					if(err) return callback(err);

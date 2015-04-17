@@ -16,7 +16,6 @@ function csvConverter(objArray) {
 
         str += line + '\r\n';
     }
-    console.log(str);
     return str;
 }
 

@@ -1,11 +1,11 @@
 [
   {
-    "name": "Item 1", "color": "Green", "size": "X-Large"
+    "name": "Item 1", "color": "Green", "size": "Small"
     },
   {
-    "name": "Item 2", "color": "Blue", "size": "X-Large"
+    "name": "Item 2", "color": "Blue", "size": "Medium"
     },
   {
-    "name": "Item 3", "color": "Red", "size": "X-Large"
+    "name": "Item 3", "color": "Red", "size": "Large"
    }
 ]

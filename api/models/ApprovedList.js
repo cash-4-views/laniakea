@@ -39,9 +39,11 @@ ApprovedList.prototype = {
 				var newObj = {};
 				newObj[YYYY_MM] = YYYY_MM;
 
-				objectAzurifier(self.partitionKey, customid, newObj, function entityInserted(err) {
-					if(err) return callback(err);
-					else return callback(null);
+				objectAzurifier(self.partitionKey, customid, newObj, function(error, processedObj) {
+					self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
+						if(err) return callback(err);
+						else return callback(null);
+					});
 				});
 			} else {
 				if(!entity[YYYY_MM]) entity[YYYY_MM] = {};

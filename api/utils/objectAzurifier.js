@@ -12,7 +12,7 @@ function objectAzurifier(partitionKey, rowKey, objectToAzurify, callback) {
 		azurifiedObj[prop] = entityGen.String(objectToAzurify[prop]);
 	}
 
-	return callback(azurifiedObj);
+	return callback(null, azurifiedObj);
 }
 
 module.exports = objectAzurifier;

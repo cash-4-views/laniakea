@@ -15,7 +15,7 @@ function deAzurifier(objectToDeAzurify, callback) {
 		}
 	}
 
-	return callback(deAzurifiedObj);
+	return callback(null, deAzurifiedObj);
 }
 
 module.exports = deAzurifier;

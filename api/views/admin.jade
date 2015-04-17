@@ -13,3 +13,7 @@ body
 		label(for="phone") phone
 			input(type="text", name="phone" id="phone")
 			input(type="submit")
+
+	form(action='/api/v1/reports', method='post', enctype='multipart/form-data')
+			input(type='file', name='upload-report')
+			input(type='submit', value='Upload')

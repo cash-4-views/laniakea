@@ -214,6 +214,7 @@ var getSingleAccount = function(req, reply) {
 var createSingleReport = function(req, reply) {
 	"use strict";
 
+	console.log("report request received");
 	var uploadInfo = req.payload['upload-report'].hapi;
 
 	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
@@ -232,9 +233,9 @@ var createSingleReport = function(req, reply) {
 
   uploadStream.on('end', function () {
     var data = body;
-    report.createBatchedReports(YYYY_MM, data, function(err) {
+    report.createBatchedReport(YYYY_MM, data, function(err, alert) {
     	if(err) return reply(err);
-    	else reply("success!");
+    	else reply(alert);
     });
 	});
 

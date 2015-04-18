@@ -45,7 +45,7 @@ Account.prototype = {
 		"use strict";
 		var self = this;
 
-		objectAzurifier(self.partitionKey, "username", item, function(error, processedAccount) {
+		objectAzurifier(self.partitionKey, "username", null, item, function(error, processedAccount) {
 			self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
  				if(err) return callback(err);
 				else return callback(null);
@@ -61,12 +61,14 @@ Account.prototype = {
 			if(err) return callback(err);
 			var field;
 
-			for (field in updateObj) {
-				if(updateObj.hasOwnProperty(field)) {
-					if(!entity[field]) entity[field] = {};
-					entity[field]._ = updateObj[field];
+			objectAzurifier(YYYY_MM, "Video ID", "Policy", updateObj, function(err, azurifiedObj) {
+				for (field in azurifiedObj) {
+					if(azurifiedObj.hasOwnProperty(field)) {
+						if(!entity[field]) entity[field] = {};
+						entity[field]._ = updateObj[field]._;
+					}
 				}
-			}
+			});
 
 			self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
 				if(err) return callback(err);

@@ -1,21 +1,41 @@
-function deAzurifier(objectToDeAzurify, callback) {
+function deAzurifier(thingToDeAzurify, callback) {
 	"use strict";
 
-	var deAzurifiedObj = {};
-	objectToDeAzurify.PartitionKey 	= null;
-	objectToDeAzurify.RowKey 				= null;
-	objectToDeAzurify.Timestamp 		= null;
-	objectToDeAzurify[".metadata"] 	= null;
+	var inputTypeIsArray = Array.isArray(thingToDeAzurify),
+			arrayOfContaminatedObjects = !inputTypeIsArray ? [thingToDeAzurify] : thingToDeAzurify;
 
-	for(var prop in objectToDeAzurify) {
-		if(objectToDeAzurify.hasOwnProperty(prop) &&
-				objectToDeAzurify[prop] !== null &&
-				objectToDeAzurify[prop]._) {
-			deAzurifiedObj[prop] = objectToDeAzurify[prop]._;
+	// May be significantly faster to use standard cached for loop - adjust if performance is an issue
+	// Also, sullied properties remain legal-characterified as per objectAzurifier
+	// (underscores rather than spaces, hyphens and question marks, no brackets)
+	var deAzurifiedArrayOfDecontaminatedObjects = arrayOfContaminatedObjects.map(function(candidate) {
+
+		var deAzurifiedObj = {},
+				sulliedProp;
+
+		candidate.PartitionKey 	= null;
+		candidate.RowKey 				= null;
+		candidate.Timestamp 		= null;
+		candidate[".metadata"] 	= null;
+
+		for(sulliedProp in candidate) {
+			if(candidate.hasOwnProperty(sulliedProp) &&
+					candidate[sulliedProp] !== null &&
+					candidate[sulliedProp]._) {
+				deAzurifiedObj[sulliedProp] = candidate[sulliedProp]._;
+			}
 		}
-	}
 
-	return callback(null, deAzurifiedObj);
+		return deAzurifiedObj;
+	});
+
+	// You reap what you sow pal
+	if (!callback) {
+		if(!inputTypeIsArray) return deAzurifiedArrayOfDecontaminatedObjects[0];
+		else return deAzurifiedArrayOfDecontaminatedObjects;
+	} else {
+		if(!inputTypeIsArray) return callback(null, deAzurifiedArrayOfDecontaminatedObjects[0]);
+		else return callback(null, deAzurifiedArrayOfDecontaminatedObjects);
+	}
 }
 
 module.exports = deAzurifier;

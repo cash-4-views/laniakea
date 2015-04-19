@@ -1,8 +1,10 @@
 var azure  					= require("azure-storage"),
 		Baby 					  = require("babyparse"),
+		fs 							= require("fs"),
 		objectAzurifier = require("../utils/objectAzurifier"),
-		csvTrimmer 			= require("../utils/csvTrimmer"),
-		fs 							= require("fs");
+		deAzurifier 		= require("../utils/deAzurifier"),
+		csvTrimmer 			= require("../utils/csvTrimmer");
+
 
 function Report(storageClient, tableName) {
 	"use strict";
@@ -21,38 +23,37 @@ Report.prototype = {
 		var self = this;
 
 		var nextContinuationToken = null;
+
 		var query = new azure.TableQuery()
 		  										.where("PartitionKey == ?", YYYY_MM);
 
-		 if(customid) query = query.and("Custom ID == ?", customid);
+		if(customid) query = query.and("Custom_ID == ?", customid);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
 			if(err) return callback(err);
 			else if (results.continuationToken) {
-				console.log(results.continuationToken);
         nextContinuationToken = results.continuationToken;
-        return self.getNextBatch(query, nextContinuationToken, results, callback);
-      }
-			else return callback(null, result.entries);
+				var batchOfRows = results.entries;
+
+        return self.getNextBatch(query, nextContinuationToken, batchOfRows, callback);
+      } else {
+				return callback(null, results.entries);
+			}
 		});
 	},
 
-	getNextBatch: function(query, continuationToken, results, callback) {
+	getNextBatch: function(query, continuationToken, batchOfRows, callback) {
 		"use strict";
 		var self = this;
-		var nextContinuationToken = null;
-		var totalResults;
 
-		if (!continuationToken) return callback(result);
-		else self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, newResults) {
+		if (!continuationToken) return deAzurifier(batchOfRows, callback);
+		else self.storageClient.queryEntities(self.tableName, query, continuationToken, function entitiesQueried(err, newRows) {
 			if(err) return callback(err);
-			totalResults = results.concat(newResults);
 
-			if (newResults.continuationToken) {
-				nextContinuationToken = newResults.continuationToken;
-				return self.getNextBatch(query, nextContinuationToken, totalResults, callback);
-			}
-			else return callback(null, totalResults);
+			var totalResults = batchOfRows.concat(newRows.entries);
+			var nextContinuationToken = newRows.continuationToken;
+
+			return self.getNextBatch(query, nextContinuationToken, totalResults, callback);
 		});
 	},
 

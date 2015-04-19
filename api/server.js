@@ -1,6 +1,7 @@
 var Hapi 				 = require('hapi'),
 		fs 					 = require("fs"),
 		Path 				 = require('path'),
+		Baby 				 = require("babyparse"),
 		bcrypt 			 = require("bcrypt-nodejs"),
 		azure 			 = require("azure-storage"),
 		Account 		 = require("./models/Account"),
@@ -10,8 +11,8 @@ var Hapi 				 = require('hapi'),
 
 var tableSvc = azure.createTableService(config.database.dbacc, config.database.dbkey),
 		account  = new Account(tableSvc, config.database.atable),
+		approved = new ApprovedList(tableSvc, config.database.atable),
 		report   = new Report(tableSvc, config.database.rtable),
-		approved = new ApprovedList(tableSvc, config.database.rtable),
 		server   = new Hapi.Server();
 
 server.connection({
@@ -57,14 +58,13 @@ var loginHandler = function(req, reply) {
 	"use strict";
 
 	var deets = req.payload;
-
-	if(!deets.password || !deets.username) return reply("Missing username or password");
+	if(!deets.password || !deets.email) return reply("Missing email or password");
 
 	var opts = {
-		url: "/api/v1/accounts/" + deets.username,
+		url: "/api/v1/accounts/" + deets.email,
 		method: "GET",
 		credentials: {
-			username: deets.username
+			email: deets.email
 		}
 	};
 
@@ -72,7 +72,6 @@ var loginHandler = function(req, reply) {
 		if(!res) {
 			return reply("Error with logging in pal:", err);
 		} else {
-			console.log(res.payload);
 			var returnedAccount = res.result;
 			bcrypt.compare(deets.password, returnedAccount.password, function(err, res) {
 				if(err) return reply("Whoops error");
@@ -80,8 +79,8 @@ var loginHandler = function(req, reply) {
 				else {
 
 					var profile = {
-						username: returnedAccount.username,
-						customid: returnedAccount.customid,
+						email: returnedAccount.email,
+						customid: returnedAccount.customid
 					};
 					req.auth.session.clear();
 
@@ -147,11 +146,43 @@ var accountHandler = function(req, reply) {
 	});
 };
 
+var getCSVHandler = function(req, reply) {
+	"use strict";
+
+	var partitionKey = req.params.YYYY_MM,
+			customid = req.auth.credentials.customid;
+
+	var opts = {
+		url: "/api/v1/reports/" + partitionKey + "/" + customid,
+		method: "GET",
+		credentials: {
+			customid: customid
+		}
+	};
+
+	server.inject(opts, function(res) {
+		return reply(Baby.unparse(res.result));
+	});
+
+};
+
 var adminHandler = function(req, reply) {
 	"use strict";
 
 	if(!req.auth.credentials.admin) return reply.redirect("/account");
-	else return reply.view("admin");
+	else {
+		var opts = {
+			url: "/api/v1/accounts",
+			method: "GET",
+			credentials: {
+				admin: true
+			}
+		};
+		server.inject(opts, function(res) {
+			reply.view("admin2", {accounts: res.result});
+		});
+	}
+
 };
 
 // API - Accounts
@@ -162,7 +193,7 @@ var getAccounts = function(req, reply) {
 
 	account.getAccounts(function(err, accounts) {
 		if(err) return reply(err);
-		else return reply(null, accounts);
+		else return reply(accounts);
 	});
 };
 
@@ -176,7 +207,6 @@ var createSingleAccount = function(req, reply) {
 		if(err) return reply("error hashing password, ", hash);
 
 		var newAccount = {
-			username : req.payload.username,
 			customid : req.payload.customid,
 			password : hash,
 			email 	 : req.payload.email,
@@ -194,13 +224,12 @@ var createSingleAccount = function(req, reply) {
 var getSingleAccount = function(req, reply) {
 	"use strict";
 
-	var username = req.params.username;
-
-	if(!req.auth.credentials.admin && req.params.username !== req.auth.credentials.username) {
+	var email = req.params.email;
+	if(!req.auth.credentials.admin && req.params.email !== req.auth.credentials.email) {
 		return reply("You're not authorised to do that");
 	}
 
-	account.getSingleAccount(username, function(err, account) {
+	account.getSingleAccount(email, function(err, account) {
 		if(err) {
 			console.log(err);
 			return reply(null);
@@ -244,7 +273,7 @@ var createSingleReport = function(req, reply) {
 var getSingleReport = function(req, reply) {
 	"use strict";
 
-	var PKey 		 = req.params.YYYY + "_" + req.params.MM;
+	var PKey 		 = req.params.YYYY_MM;
 	var customid = req.params.customid;
 
 	if(!customid) {
@@ -255,13 +284,13 @@ var getSingleReport = function(req, reply) {
 			return reply(totalResults);
 		});
 
-	} else if(customid !== req.auth.credentials.customid) {
+	} else if(!req.auth.credentials.admin && customid !== req.auth.credentials.customid) {
 		return reply("That is not your report to take");
 
 	} else {
 		report.getSingleReport(PKey, customid, function(err, totalResults) {
-		if(err) return reply(err);
-		return reply(totalResults);
+			if(err) return reply(err);
+			return reply(totalResults);
 		});
 
 	}
@@ -272,7 +301,7 @@ var updateSingleReport = function(req, reply) {
 
 	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
 
-	var PKey 		  = req.params.YYYY + "_" + req.params.MM,
+	var PKey 		  = req.params.YYYY_MM,
 			updateObj = {},
 			fieldToUpdate;
 
@@ -322,6 +351,28 @@ var updateApproved = function(req, reply) {
 server.route([
 
 	{
+		path: '/{param*}',
+		method: 'GET',
+		handler: {
+      directory: {
+        path: Path.resolve(__dirname + '/../public'),
+    		index: true
+      }
+		},
+		config: {
+			auth: {
+				mode: "try",
+				strategy: "session"
+			},
+			plugins: {
+				"hapi-auth-cookie": {
+					redirectTo: false
+				}
+			}
+		}
+	},
+
+	{
 		path: "/",
 		method: "GET",
 		config: {
@@ -363,13 +414,6 @@ server.route([
 		}
 	},
 
-	{
-		path: "/addAccount",
-		method: "POST",
-		config: {
-			handler: addAccountHandler
-		}
-	},
 
 	{
 		path: "/account",
@@ -387,6 +431,21 @@ server.route([
 		}
 	},
 
+	{
+		path: "/addAccount",
+		method: "POST",
+		config: {
+			handler: addAccountHandler
+		}
+	},
+
+	{
+		path: "/getCSV/{YYYY_MM}",
+		method: "GET",
+		config: {
+			handler: getCSVHandler
+		}
+	},
 	// barebones api for our eyes only ;)
 	// accounts
 	{
@@ -406,7 +465,7 @@ server.route([
 	},
 
 	{
-		path: "/api/v1/accounts/{username}",
+		path: "/api/v1/accounts/{email}",
 		method: "GET",
 		config: {
 			handler: getSingleAccount
@@ -427,7 +486,7 @@ server.route([
 	},
 
 	{
-		path: "/api/v1/reports/{YYYY}/{MM}/{customid?}",
+		path: "/api/v1/reports/{YYYY_MM}/{customid?}",
 		method: "GET",
 		config: {
 			handler: getSingleReport
@@ -435,7 +494,7 @@ server.route([
 	},
 
 	{
-		path: "/api/v1/reports/{YYYY}/{MM}/{videoid}",
+		path: "/api/v1/reports/{YYYY_MM}/{videoid}",
 		method: "PUT",
 		config: {
 			handler: updateSingleReport

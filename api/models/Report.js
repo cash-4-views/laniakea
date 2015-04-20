@@ -17,7 +17,7 @@ function Report(storageClient, tableName) {
 
 Report.prototype = {
 
-	getSingleReport: function(YYYY_MM, customid, approved, callback) {
+	getReport: function(YYYY_MM, customid, approved, callback) {
 		"use strict";
 		var self = this;
 
@@ -60,19 +60,7 @@ Report.prototype = {
 		});
 	},
 
-	createSingleReportRow: function(YYYY_MM, report, callback) {
-		"use strict";
-		var self = this;
-
-		objectAzurifier(YYYY_MM, "Video ID", "Policy", report, function(error, azurifiedObj) {
-			self.storageClient.insertEntity(self.tableName, azurifiedObj, function entityInserted(err) {
-				if(err) return callback(err);
-				else return callback(null);
-			});
-		});
-	},
-
-	createBatchedReport: function(YYYY_MM, csvReport, callback) {
+	createReport: function(YYYY_MM, csvReport, callback) {
 		"use strict";
 		var self = this;
 
@@ -114,7 +102,7 @@ Report.prototype = {
 					azurifiedReportHolder.forEach(function(rep, ind) {
 						self.storageClient.insertOrReplaceEntity(self.tableName, rep, function(err) {
 							if (ind%base === 0) {
-								console.log(Math.floor(ind/base), "% completed");
+								console.log(ind/base/10, "% completed");
 							}
 							if (err) {
 								errorCounter += 1;
@@ -123,11 +111,17 @@ Report.prototype = {
 									err: err,
 									rep: rep
 								};
+								fs.appendFile("errorlog.json", JSON.stringify(errorObj), function(err) {
+									return;
+								});
 							}
 							if(ind === holderLength-1) {
-								objectAzurifier("customidlist", "y" + YYYY_MM, null, customidObject, function(err, azurifiedList) {
+								customidObject.RowKey = "y" + YYYY_MM;
+								objectAzurifier("customidlist", "RowKey", null, customidObject, function(err, azurifiedList) {
+									console.log(azurifiedList);
 									self.storageClient.insertOrReplaceEntity(self.tableName, azurifiedList, function(err) {
 										if (err) {
+											console.log(err);
 											errorCounter += 1;
 											var errorObj = {
 												ind: "customidlist",
@@ -136,6 +130,7 @@ Report.prototype = {
 											};
 										}
 										console.log("Done, that took ", Date.now() - timestampPrep, "/ms to upload " + holderLength + " rows and there were " + errorCounter, " errors");
+										if(errorCounter) console.log("Check errorlog.json for details");
 										return callback(null, "success!");
 									});
 								});
@@ -149,7 +144,20 @@ Report.prototype = {
 		});
 	},
 
-	updateSingleReportRow: function(YYYY_MM, rKey, updateObj, callback) {
+	createReportRow: function(YYYY_MM, report, callback) {
+		"use strict";
+		var self = this;
+
+		objectAzurifier(YYYY_MM, "Video ID", "Policy", report, function(error, azurifiedObj) {
+			self.storageClient.insertEntity(self.tableName, azurifiedObj, function entityInserted(err) {
+				if(err) return callback(err);
+				else return callback(null);
+			});
+		});
+	},
+
+
+	updateReportRow: function(YYYY_MM, rKey, updateObj, callback) {
 		"use strict";
 		var self = this;
 
@@ -193,7 +201,7 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		self.getSingleReport(YYYY_MM, customid, null, function(err, arrayOfResults) {
+		self.getReport(YYYY_MM, customid, null, function(err, arrayOfResults) {
 			if(err) return callback(err);
 
 			arrayOfResults.map(function(ele) {

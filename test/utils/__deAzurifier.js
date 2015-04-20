@@ -24,7 +24,8 @@ Test("The deAzurifier function - a well-formatted azure object", function(t) {
 		admin: true
 	};
 
-	deAzurifier(objectToDeAzurify,function(objectWeGotBack) {
+	deAzurifier(objectToDeAzurify, function(err, objectWeGotBack) {
+		t.notOk(err, "shouldn't give us an error");
 		t.deepEqual(objectWeGotBack, objectWeWant, "should return a successfully de-azurinated object");
 		t.end();
 	});
@@ -49,7 +50,8 @@ Test("The deAzurifier function - a well-formatted azure object with falsy values
 
 	var objectWeWant = {};
 
-	deAzurifier(objectToDeAzurify,function(objectWeGotBack) {
+	deAzurifier(objectToDeAzurify,function(err, objectWeGotBack) {
+		t.notOk(err, "shouldn't give us an error");
 		t.deepEqual(objectWeGotBack, objectWeWant, "should return a successfully de-azurinated object without falsy fields");
 		t.end();
 	});
@@ -75,7 +77,8 @@ Test("The deAzurifier function - a well-formatted azure object with inheritance"
 		username: "timmy"
 	};
 
-	deAzurifier(objectToDeAzurify,function(objectWeGotBack) {
+	deAzurifier(objectToDeAzurify, function(err, objectWeGotBack) {
+		t.notOk(err, "shouldn't give us an error");
 		t.deepEqual(objectWeGotBack, objectWeWant, "should return a successfully de-azurinated object without inherited properties");
 		t.end();
 	});
@@ -99,7 +102,8 @@ Test("The deAzurifier function - a badly-formatted azure object", function(t) {
 		phone: 12312412,
 	};
 
-	deAzurifier(objectToDeAzurify,function(objectWeGotBack) {
+	deAzurifier(objectToDeAzurify, function(err, objectWeGotBack) {
+		t.notOk(err, "shouldn't give us an error");
 		t.deepEqual(objectWeGotBack, objectWeWant, "should return a successfully de-azurinated object without falsy fields");
 		t.end();
 	});

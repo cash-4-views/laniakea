@@ -1,0 +1,286 @@
+var fs 					 = require("fs"),
+		Path 				 = require('path'),
+		Baby 				 = require("babyparse"),
+		azure 			 = require("azure-storage"),
+		config 			 = require("../config"),
+		Account 		 = require("../models/Account"),
+		Report 			 = require("../models/Report"),
+		ApprovedList = require("../models/ApprovedList"),
+		deAzurifier  = require("../utils/deAzurifier");
+
+var tableSvc 		 = azure.createTableService(config.database.dbacc, config.database.dbkey),
+		account  		 = new Account(tableSvc, config.database.atable),
+		approvedList = new ApprovedList(tableSvc, config.database.atable),
+		report   		 = new Report(tableSvc, config.database.rtable);
+
+module.exports = {
+
+	statics: {
+		directory: {
+			path: Path.resolve(__dirname + '/../../public'),
+			index: true
+		}
+	},
+
+	home: function(req, reply) {
+		"use strict";
+
+		return reply.redirect("/login");
+	},
+
+	login: function(req, reply) {
+		"use strict";
+
+		if(req.method.toUpperCase() === "GET") {
+			if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
+			else if(req.auth.isAuthenticated) return reply.redirect("/account");
+			else return reply.view("login");
+		}
+
+		var deets = req.payload;
+		if(!deets.password || !deets.email) return reply("Missing email or password");
+
+		account.getSingleAccount(deets.email, function(err, returnedAccount) {
+			if(err) return reply(err);
+
+			account.comparePassword(deets.password, returnedAccount.password, function(err) {
+				if(err) return reply(err);
+
+				var profile = {
+					email: returnedAccount.email,
+					customid: returnedAccount.customid
+				};
+
+				req.auth.session.clear();
+
+				if(returnedAccount.admin) {
+					profile.admin = true;
+					req.auth.session.set(profile);
+
+					return reply.redirect("/admin");
+				} else {
+					req.auth.session.set(profile);
+
+					return reply.redirect("/account");
+				}
+
+			});
+		});
+
+	},
+
+	logout: function(req, reply) {
+		"use strict";
+
+		req.auth.session.clear();
+		return reply.redirect('/');
+	},
+
+	account: function(req, reply) {
+		"use strict";
+
+		if(req.auth.credentials.admin) return reply.redirect("/admin");
+
+		var customid = req.auth.credentials.customid;
+
+		approvedList.getApproved(customid, null, function(err, approvedList) {
+			if(err) return reply(err);
+			else 		return reply.view("account", {user: req.auth.credentials, approvedList: approvedList});
+		});
+	},
+
+	admin: function(req, reply) {
+		"use strict";
+
+		if(!req.auth.credentials.admin) return reply.redirect("/account");
+
+		account.getAccounts(function(err, accounts) {
+			if(err) return reply(err);
+			else 		return reply.view("admin", {accounts: accounts});
+		});
+	},
+
+// API
+// Accounts
+	getAccounts: function(req, reply) {
+		"use strict";
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that").code(403);
+		var csv = req.query.csv;
+
+		account.getAccounts(function(err, accounts) {
+			if(err) 			return reply(err);
+			else if(csv) 	return reply(Baby.unparse(accounts)).type("text/csv");
+			else 					return reply(accounts);
+		});
+	},
+
+	createSingleAccount: function(req, reply) {
+		"use strict";
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+		// Use JOI for validation
+		account.hashPassword(req.payload.password, function(err, hash) {
+			if(err) return reply("error hashing password");
+
+			var newAccount = {
+				customid : req.payload.customid,
+				password : hash,
+				email 	 : req.payload.email,
+				phone 	 : req.payload.phone,
+				admin 	 : false
+			};
+
+			account.createSingleAccount(newAccount, function(err) {
+				if(err) return reply(err.statusCode + ": " + err.code);
+				else return reply("Account successfully created");
+			});
+		});
+	},
+
+	getSingleAccount: function(req, reply) {
+		"use strict";
+
+		var email = req.params.email,
+				csv   = req.query.csv;
+
+		if(!req.auth.credentials.admin && req.params.email !== req.auth.credentials.email) {
+			return reply("You're not authorised to do that");
+		}
+
+		account.getSingleAccount(email, function(err, account) {
+			if(err) 			return reply(err).code(404);
+			else if(csv) 	return reply(Baby.unparse(account)).type("text/csv");
+			else 					return reply(account);
+		});
+	},
+
+// Reports
+	getReport: function(req, reply) {
+		"use strict";
+
+		var creds 			= req.auth.credentials,
+				PKey 		 		= req.params.YYYY_MM,
+				customid 		= (req.params.customid === undefined) ? null : req.params.customid,
+				csv 			 	= req.query.csv,
+				approveBool = (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null;
+
+		if(customid) {
+			if(!creds.admin && customid !== creds.customid) {
+				return reply().code(403);
+			} else {
+				approvedList.getApproved(customid, PKey, function(err, approvedArray) {
+
+					if(!creds.admin && approvedArray.length === 0) {
+						return reply("That report is not available to you yet");
+					} else {
+						report.getReport(PKey, customid, approveBool, function(err, reportResults) {
+							if(err) return reply(err);
+
+							return deAzurifier(reportResults, function(err, formattedArray) {
+								if(csv) return reply(Baby.unparse(formattedArray)).type("text/csv");
+								else 		return reply(formattedArray);
+							});
+
+						});
+					}
+				});
+			}
+		} else if(!customid) {
+			if(!creds.admin) return reply().code(403);
+
+			report.getReport(PKey, customid, approveBool, function(err, totalResults) {
+				if(err) return reply(err);
+
+				return deAzurifier(totalResults, function(err, formattedArray) {
+					if(err) 			return reply(err);
+					else if(csv) 	return reply(Baby.unparse(formattedArray)).type("text/csv");
+					else 					return reply(formattedArray);
+				});
+			});
+		}
+	},
+
+	createReport: function(req, reply) {
+		"use strict";
+
+		var uploadInfo = req.payload['upload-report'].hapi;
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+		if(uploadInfo.headers["content-type"] !== "text/csv") return reply("Not a csv");
+	  reply("Your report is being processed");
+
+		var date = uploadInfo.filename.match(/_([\d]{8})_/i)[1];
+
+		var YYYY_MM = date.slice(0, 4) + "_" + date.slice(4, 6);
+		var uploadStream = req.payload["upload-report"];
+
+		var body = '';
+
+	  uploadStream.on('data', function (chunk) {
+	    body += chunk;
+	  });
+
+	  uploadStream.on('end', function () {
+	    var data = body;
+	    report.createReport(YYYY_MM, data, function(err, alert) {
+	    	return console.log(alert);
+	    });
+		});
+	},
+
+
+	updateReportRow: function(req, reply) {
+		"use strict";
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+		var PKey 		  = req.params.YYYY_MM,
+				RKey		 	= req.params.videoid_policy;
+
+		report.updateReportRow(PKey, RKey, req.payload, function(err) {
+			if(err) return reply(err);
+			else return reply(null);
+		});
+	},
+
+// Approved
+	getApproved: function(req, reply) {
+		"use strict";
+
+		var customid = req.params.customid,
+				YYYY_MM  = req.params[YYYY_MM];
+
+		if(!req.auth.credentials.admin && customid !== req.auth.credentials.customid) {
+			return reply("You're not authorised to do that");
+		} else {
+			approved.getApproved(customid, YYYY_MM, function(err, approvedList) {
+				if(err) return reply(err);
+				else return reply(approvedList);
+			});
+		}
+	},
+
+	updateApproved: function(req, reply) {
+		"use strict";
+
+		var customid = req.params.customid,
+				YYYY_MM  = req.params[YYYY_MM];
+
+		if(!req.auth.credentials.admin) {
+			return reply("You're not authorised to do that");
+		} else {
+			report.approveAllOfCustomID(YYYY_MM, customid, function(err) {
+				if(err) {
+					return reply("There was an error approving" + err);
+			 	} else {
+			 		approved.updateApproved(customid, YYYY_MM, function(err) {
+					if(err) return reply(err);
+					else return reply("successfully approved");
+					});
+				}
+			});
+		}
+	}
+};

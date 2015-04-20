@@ -1,5 +1,26 @@
+/**
+* DeAzurifies an object
+*
+* Merely trims off the azure value-wrapping
+* So turns {key: {_: "val", $: "type"}} into {key: val}
+* Does not transform characters back into their illegal variants
+*
+* @param {object/array} 	thingToDeAzurify 			The object or set of objects to decontaminate
+*	@param {errorOrResult}	callback 							Optional callback - contains error details
+* 																							or a decontaminated thing of the same type
+* 																							as was put in (array->array, obj->obj)
+*
+* @return {object/array/callback}								As per input type, callback-contingent
+*/
+
 function deAzurifier(thingToDeAzurify, callback) {
 	"use strict";
+
+	if(typeof(thingToDeAzurify) !== 'object') {
+		var err = new Error("Input must be an object or array");
+		if(callback) return callback(err);
+		else return err;
+	}
 
 	var inputTypeIsArray = Array.isArray(thingToDeAzurify),
 			arrayOfContaminatedObjects = !inputTypeIsArray ? [thingToDeAzurify] : thingToDeAzurify;
@@ -33,10 +54,10 @@ function deAzurifier(thingToDeAzurify, callback) {
 	// You reap what you sow pal
 	if (!callback) {
 		if(!inputTypeIsArray) return deAzurifiedArrayOfDecontaminatedObjects[0];
-		else return deAzurifiedArrayOfDecontaminatedObjects;
+		else 									return deAzurifiedArrayOfDecontaminatedObjects;
 	} else {
 		if(!inputTypeIsArray) return callback(null, deAzurifiedArrayOfDecontaminatedObjects[0]);
-		else return callback(null, deAzurifiedArrayOfDecontaminatedObjects);
+		else 									return callback(null, deAzurifiedArrayOfDecontaminatedObjects);
 	}
 }
 

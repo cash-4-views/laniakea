@@ -405,12 +405,33 @@ var updateApproved = function(req, reply) {
 	}
 };
 
+
 server.route([
 
 	 {
 	 	path : "/notify",
 	 	method : "GET",
 	 	handler : notify
+	 },
+
+	 {
+	 	path: "/index",
+	 	method : "GET",
+	 	handler : function(request, reply) {
+	 		"use strict";
+	 		reply.file("./public/assets/index.html");
+	 	},
+	 	config: {
+	 		auth: {
+	 			mode: "try",
+	 			strategy: "session"
+	 		},
+	 		plugins: {
+	 			"hapi-auth-cookie": {
+	 				redirectTo: false
+	 			}
+	 		}
+	 	}
 	 },
 
 	{

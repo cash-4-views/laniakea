@@ -30,7 +30,7 @@ function router(ctrlr) {
 		{ path: "/login", 																			method: ["GET", "POST"], 	handler: ctrlr.login.bind(ctrlr), 						config: tryButDontRedirectMePleaseConfig 	},
 		{ path: "/logout", 																			method: "GET", 						handler: ctrlr.logout.bind(ctrlr) 																											},
 
-		{ path: "/myaccount", 																	method: "GET", 						handler: ctrlr.myAccount.bind(ctrlr) 																											},
+		{ path: "/myaccount", 																	method: "GET", 						handler: ctrlr.myAccount.bind(ctrlr) 																										},
 		{ path: "/admin", 																			method: "GET", 						handler: ctrlr.admin.bind(ctrlr) 																												},
 
 		// api

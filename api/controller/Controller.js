@@ -3,12 +3,13 @@ var fs 					 = require("fs"),
 		Baby 				 = require("babyparse"),
 		deAzurifier  = require("../utils/deAzurifier");
 
-function Controller(models) {
+function Controller(models, toolbox) {
 	"use strict";
 
 	this.account 			= models.account;
 	this.approvedList = models.approvedList;
 	this.report 			= models.report;
+	this.messages 		= toolbox.messages;
 }
 
 Controller.prototype = {
@@ -135,9 +136,24 @@ Controller.prototype = {
 				admin 	 : false
 			};
 
+			var mailAccount = {
+				subscribed: true,
+				address: req.payload.email,
+				name: req.payload.customid,
+				vars: {}
+			};
+
 			self.account.createSingleAccount(newAccount, function(err) {
 				if(err) return reply(err.statusCode + ": " + err.code);
-				else 		return reply("Account successfully created");
+				else {
+					self.messages.addToMailingList(mailAccount, function(error) {
+						if(err) console.log("list error: ", error);
+					});
+					self.messages.sendEmail("approve", newAccount, function(error) {
+						if(err) console.log("list error: ", error);
+						return reply("Account successfully created, a confirmation email has been sent to you");
+					});
+				}
 			});
 		});
 	},

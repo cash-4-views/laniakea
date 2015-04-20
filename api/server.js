@@ -1,7 +1,9 @@
+
 var Hapi 				 = require('hapi'),
 		config 			 = require("./config"),
+		Messages 		 = require("./messages/Messages"),
 		router 			 = require("./router/router"),
-		Controller 	 = require("./controller/controller"),
+		Controller 	 = require("./controller/Controller"),
 		Account 		 = require("./models/Account"),
 		Report 			 = require("./models/Report"),
 		ApprovedList = require("./models/ApprovedList");
@@ -14,9 +16,12 @@ var models = {
 	report   		 : new Report(tableSvc, config.database.rtable)
 };
 
-var ctrlr  = new Controller(models),
-		server = new Hapi.Server();
+var toolbox = {
+	messages : new Messages(config.mailgun)
+};
 
+var ctrlr  = new Controller(models, toolbox),
+		server = new Hapi.Server();
 
 server.connection({
 	port: process.env.PORT || 8000

@@ -1,7 +1,22 @@
 var Hapi 				 = require('hapi'),
 		config 			 = require("./config"),
-		routes 			 = require("./router/routes");
-		server 			 = new Hapi.Server();
+		router 			 = require("./router/router"),
+		Controller 	 = require("./controller/controller"),
+		Account 		 = require("./models/Account"),
+		Report 			 = require("./models/Report"),
+		ApprovedList = require("./models/ApprovedList");
+
+var tableSvc 		 = require("azure-storage").createTableService(config.database.dbacc, config.database.dbkey);
+
+var models = {
+	account  		 : new Account(tableSvc, config.database.atable),
+	approvedList : new ApprovedList(tableSvc, config.database.atable),
+	report   		 : new Report(tableSvc, config.database.rtable)
+};
+
+var ctrlr  = new Controller(models),
+		server = new Hapi.Server();
+
 
 server.connection({
 	port: process.env.PORT || 8000
@@ -34,6 +49,6 @@ server.views({
 
 });
 
-server.route(routes);
+server.route(router(ctrlr));
 
 module.exports = server;

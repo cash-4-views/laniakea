@@ -21,11 +21,11 @@ ApprovedList.prototype = {
 		var query = new azure.TableQuery()
 													.where("RowKey == ?", customid);
 
-		if(YYYY_MM) query = query.and("YYYY_MM == ?", YYYY_MM);
+		if(YYYY_MM) query = query.and("y" + YYYY_MM + " == ?", YYYY_MM);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
 			if(err) return callback(err);
-			else return callback(null, results);
+			else return callback(null, results.entries);
 		});
 	},
 
@@ -37,7 +37,7 @@ ApprovedList.prototype = {
 			if(err) return callback(err);
 			else if(!entity) {
 				var newObj = {};
-				newObj[YYYY_MM] = YYYY_MM;
+				newObj["y" + YYYY_MM] = YYYY_MM;
 
 				objectAzurifier(self.partitionKey, customid, newObj, function(error, processedObj) {
 					self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
@@ -46,8 +46,8 @@ ApprovedList.prototype = {
 					});
 				});
 			} else {
-				if(!entity[YYYY_MM]) entity[YYYY_MM] = {};
-				entity[YYYY_MM]._ = YYYY_MM;
+				if(!entity["y" + YYYY_MM]) entity[YYYY_MM] = {};
+				entity["y" + YYYY_MM]._ = YYYY_MM;
 
 				self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
 					if(err) return callback(err);

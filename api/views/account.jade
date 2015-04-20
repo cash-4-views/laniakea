@@ -1,3 +1,9 @@
 doctype html
 body
 	h1 this is the account page
+	h2 The following reports are available for download:
+	each thing in approvedlist
+		each prop, key in thing
+			if(key.indexOf("y") === 0)
+				h1 #{prop._}
+				a(href="/getCSV/" + prop._) Download

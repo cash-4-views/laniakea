@@ -2,7 +2,6 @@ var azure  					= require("azure-storage"),
 		Baby 					  = require("babyparse"),
 		fs 							= require("fs"),
 		objectAzurifier = require("../utils/objectAzurifier"),
-		deAzurifier 		= require("../utils/deAzurifier"),
 		csvTrimmer 			= require("../utils/csvTrimmer");
 
 
@@ -18,7 +17,7 @@ function Report(storageClient, tableName) {
 
 Report.prototype = {
 
-	getSingleReport: function(YYYY_MM, customid, callback) {
+	getSingleReport: function(YYYY_MM, customid, approved, callback) {
 		"use strict";
 		var self = this;
 
@@ -27,7 +26,11 @@ Report.prototype = {
 		var query = new azure.TableQuery()
 		  										.where("PartitionKey == ?", YYYY_MM);
 
-		if(customid) query = query.and("Custom_ID == ?", customid);
+		if(customid === false) query = query.and("Custom_ID != ?", '');
+		else if(customid !== null) query = query.and("Custom_ID == ?", customid);
+
+		if(approved === true) query = query.and("approved == ?", true);
+		else if(approved === false) query = query.and("approved != ?", true);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
 			if(err) return callback(err);
@@ -46,7 +49,7 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		if (!continuationToken) return deAzurifier(batchOfRows, callback);
+		if (!continuationToken) return callback(null, batchOfRows);
 		else self.storageClient.queryEntities(self.tableName, query, continuationToken, function entitiesQueried(err, newRows) {
 			if(err) return callback(err);
 
@@ -74,6 +77,7 @@ Report.prototype = {
 		var self = this;
 
 		var azurifiedReportHolder = [],
+				customidObject = {},
 				timestampPrep = Date.now(),
 				bloodyTwice = false;
 
@@ -85,9 +89,10 @@ Report.prototype = {
 				header: true,
 
 				step: function(row) {
-					rowNumber += 1;
 					objectAzurifier(YYYY_MM, "Video ID", "Policy", row.data[0], function(err, azurifiedObj) {
+						azurifiedObj.approved = {_: false, $: "Edm.Boolean"};
 						azurifiedReportHolder.push(azurifiedObj);
+						customidObject[azurifiedObj["Custom_ID"]._] = azurifiedObj["Custom_ID"]._;
 						return;
 					});
 				},
@@ -102,10 +107,15 @@ Report.prototype = {
 					console.log("Trimming, parsing and batching took ", Date.now()-timestampPrep, "/ms");
 
 					var errorCounter = 0,
-							holderLength = azurifiedReportHolder.length;
+							holderLength = azurifiedReportHolder.length,
+							base  	 		 = Math.floor(holderLength/1000),
+							n;
 
 					azurifiedReportHolder.forEach(function(rep, ind) {
-						self.storageClient.insertEntity(self.tableName, rep, function(err) {
+						self.storageClient.insertOrReplaceEntity(self.tableName, rep, function(err) {
+							if (ind%base === 0) {
+								console.log(Math.floor(ind/base), "% completed");
+							}
 							if (err) {
 								errorCounter += 1;
 								var errorObj = {
@@ -113,18 +123,28 @@ Report.prototype = {
 									err: err,
 									rep: rep
 								};
-								return fs.appendFile("errorbatcher.json", JSON.stringify(errorObj), function(err) {
-									return;
+							}
+							if(ind === holderLength-1) {
+								objectAzurifier("customidlist", "y" + YYYY_MM, null, customidObject, function(err, azurifiedList) {
+									self.storageClient.insertOrReplaceEntity(self.tableName, azurifiedList, function(err) {
+										if (err) {
+											errorCounter += 1;
+											var errorObj = {
+												ind: "customidlist",
+												err: err,
+												rep: azurifiedList
+											};
+										}
+										console.log("Done, that took ", Date.now() - timestampPrep, "/ms to upload " + holderLength + " rows and there were " + errorCounter, " errors");
+										return callback(null, "success!");
+									});
 								});
-							} else if(!err && ind === holderLength-1) {
-								console.log("Done, that took ", Date.now() - timestampPrep, "/ms in azurifiedReportHolder, and there were " + errorCounter, " errors");
-								return callback(null, "success!");
 							}
 						});
+
 					});
 
 				}
-
 			});
 		});
 	},
@@ -137,7 +157,7 @@ Report.prototype = {
 			if(err) return callback(err);
 			var field;
 
-			objectAzurifier(YYYY_MM, "Video ID", "Policy", updateObj, function(err, azurifiedObj) {
+			objectAzurifier(null, null, null, updateObj, function(err, azurifiedObj) {
 				for (field in azurifiedObj) {
 					if(azurifiedObj.hasOwnProperty(field)) {
 						if(!entity[field]) entity[field] = {};
@@ -151,6 +171,41 @@ Report.prototype = {
 				else return callback(null);
 			});
 		});
+	},
+
+	getCustomIDList: function(YYYY_MM, callback) {
+		"use strict";
+		var self = this;
+
+		var nextContinuationToken = null;
+
+		var query = new azure.TableQuery()
+		  										.where("PartitionKey == ?", "customidlist")
+		  										.and("RowKey == ?", "y" + YYYY_MM);
+
+		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
+			if(err) return callback(err);
+			return callback(null, results.entries);
+		});
+	},
+
+	approveAllOfCustomID: function(YYYY_MM, customid, callback) {
+		"use strict";
+		var self = this;
+
+		self.getSingleReport(YYYY_MM, customid, null, function(err, arrayOfResults) {
+			if(err) return callback(err);
+
+			arrayOfResults.map(function(ele) {
+				ele.approved = {_: true, $: "Edm.Boolean"};
+				self.storageClient.mergeEntity(self.tableName, ele, function(err, res) {
+					if(err) return callback(err);
+					else return callback(null);
+				});
+			});
+
+		});
+
 	}
 
 };

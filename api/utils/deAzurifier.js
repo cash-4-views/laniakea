@@ -17,6 +17,8 @@ function deAzurifier(thingToDeAzurify, callback) {
 		candidate.Timestamp 		= null;
 		candidate[".metadata"] 	= null;
 
+		if(candidate.approved) candidate.approved = null;
+
 		for(sulliedProp in candidate) {
 			if(candidate.hasOwnProperty(sulliedProp) &&
 					candidate[sulliedProp] !== null &&

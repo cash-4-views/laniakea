@@ -7,6 +7,7 @@ var Hapi 				 = require('hapi'),
 		Account 		 = require("./models/Account"),
 		Report 			 = require("./models/Report"),
 		ApprovedList = require("./models/ApprovedList"),
+		deAzurifier  = require("./utils/deAzurifier"),
 		config 			 = require("./config");
 
 var tableSvc = azure.createTableService(config.database.dbacc, config.database.dbkey),
@@ -69,13 +70,15 @@ var loginHandler = function(req, reply) {
 	};
 
 	server.inject(opts, function(res) {
-		if(!res) {
-			return reply("Error with logging in pal:", err);
+		if(res.statusCode === 404) {
+			return reply("Error with logging in pal: that account doesn't exist.");
 		} else {
 			var returnedAccount = res.result;
 			bcrypt.compare(deets.password, returnedAccount.password, function(err, res) {
-				if(err) return reply("Whoops error");
-				else if (!res) return reply("Dodgy password pal");
+				if(err) {
+					console.log(err);
+					return reply("Whoops error");
+				} else if (!res) return reply("Dodgy password pal");
 				else {
 
 					var profile = {
@@ -96,27 +99,6 @@ var loginHandler = function(req, reply) {
 			});
 		}
 	});
-};
-
-var addAccountHandler = function(req, reply) {
-	"use strict";
-
-	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
-
-	var opts = {
-		url: "/api/v1/accounts",
-		method: "POST",
-		credentials: {
-			admin: true
-		},
-		payload: req.payload
-	};
-
-	server.inject(opts, function(err) {
-		if(err) return reply("Whoops, there was an error creating that account: ", err);
-		else return reply("Account successfully created");
-	});
-
 };
 
 var logoutHandler = function(req, reply) {
@@ -146,14 +128,14 @@ var accountHandler = function(req, reply) {
 	});
 };
 
-var getCSVHandler = function(req, reply) {
+var accountReportHandler = function(req, reply) {
 	"use strict";
 
 	var partitionKey = req.params.YYYY_MM,
 			customid = req.auth.credentials.customid;
 
 	var opts = {
-		url: "/api/v1/reports/" + partitionKey + "/" + customid,
+		url: "/api/v1/reports/" + partitionKey + "/" + customid + "?approved=true&csv=" + req.query.csv,
 		method: "GET",
 		credentials: {
 			customid: customid
@@ -161,7 +143,7 @@ var getCSVHandler = function(req, reply) {
 	};
 
 	server.inject(opts, function(res) {
-		return reply(Baby.unparse(res.result));
+		reply(res.result);
 	});
 
 };
@@ -180,6 +162,33 @@ var adminHandler = function(req, reply) {
 		};
 		server.inject(opts, function(res) {
 			reply.view("admin2", {accounts: res.result});
+		});
+	}
+
+};
+
+var adminReportHandler = function(req, reply) {
+	"use strict";
+
+	if(!req.auth.credentials.admin) return reply.redirect("/account");
+	else {
+		var opts = {
+			url: "/api/v1/reports/2015_01",
+			method: "GET",
+			credentials: {
+				admin: true
+			}
+		};
+
+		if(req.query.approved) opts.url += "?approved=true";
+
+		server.inject(opts, function(res) {
+			reports.getCustomIDList("y2015_01", function(err, badObj) {
+				if(err) return reply(err);
+				deAzurifier(badObj, function(err, niceObj) {
+					reply.view("adminReport", {report: res.result, customidlist: niceObj});
+				});
+			});
 		});
 	}
 
@@ -231,8 +240,7 @@ var getSingleAccount = function(req, reply) {
 
 	account.getSingleAccount(email, function(err, account) {
 		if(err) {
-			console.log(err);
-			return reply(null);
+			return reply().code(404);
 		}
 		return reply(account);
 	});
@@ -248,6 +256,7 @@ var createSingleReport = function(req, reply) {
 
 	if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
 	if(uploadInfo.headers["content-type"] !== "text/csv") return reply("Not a csv");
+  reply("Your report is being processed");
 
 	var date = uploadInfo.filename.match(/_([\d]{8})_/i)[1];
 
@@ -263,34 +272,51 @@ var createSingleReport = function(req, reply) {
   uploadStream.on('end', function () {
     var data = body;
     report.createBatchedReport(YYYY_MM, data, function(err, alert) {
-    	if(err) return reply(err);
-    	else reply(alert);
+    	return console.log(alert);
     });
 	});
-
 };
 
 var getSingleReport = function(req, reply) {
 	"use strict";
 
-	var PKey 		 = req.params.YYYY_MM;
-	var customid = req.params.customid;
+	var PKey 		 		= req.params.YYYY_MM,
+			customid 		= req.params.customid,
+			csv 			 	= req.query.csv,
+			approveBool = (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null;
 
+	// If customid is falsy
 	if(!customid) {
 		if(!req.auth.credentials.admin)return reply("You're not authorised to do that");
-
-		else report.getSingleReport(PKey, null, function(err, totalResults) {
-			if(err) return reply(err);
-			return reply(totalResults);
-		});
+		else {
+			// It may be that the user wants items regardless of custom id, or with no custom id
+			customid = (customid === undefined) ? null : false;
+				report.getSingleReport(PKey, customid, approveBool, function(err, totalResults) {
+				if(err) return reply(err);
+				return deAzurifier(totalResults, function(err, formattedArray) {
+					if(csv) {
+						reply(Baby.unparse(formattedArray)).type("text/csv");
+					} else reply(formattedArray);
+				});
+			});
+		}
 
 	} else if(!req.auth.credentials.admin && customid !== req.auth.credentials.customid) {
 		return reply("That is not your report to take");
-
 	} else {
-		report.getSingleReport(PKey, customid, function(err, totalResults) {
-			if(err) return reply(err);
-			return reply(totalResults);
+		approved.getApproved(customid, PKey, function(err, approvedArray) {
+			if(approvedArray.length !== 1 && !req.auth.credentials.admin) {
+				return reply("That report is not available yet");
+			} else {
+				report.getSingleReport(PKey, customid, true, function(err, totalResults) {
+					if(err) return reply(err);
+					return deAzurifier(totalResults, function(err, formattedArray) {
+						if(csv) {
+							reply(Baby.unparse(formattedArray)).type("text/csv");
+						} else reply(formattedArray);
+					});
+				});
+			}
 		});
 
 	}
@@ -341,9 +367,14 @@ var updateApproved = function(req, reply) {
 	if(!req.auth.credentials.admin) {
 		return reply("You're not authorised to do that");
 	} else {
-		approved.updateApproved(customid, YYYY_MM, function(err) {
-			if(err) return reply(err);
-			else return reply("successfully approved");
+		report.approveAllOfCustomID(YYYY_MM, customid, function(err) {
+			if(err) return reply("There was an error approving" + err);
+		 	else {
+		 		approved.updateApproved(customid, YYYY_MM, function(err) {
+				if(err) return reply(err);
+				else return reply("successfully approved");
+				});
+			}
 		});
 	}
 };
@@ -432,10 +463,10 @@ server.route([
 	},
 
 	{
-		path: "/addAccount",
-		method: "POST",
+		path: "/admin/reports",
+		method: "GET",
 		config: {
-			handler: addAccountHandler
+			handler: adminReportHandler
 		}
 	},
 
@@ -443,7 +474,7 @@ server.route([
 		path: "/getCSV/{YYYY_MM}",
 		method: "GET",
 		config: {
-			handler: getCSVHandler
+			handler: accountReportHandler
 		}
 	},
 	// barebones api for our eyes only ;)

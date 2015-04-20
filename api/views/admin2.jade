@@ -19,16 +19,16 @@ body
 			#navbar.navbar-collapse.collapse
 				ul.nav.navbar-nav.navbar-right
 					li
-						a(href='#') Reports
+						a(href='/admin/reports') Reports
 					li
-						a(href='#') Accounts
+						a(href='/admin') Accounts
 					li
-						a(href='#') Uploads
+						a(href='/admin/uploads') Uploads
 					li
 						a(href='/logout') Logout
 	.container-fluid
 		.row
-			.col-sm-3.col-md-2.sidebar
+			.col-sm-2.col-md-1.sidebar
 				ul.nav.nav-sidebar
 					li.active
 						a(href='#')
@@ -38,42 +38,51 @@ body
 						a(href='#') Reports
 					li
 						a(href='#') Uploads
-			.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
+			.col-sm-10.col-sm-offset-2.col-md-11.col-md-offset-1.main
 				h1.page-header Accounts
 				.table-responsive
 					table.table.table-striped
 						thead
 							tr
-								th Custom ID
 								th Email
+								th Custom ID
 								th Phone
 						tbody
 							if(accounts)
 								each account in accounts
 									tr
-										td #{account.customid._}
 										td #{account.email._}
+										td #{account.customid._}
 										td #{account.phone._}
 				h3.sub-header Add an account
 				.row.placeholders
-					form.form-horizontal(action="/addAccount", method="POST")
+					form.form-horizontal(action="/api/v1/accounts", method="POST")
 						fieldset
 							.form-group
-								label.col-md-1.control-label(for='password') Password
-								.col-md-1
-									input#password.form-control.input-md(name='password', type='text', placeholder='********')
 								label.col-md-1.control-label(for='email') Email
 								.col-md-3
 									input#email.form-control.input-md(name='email', type='text', placeholder='useremail@email.com')
-							.form-group
-								label.col-md-2.control-label(for='customid') Custom ID (Username)
+								label.col-md-1.control-label(for='password') Password
 								.col-md-2
+									input#password.form-control.input-md(name='password', type='text', placeholder='********')
+							.form-group
+								label.col-md-1.control-label(for='customid') Custom ID
+								.col-md-3
 									input#customid.form-control.input-md(name='customid', type='text', placeholder='')
 								label.col-md-1.control-label(for='phone') Phone #
 								.col-md-2
 									input#phone.form-control.input-md(name='phone', type='text', placeholder='01234555666')
-								.col-md-4
+								.col-md-1
 									button#submit.btn.btn-primary(name='submit', type="submit") Create
+				h3.sub-header Upload a CSV report
+				.row.placeholders
+					form.form-horizontal(action="/api/v1/reports", method="POST", enctype='multipart/form-data')
+						.form-group
+							label.col-md-2.control-label(for='upload') Upload Your File
+							.col-md-2
+								input#upload.input-file(name='upload-report', type='file')
+							.col-md-1
+								button#submit.btn.btn-primary(type='submit', value='Upload') Upload
 
 	script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js')
 	script(src='/assets/js/bootstrap.min.js')

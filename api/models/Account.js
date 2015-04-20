@@ -20,7 +20,7 @@ Account.prototype = {
 		var self = this;
 
 		var query = new azure.TableQuery()
-											.select(["username", "customid", "email", "phone"])
+											.select(["customid", "email", "phone"])
 											.where("PartitionKey == ?", self.partitionKey);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function(err, result, response) {
@@ -29,11 +29,11 @@ Account.prototype = {
 		});
 	},
 
-	getSingleAccount: function(username, callback) {
+	getSingleAccount: function(email, callback) {
 		"use strict";
 		var self = this;
 
-		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, username, function entityQueried(err, entity) {
+		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, email, function entityQueried(err, entity) {
 			if(err) return callback(err);
 			else {
 				return deAzurifier(entity, callback);
@@ -45,7 +45,7 @@ Account.prototype = {
 		"use strict";
 		var self = this;
 
-		objectAzurifier(self.partitionKey, "username", item, function(error, processedAccount) {
+		objectAzurifier(self.partitionKey, "email", null, item, function(error, processedAccount) {
 			self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
  				if(err) return callback(err);
 				else return callback(null);
@@ -53,20 +53,22 @@ Account.prototype = {
 		});
 	},
 
-	updateSingleAccount: function(rKey, updateObj, callback) {
+	updateSingleAccount: function(email, updateObj, callback) {
 		"use strict";
 		var self = this;
 
-		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, rKey, function entityQueried(err, entity) {
+		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, email, function entityQueried(err, entity) {
 			if(err) return callback(err);
 			var field;
 
-			for (field in updateObj) {
-				if(updateObj.hasOwnProperty(field)) {
-					if(!entity[field]) entity[field] = {};
-					entity[field]._ = updateObj[field];
+			objectAzurifier(YYYY_MM, "Video ID", "Policy", updateObj, function(err, azurifiedObj) {
+				for (field in azurifiedObj) {
+					if(azurifiedObj.hasOwnProperty(field)) {
+						if(!entity[field]) entity[field] = {};
+						entity[field]._ = updateObj[field]._;
+					}
 				}
-			}
+			});
 
 			self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
 				if(err) return callback(err);

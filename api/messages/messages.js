@@ -71,7 +71,7 @@ module.exports = {
 
 		list.members().create(data, function(err, data) {
 			if (err) console.log("members err: " + err);
-			console.log("members added to mailing list: " + data.member.name);
+			console.log("member added to mailing list: " + data.member.name);
 		});
 	},
 

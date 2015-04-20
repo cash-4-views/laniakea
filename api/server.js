@@ -477,7 +477,6 @@ server.route([
 		}
 	},
 
-
 	{
 		path: "/account",
 		method: "GET",

@@ -16,10 +16,16 @@
     "azure-storage": "^0.4.3",
     "babyparse": "^0.4.3",
     "bcrypt-nodejs": "0.0.3",
+    "griddle-react": "^0.2.12",
+    "gulp": "^3.8.11",
+    "gulp-browserify": "^0.5.1",
+    "gulp-concat": "^2.5.2",
     "hapi": "^8.4.0",
     "hapi-auth-cookie": "^2.0.0",
     "jade": "^1.9.2",
-    "papaparse": "^4.1.0"
+    "papaparse": "^4.1.0",
+    "react": "^0.13.2",
+    "reactify": "^1.1.0"
   },
   "author": "cash-4-views",
   "license": "ISC"

@@ -1,7 +1,10 @@
 var azure  					= require("azure-storage"),
 		Baby 					  = require("babyparse"),
+		fs 							= require("fs"),
 		objectAzurifier = require("../utils/objectAzurifier"),
+		deAzurifier 		= require("../utils/deAzurifier"),
 		csvTrimmer 			= require("../utils/csvTrimmer");
+
 
 function Report(storageClient, tableName) {
 	"use strict";
@@ -20,38 +23,37 @@ Report.prototype = {
 		var self = this;
 
 		var nextContinuationToken = null;
+
 		var query = new azure.TableQuery()
 		  										.where("PartitionKey == ?", YYYY_MM);
 
-		 if(customid) query = query.and("Custom ID == ?", customid);
+		if(customid) query = query.and("Custom_ID == ?", customid);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
 			if(err) return callback(err);
 			else if (results.continuationToken) {
-				console.log(results.continuationToken);
         nextContinuationToken = results.continuationToken;
-        return self.getNextBatch(query, nextContinuationToken, results, callback);
-      }
-			else return callback(null, result.entries);
+				var batchOfRows = results.entries;
+
+        return self.getNextBatch(query, nextContinuationToken, batchOfRows, callback);
+      } else {
+				return callback(null, results.entries);
+			}
 		});
 	},
 
-	getNextBatch: function(query, continuationToken, results, callback) {
+	getNextBatch: function(query, continuationToken, batchOfRows, callback) {
 		"use strict";
 		var self = this;
-		var nextContinuationToken = null;
-		var totalResults;
 
-		if (!continuationToken) return callback(result);
-		else self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, newResults) {
+		if (!continuationToken) return deAzurifier(batchOfRows, callback);
+		else self.storageClient.queryEntities(self.tableName, query, continuationToken, function entitiesQueried(err, newRows) {
 			if(err) return callback(err);
-			totalResults = results.concat(newResults);
 
-			if (newResults.continuationToken) {
-				nextContinuationToken = newResults.continuationToken;
-				return self.getNextBatch(query, nextContinuationToken, totalResults, callback);
-			}
-			else return callback(null, totalResults);
+			var totalResults = batchOfRows.concat(newRows.entries);
+			var nextContinuationToken = newRows.continuationToken;
+
+			return self.getNextBatch(query, nextContinuationToken, totalResults, callback);
 		});
 	},
 
@@ -59,63 +61,68 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		objectAzurifier(YYYY_MM, "Video ID", report, function(error, processedReport) {
-			self.storageClient.insertEntity(self.tableName, processedReport, function entityInserted(err) {
+		objectAzurifier(YYYY_MM, "Video ID", "Policy", report, function(error, azurifiedObj) {
+			self.storageClient.insertEntity(self.tableName, azurifiedObj, function entityInserted(err) {
 				if(err) return callback(err);
 				else return callback(null);
 			});
 		});
 	},
 
-	createBatchedReports: function(YYYY_MM, csvReport, callback) {
+	createBatchedReport: function(YYYY_MM, csvReport, callback) {
 		"use strict";
 		var self = this;
 
-		var batchHolder = [];
-		var reportsInOneBatch = 99;
-		var timestampPrep = Date.now();
-		var n = 0;
+		var azurifiedReportHolder = [],
+				timestampPrep = Date.now(),
+				bloodyTwice = false;
 
 		csvTrimmer(csvReport, null, null, function(err, trimmedCSV) {
 			if(err) return callback(err);
+			console.log("Parsing started");
 
 			Baby.parse(trimmedCSV, {
 				header: true,
+
 				step: function(row) {
-					if(n === 0 && !batchHolder[n]) console.log(row);
-					objectAzurifier(YYYY_MM, "Video ID", row.data[0], function(err, azurifiedObj) {
-						if (!batchHolder[n]) {
-							batchHolder[n] = new azure.TableBatch();
-						}	else if (batchHolder[n].size() === reportsInOneBatch) {
-							n += 1;
-							batchHolder[n] = new azure.TableBatch();
-						}
-						return batchHolder[n].insertEntity(azurifiedObj);
+					rowNumber += 1;
+					objectAzurifier(YYYY_MM, "Video ID", "Policy", row.data[0], function(err, azurifiedObj) {
+						azurifiedReportHolder.push(azurifiedObj);
+						return;
 					});
 				},
+
 				complete: function(results) {
+					if(bloodyTwice) {
+						return;
+					}
+					bloodyTwice = true;
+
 					console.log("Parsing complete! Errors: ", results.errors);
 					console.log("Trimming, parsing and batching took ", Date.now()-timestampPrep, "/ms");
-					console.log("Starting batch upload: ");
-					var totalBatchSize = 0;
 
-					batchHolder.forEach(function(batch, index) {
-						var timestampBatch = Date.now();
-						totalBatchSize += batch.size();
-						if(batchHolder.length === index+1) {
-							console.log("The total number of row headers is: ", results.meta.fields.length);
-							console.log("The total number of batches is: ", batchHolder.length);
-							console.log("The total number of batch operations is: ", totalBatchSize);
-						}
-						// self.storageClient.executeBatch(self.tableName, batchHolder[index], function(err, result, response) {
-						// 	if(err) {
-						// 		console.log(err);
-						// 		return callback(err);
-						// 	} else {
-						// 		return console.log("batch ", index, " completed in: ", Date.now()-timestampBatch);
-						// 	}
-						// });
+					var errorCounter = 0,
+							holderLength = azurifiedReportHolder.length;
+
+					azurifiedReportHolder.forEach(function(rep, ind) {
+						self.storageClient.insertEntity(self.tableName, rep, function(err) {
+							if (err) {
+								errorCounter += 1;
+								var errorObj = {
+									ind: ind,
+									err: err,
+									rep: rep
+								};
+								return fs.appendFile("errorbatcher.json", JSON.stringify(errorObj), function(err) {
+									return;
+								});
+							} else if(!err && ind === holderLength-1) {
+								console.log("Done, that took ", Date.now() - timestampPrep, "/ms in azurifiedReportHolder, and there were " + errorCounter, " errors");
+								return callback(null, "success!");
+							}
+						});
 					});
+
 				}
 
 			});
@@ -130,12 +137,14 @@ Report.prototype = {
 			if(err) return callback(err);
 			var field;
 
-			for (field in updateObj) {
-				if(updateObj.hasOwnProperty(field)) {
-					if(!entity[field]) entity[field] = {};
-					entity[field]._ = updateObj[field];
+			objectAzurifier(YYYY_MM, "Video ID", "Policy", updateObj, function(err, azurifiedObj) {
+				for (field in azurifiedObj) {
+					if(azurifiedObj.hasOwnProperty(field)) {
+						if(!entity[field]) entity[field] = {};
+						entity[field]._ = updateObj[field]._;
+					}
 				}
-			}
+			});
 
 			self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
 				if(err) return callback(err);

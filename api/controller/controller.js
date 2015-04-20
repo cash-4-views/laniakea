@@ -1,19 +1,17 @@
 var fs 					 = require("fs"),
 		Path 				 = require('path'),
 		Baby 				 = require("babyparse"),
-		azure 			 = require("azure-storage"),
-		config 			 = require("../config"),
-		Account 		 = require("../models/Account"),
-		Report 			 = require("../models/Report"),
-		ApprovedList = require("../models/ApprovedList"),
 		deAzurifier  = require("../utils/deAzurifier");
 
-var tableSvc 		 = azure.createTableService(config.database.dbacc, config.database.dbkey),
-		account  		 = new Account(tableSvc, config.database.atable),
-		approvedList = new ApprovedList(tableSvc, config.database.atable),
-		report   		 = new Report(tableSvc, config.database.rtable);
+function Controller(models) {
+	"use strict";
 
-module.exports = {
+	this.account 			= models.account;
+	this.approvedList = models.approvedList;
+	this.report 			= models.report;
+}
+
+Controller.prototype = {
 
 	statics: {
 		directory: {
@@ -30,6 +28,7 @@ module.exports = {
 
 	login: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		if(req.method.toUpperCase() === "GET") {
 			if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
@@ -40,10 +39,10 @@ module.exports = {
 		var deets = req.payload;
 		if(!deets.password || !deets.email) return reply("Missing email or password");
 
-		account.getSingleAccount(deets.email, function(err, returnedAccount) {
+		self.account.getSingleAccount(deets.email, function(err, returnedAccount) {
 			if(err) return reply(err);
 
-			account.comparePassword(deets.password, returnedAccount.password, function(err) {
+			self.account.comparePassword(deets.password, returnedAccount.password, function(err) {
 				if(err) return reply(err);
 
 				var profile = {
@@ -76,14 +75,15 @@ module.exports = {
 		return reply.redirect('/');
 	},
 
-	account: function(req, reply) {
+	myAccount: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		if(req.auth.credentials.admin) return reply.redirect("/admin");
 
 		var customid = req.auth.credentials.customid;
 
-		approvedList.getApproved(customid, null, function(err, approvedList) {
+		self.approvedList.getApproved(customid, null, function(err, approvedList) {
 			if(err) return reply(err);
 			else 		return reply.view("account", {user: req.auth.credentials, approvedList: approvedList});
 		});
@@ -91,10 +91,11 @@ module.exports = {
 
 	admin: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		if(!req.auth.credentials.admin) return reply.redirect("/account");
 
-		account.getAccounts(function(err, accounts) {
+		self.account.getAccounts(function(err, accounts) {
 			if(err) return reply(err);
 			else 		return reply.view("admin", {accounts: accounts});
 		});
@@ -104,11 +105,12 @@ module.exports = {
 // Accounts
 	getAccounts: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		if(!req.auth.credentials.admin) return reply("You're not authorised to do that").code(403);
 		var csv = req.query.csv;
 
-		account.getAccounts(function(err, accounts) {
+		self.account.getAccounts(function(err, accounts) {
 			if(err) 			return reply(err);
 			else if(csv) 	return reply(Baby.unparse(accounts)).type("text/csv");
 			else 					return reply(accounts);
@@ -117,11 +119,12 @@ module.exports = {
 
 	createSingleAccount: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
 
 		// Use JOI for validation
-		account.hashPassword(req.payload.password, function(err, hash) {
+		self.account.hashPassword(req.payload.password, function(err, hash) {
 			if(err) return reply("error hashing password");
 
 			var newAccount = {
@@ -132,15 +135,16 @@ module.exports = {
 				admin 	 : false
 			};
 
-			account.createSingleAccount(newAccount, function(err) {
+			self.account.createSingleAccount(newAccount, function(err) {
 				if(err) return reply(err.statusCode + ": " + err.code);
-				else return reply("Account successfully created");
+				else 		return reply("Account successfully created");
 			});
 		});
 	},
 
 	getSingleAccount: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		var email = req.params.email,
 				csv   = req.query.csv;
@@ -149,7 +153,7 @@ module.exports = {
 			return reply("You're not authorised to do that");
 		}
 
-		account.getSingleAccount(email, function(err, account) {
+		self.account.getSingleAccount(email, function(err, account) {
 			if(err) 			return reply(err).code(404);
 			else if(csv) 	return reply(Baby.unparse(account)).type("text/csv");
 			else 					return reply(account);
@@ -159,6 +163,7 @@ module.exports = {
 // Reports
 	getReport: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		var creds 			= req.auth.credentials,
 				PKey 		 		= req.params.YYYY_MM,
@@ -170,12 +175,12 @@ module.exports = {
 			if(!creds.admin && customid !== creds.customid) {
 				return reply().code(403);
 			} else {
-				approvedList.getApproved(customid, PKey, function(err, approvedArray) {
+				self.approvedList.getApproved(customid, PKey, function(err, approvedArray) {
 
 					if(!creds.admin && approvedArray.length === 0) {
 						return reply("That report is not available to you yet");
 					} else {
-						report.getReport(PKey, customid, approveBool, function(err, reportResults) {
+						self.report.getReport(PKey, customid, approveBool, function(err, reportResults) {
 							if(err) return reply(err);
 
 							return deAzurifier(reportResults, function(err, formattedArray) {
@@ -190,7 +195,7 @@ module.exports = {
 		} else if(!customid) {
 			if(!creds.admin) return reply().code(403);
 
-			report.getReport(PKey, customid, approveBool, function(err, totalResults) {
+			self.report.getReport(PKey, customid, approveBool, function(err, totalResults) {
 				if(err) return reply(err);
 
 				return deAzurifier(totalResults, function(err, formattedArray) {
@@ -204,6 +209,7 @@ module.exports = {
 
 	createReport: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		var uploadInfo = req.payload['upload-report'].hapi;
 
@@ -224,7 +230,7 @@ module.exports = {
 
 	  uploadStream.on('end', function () {
 	    var data = body;
-	    report.createReport(YYYY_MM, data, function(err, alert) {
+	    self.report.createReport(YYYY_MM, data, function(err, alert) {
 	    	return console.log(alert);
 	    });
 		});
@@ -233,13 +239,14 @@ module.exports = {
 
 	updateReportRow: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
 
 		var PKey 		  = req.params.YYYY_MM,
 				RKey		 	= req.params.videoid_policy;
 
-		report.updateReportRow(PKey, RKey, req.payload, function(err) {
+		self.report.updateReportRow(PKey, RKey, req.payload, function(err) {
 			if(err) return reply(err);
 			else return reply(null);
 		});
@@ -248,6 +255,7 @@ module.exports = {
 // Approved
 	getApproved: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		var customid = req.params.customid,
 				YYYY_MM  = req.params[YYYY_MM];
@@ -255,7 +263,7 @@ module.exports = {
 		if(!req.auth.credentials.admin && customid !== req.auth.credentials.customid) {
 			return reply("You're not authorised to do that");
 		} else {
-			approved.getApproved(customid, YYYY_MM, function(err, approvedList) {
+			self.approved.getApproved(customid, YYYY_MM, function(err, approvedList) {
 				if(err) return reply(err);
 				else return reply(approvedList);
 			});
@@ -264,6 +272,7 @@ module.exports = {
 
 	updateApproved: function(req, reply) {
 		"use strict";
+		var self = this;
 
 		var customid = req.params.customid,
 				YYYY_MM  = req.params[YYYY_MM];
@@ -271,11 +280,11 @@ module.exports = {
 		if(!req.auth.credentials.admin) {
 			return reply("You're not authorised to do that");
 		} else {
-			report.approveAllOfCustomID(YYYY_MM, customid, function(err) {
+			self.report.approveAllOfCustomID(YYYY_MM, customid, function(err) {
 				if(err) {
 					return reply("There was an error approving" + err);
 			 	} else {
-			 		approved.updateApproved(customid, YYYY_MM, function(err) {
+			 		self.approved.updateApproved(customid, YYYY_MM, function(err) {
 					if(err) return reply(err);
 					else return reply("successfully approved");
 					});
@@ -283,4 +292,7 @@ module.exports = {
 			});
 		}
 	}
+
 };
+
+module.exports = Controller;

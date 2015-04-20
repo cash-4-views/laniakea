@@ -137,6 +137,7 @@ Test("/logout, without auth", function(t) {
 	});
 });
 
+
 Test("/logout, with auth", function(t) {
 	"use strict";
 

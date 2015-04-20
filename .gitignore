@@ -35,3 +35,6 @@ sampledata
 # Bloody credentials
 credentials.json
 testcredentials.json
+
+#Build
+public/assets/js/main.js

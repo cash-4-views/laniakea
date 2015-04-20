@@ -8,5 +8,12 @@ module.exports = {
 	},
 	cookie : {
 				password: process.env.COOKIESECRET || require("./credentials.json").cookie.cookie_secret
+	},
+	mailgun : {
+				apiKey   	: 												 require("./credentials.json").mailgun.mgApiKey,
+				domain		: process.env.DOMAIN 		|| require("./credentials.json").mailgun.mgDomain,
+				mailLists : process.env.MAILLISTS || require("./credentials.json").mailgun.mailLists,
+				listURL   : process.env.LISTURL   || require("./credentials.json").mailgun.listURL
+
 	}
 };

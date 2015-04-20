@@ -5,33 +5,13 @@ var mailgun   = require("mailgun-js")({ apiKey : api_key, domain : domain });
 var mailLists = config.mailgun.mailLists;
 var list = mailgun.lists("members@sandbox4922452d57df45d891c470ce3aa4ee3e.mailgun.org");
 
-list.info(function(err, data){
-	"use strict";
-	if (err) console.log("list err: " + err);
-	// console.log(data);
-});
-
-var bob = {
-	name: "Bob",
-	address: "bob@yahoo.com"
-};
-
-
-
-// list.members().list(function (err, members) {
-//   console.log(members);
-// });
-
-
-
 
 var messageTemplates = {
 
     approve: function (message, data) {
     	"use strict";
-
     	message.subject = "Your account has been approved";
-    	message.text		= "Hi " + data.username + ". \n\nThank you for signing up to receive online revenue reports from Laniakea. Please add this email address to your contacts to avoid further communication being filtered as spam.";
+    	message.text		= "Hi " + data.customid + ". \n\nThank you for signing up to receive online revenue reports from Laniakea. Please add this email address to your contacts to avoid further communication being filtered as spam.";
     	return message;
     },
 
@@ -49,7 +29,6 @@ getRecipient = function(data) {
 	"use strict";
 
 	if(data.email.indexOf("@") !== -1) return data.email;
-	console.log()
 
 	var found = mailLists.filter (function(val, index) {
 		return(val.name === data.email);

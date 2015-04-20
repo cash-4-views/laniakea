@@ -66,7 +66,6 @@ var accounts = {
 };
 
 
-
 var homeHandler = function(req, reply) {
 	"use strict";
 
@@ -94,7 +93,6 @@ var loginHandler = function(req, reply) {
 			return reply("Error with logging in pal:", err);
 		} else {
 			var returnedAccount = res.result;
-			// console.log(res.result);
 			bcrypt.compare(deets.password, returnedAccount.password, function(err, res) {
 				if(err) return reply("Whoops error");
 				else if (!res) return reply("Dodgy password pal");
@@ -135,34 +133,12 @@ var addAccountHandler = function(req, reply) {
 		};
 
 		server.inject(opts, function(err) {
-			var newAccount = {
-				username : username,
-				customid : customid,
-				password : hash,
-				email 	 : email,
-				phone 	 : phone
-			};
 
-			accounts[username] = newAccount;
-
-			var newMember = {
-				subscribed: true,
-				address: email,
-				name: username,
-				vars: {}
-			};
-
-			if(err) return reply("Whoops, there was an error creating that account: ", err);
-			else {
-				messages.addToMailingList(newMember, function(err) {
-					if (err) console.log("list error: " + err);
-				});
-
-				messages.sendEmail("approve", newAccount, function(err) {
-					if (err) console.log("error: " + err);
-				});
-				return reply("Account successfully created");
-		}
+			if(err) {
+				console.log("creation error: " + Object.keys(err));
+				return reply("Whoops, there was an error creating that account: ",  err);
+			}
+			else return reply("Account successfully created");
 	});
 };
 
@@ -210,7 +186,6 @@ var getCSVHandler = function(req, reply) {
 	server.inject(opts, function(res) {
 		return reply(Baby.unparse(res.result));
 	});
-
 };
 
 var adminHandler = function(req, reply) {
@@ -229,7 +204,6 @@ var adminHandler = function(req, reply) {
 			reply.view("admin2", {accounts: res.result});
 		});
 	}
-
 };
 
 
@@ -282,9 +256,24 @@ var createSingleAccount = function(req, reply) {
 			admin 	 : false
 		};
 
+		var newMember = {
+			subscribed: true,
+			address: req.payload.email,
+			name: req.payload.customid,
+			vars: {}
+		};
+
 		account.createSingleAccount(newAccount, function(err) {
 			if(err) return reply(err.statusCode + ": " + err.code);
-			else return reply("Account successfully created");
+			else {
+				messages.addToMailingList(newMember, function(err) {
+					if (err) console.log("list error: " + err);
+				});
+				messages.sendEmail("approve", newAccount, function(err) {
+					if (err) console.log("error: " + err);
+				});
+				return reply("Account successfully created");
+			}
 		});
 	});
 };
@@ -417,16 +406,6 @@ var updateApproved = function(req, reply) {
 };
 
 server.route([
-
-	{
-    path: "/{param}",
-    method: "GET",
-    handler: {
-        directory: {
-            path: path.join(__dirname) + "../../public"
-        }
-	    }
-	 },
 
 	 {
 	 	path : "/notify",

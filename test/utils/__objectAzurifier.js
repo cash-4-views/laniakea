@@ -32,8 +32,8 @@ Test("The objectAzurifier function - an illegal-character input object", functio
 	var objectToAzurify = {
 		username: "timmy",
 		phone: "01999191999",
-		admin: true,
-		"  --dog-eater": "happy",
+		"123admin": true,
+		"  --dog-ea1ter": "happy",
 		"Tea?  ": "biscuits",
 		"m()oe syzlack": "lol"
 	};
@@ -43,8 +43,8 @@ Test("The objectAzurifier function - an illegal-character input object", functio
 		RowKey: { "$": "Edm.String", _: "timmy_01999191999" },
 		username: { "$": "Edm.String",_: "timmy" },
 		phone: { "$": "Edm.String",_: "01999191999" },
-		admin: { "$": "Edm.String",_: true },
-		"dog_eater": { "$": "Edm.String",_: "happy" },
+		"_123admin": { "$": "Edm.String",_: true },
+		"dog_ea1ter": { "$": "Edm.String",_: "happy" },
 		"Tea": { "$": "Edm.String",_: "biscuits" },
 		"moe_syzlack": { "$": "Edm.String",_: "lol" }
 	};
@@ -96,6 +96,29 @@ Test("The objectAzurifier function - an input object without partition or row ke
 
 	var objectWeWant = {
 		Custom_ID: { "$": "Edm.String",_: "a901masi9" },
+	};
+
+
+	objectAzurifier(null, null, null, objectToAzurify, function(err, objectWeGotBack) {
+		t.notOk(err, "should not return an error");
+		t.deepEqual(objectWeGotBack, objectWeWant, "should return a successfully azurinated object, without partition or row keys");
+		t.end();
+	});
+});
+
+Test("The objectAzurifier function - a wonky input object with pre-existing partition or row keys", function(t) {
+	"use strict";
+
+	var objectToAzurify = {
+		PartitionKey: { "$": "Edm.String", _: "users" },
+		RowKey: { "$": "Edm.String", _: "timmy" },
+		"Custom ID": "a901masi9",
+	};
+
+	var objectWeWant = {
+		PartitionKey: { "$": "Edm.String", _: "users" },
+		RowKey: { "$": "Edm.String", _: "timmy" },
+		Custom_ID: { "$": "Edm.String",_: "a901masi9" }
 	};
 
 

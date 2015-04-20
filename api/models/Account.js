@@ -1,4 +1,5 @@
 var azure  					= require("azure-storage"),
+		bcrypt 					= require("bcrypt-nodejs"),
 		objectAzurifier = require("../utils/objectAzurifier"),
 		deAzurifier 		= require("../utils/deAzurifier");
 
@@ -74,6 +75,25 @@ Account.prototype = {
 				if(err) return callback(err);
 				else return callback(null);
 			});
+		});
+	},
+
+	comparePassword: function(password1, password2, callback) {
+		"use strict";
+
+		bcrypt.compare(password1, password2, function(err, res) {
+			if(err) return callback(err);
+			else if(!res) return callback("dodgy password");
+			else return callback(null);
+		});
+	},
+
+	hashPassword: function(password, callback) {
+		"use strict";
+
+		bcrypt.hash(password, null, null, function(err, hash) {
+			if(err) return callback(err);
+			else return callback(null, hash);
 		});
 	}
 

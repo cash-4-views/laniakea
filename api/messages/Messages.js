@@ -25,7 +25,8 @@ function Messages(mailConfig) {
 
 	this.mailgun 					= mailgun({ apiKey : mailConfig.apiKey, domain : mailConfig.domain });
 	this.mailLists 				= mailConfig.mailLists;
-	this.list 	 					= this.mailgun.lists(mailConfig.listURL);
+	this.domain 					= mailConfig.domain;
+	this.list 	 					= this.mailgun.lists("members@" + this.domain);
 }
 
 Messages.prototype = {
@@ -82,7 +83,7 @@ Messages.prototype = {
 		var self = this;
 
 		var message = {
-			from: "mail@sandbox4922452d57df45d891c470ce3aa4ee3e.mailgun.org"
+			from: "mail@" + self.domain
 		};
 
 		console.log("Message sent from :" + message.from);

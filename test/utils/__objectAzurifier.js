@@ -1,7 +1,7 @@
-var Test 	  				= require("tape"),
+var test 	  				= require("tape"),
 		objectAzurifier = require("../../api/utils/objectAzurifier");
 
-Test("The objectAzurifier function - a legal-character input object", function(t) {
+test("The objectAzurifier function - a legal-character input object", function(t) {
 	"use strict";
 
 	var objectToAzurify = {
@@ -26,7 +26,7 @@ Test("The objectAzurifier function - a legal-character input object", function(t
 	});
 });
 
-Test("The objectAzurifier function - an illegal-character input object", function(t) {
+test("The objectAzurifier function - an illegal-character input object", function(t) {
 	"use strict";
 
 	var objectToAzurify = {
@@ -57,7 +57,7 @@ Test("The objectAzurifier function - an illegal-character input object", functio
 	});
 });
 
-Test("The objectAzurifier function - an input object with inheritance", function(t) {
+test("The objectAzurifier function - an input object with inheritance", function(t) {
 	"use strict";
 
 	function ObjectSchmobject(username) {
@@ -87,7 +87,7 @@ Test("The objectAzurifier function - an input object with inheritance", function
 	});
 });
 
-Test("The objectAzurifier function - an input object without partition or row keys", function(t) {
+test("The objectAzurifier function - an input object without partition or row keys", function(t) {
 	"use strict";
 
 	var objectToAzurify = {
@@ -106,7 +106,7 @@ Test("The objectAzurifier function - an input object without partition or row ke
 	});
 });
 
-Test("The objectAzurifier function - a wonky input object with pre-existing partition or row keys", function(t) {
+test("The objectAzurifier function - a wonky input object with pre-existing partition or row keys", function(t) {
 	"use strict";
 
 	var objectToAzurify = {
@@ -129,7 +129,7 @@ Test("The objectAzurifier function - a wonky input object with pre-existing part
 	});
 });
 
-Test("The objectAzurifier function - an input object with only one row key", function(t) {
+test("The objectAzurifier function - an input object with only one row key", function(t) {
 	"use strict";
 
 	var objectToAzurify = {

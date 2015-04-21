@@ -1,12 +1,12 @@
 var azure  					= require("azure-storage"),
 		objectAzurifier = require("../utils/objectAzurifier");
 
-function ApprovedList(storageClient, tableName) {
+function ApprovedList(storageClient, tableName, partitionKey) {
 	"use strict";
 
 	this.storageClient = storageClient;
 	this.tableName = tableName;
-	this.partitionKey = "approvedlist";
+	this.partitionKey = partitionKey || "approvedlist";
 	this.storageClient.createTableIfNotExists(tableName, function tableCreated(err) {
 		if(err) throw err;
 	});
@@ -33,13 +33,18 @@ ApprovedList.prototype = {
 		"use strict";
 		var self = this;
 
+		// This logic can be condensed to a simple upsert
+		// as long as objectAzurifier does its thing
+		// Also now the leading _ specification is not required
+		// As that is taken care of by objectAzurifier
 		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, customid, function entityQueried(err, entity) {
 			if(err) return callback(err);
 			else if(!entity) {
 				var newObj = {};
-				newObj["_" + YYYY_MM] = YYYY_MM;
+				newObj[YYYY_MM] = YYYY_MM;
+				newObj[customid] = customid;
 
-				objectAzurifier(self.partitionKey, customid, newObj, function(error, processedObj) {
+				objectAzurifier(self.partitionKey, customid, null, newObj, function(error, processedObj) {
 					self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
 						if(err) return callback(err);
 						else return callback(null);

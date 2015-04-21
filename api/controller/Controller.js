@@ -31,6 +31,7 @@ Controller.prototype = {
 		"use strict";
 		var self = this;
 
+		console.log(req.method);
 		if(req.method.toUpperCase() === "GET") {
 			if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
 			else if(req.auth.isAuthenticated) return reply.redirect("/account");

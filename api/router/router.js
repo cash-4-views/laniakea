@@ -31,7 +31,7 @@ function router(ctrlr) {
 		{ path: "/logout", 																			method: "GET", 						handler: ctrlr.logout.bind(ctrlr) 																											},
 
 		{ path: "/myaccount", 																	method: "GET", 						handler: ctrlr.myAccount.bind(ctrlr) 																										},
-		{ path: "/admin", 																			method: "GET", 						handler: ctrlr.admin.bind(ctrlr) 																												},
+		{ path: "/admin/{param?}", 															method: "GET", 						handler: ctrlr.admin.bind(ctrlr) 																												},
 
 		// api
 		// accounts

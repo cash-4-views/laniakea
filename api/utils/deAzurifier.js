@@ -6,6 +6,7 @@
 * Does not transform characters back into their illegal variants
 *
 * @param {object/array} 	thingToDeAzurify 			The object or set of objects to decontaminate
+* @param {boolean}				keepKeys							Whether we should keep the PKey & RKey
 *	@param {errorOrResult}	callback 							Optional callback - contains error details
 * 																							or a decontaminated thing of the same type
 * 																							as was put in (array->array, obj->obj)
@@ -13,11 +14,11 @@
 * @return {object/array/callback}								As per input type, callback-contingent
 */
 
-function deAzurifier(thingToDeAzurify, callback) {
+function deAzurifier(thingToDeAzurify, keepKeys, callback) {
 	"use strict";
 
 	if(typeof(thingToDeAzurify) !== 'object') {
-		var err = new Error("Input must be an object or array");
+		var err = new Error("Invalid input type:" + thingToDeAzurify + "is not an object or array");
 		if(callback) return callback(err);
 		else return err;
 	}
@@ -33,8 +34,10 @@ function deAzurifier(thingToDeAzurify, callback) {
 		var deAzurifiedObj = {},
 				sulliedProp;
 
-		candidate.PartitionKey 	= null;
-		candidate.RowKey 				= null;
+		if (!keepKeys) {
+			candidate.PartitionKey 	= null;
+			candidate.RowKey 				= null;
+		}
 		candidate.Timestamp 		= null;
 		candidate[".metadata"] 	= null;
 

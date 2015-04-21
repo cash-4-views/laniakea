@@ -31,7 +31,6 @@ Controller.prototype = {
 		"use strict";
 		var self = this;
 
-		console.log(req.method);
 		if(req.method.toUpperCase() === "GET") {
 			if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
 			else if(req.auth.isAuthenticated) return reply.redirect("/account");
@@ -95,12 +94,17 @@ Controller.prototype = {
 		"use strict";
 		var self = this;
 
-		if(!req.auth.credentials.admin) return reply.redirect("/account");
+		var page = req.params.param;
 
-		self.account.getAccounts(function(err, accounts) {
-			if(err) return reply(err);
-			else 		return reply.view("admin", {accounts: accounts});
-		});
+		if(!req.auth.credentials.admin) return reply.redirect("/account");
+		if(page === "reports") {
+			return reply.view("adminReport");
+		} else {
+			self.account.getAccounts(function(err, accounts) {
+				if(err) return reply(err);
+				else 		return reply.view("admin", {accounts: accounts});
+			});
+		}
 	},
 
 // API
@@ -139,9 +143,9 @@ Controller.prototype = {
 
 			var mailAccount = {
 				subscribed: true,
-				address: req.payload.email,
-				name: req.payload.customid,
-				vars: {}
+				address 	: req.payload.email,
+				name 			: req.payload.customid,
+				vars 			: {}
 			};
 
 			self.account.createSingleAccount(newAccount, function(err) {
@@ -200,7 +204,7 @@ Controller.prototype = {
 						self.report.getReport(PKey, customid, approveBool, function(err, reportResults) {
 							if(err) return reply(err);
 
-							return deAzurifier(reportResults, function(err, formattedArray) {
+							return deAzurifier(reportResults, false, function(err, formattedArray) {
 								if(csv) return reply(Baby.unparse(formattedArray)).type("text/csv");
 								else 		return reply(formattedArray);
 							});
@@ -215,7 +219,7 @@ Controller.prototype = {
 			self.report.getReport(PKey, customid, approveBool, function(err, totalResults) {
 				if(err) return reply(err);
 
-				return deAzurifier(totalResults, function(err, formattedArray) {
+				return deAzurifier(totalResults, true, function(err, formattedArray) {
 					if(err) 			return reply(err);
 					else if(csv) 	return reply(Baby.unparse(formattedArray)).type("text/csv");
 					else 					return reply(formattedArray);
@@ -265,7 +269,7 @@ Controller.prototype = {
 
 		self.report.updateReportRow(PKey, RKey, req.payload, function(err) {
 			if(err) return reply(err);
-			else return reply(null);
+			else 		return reply(null);
 		});
 	},
 
@@ -282,7 +286,7 @@ Controller.prototype = {
 		} else {
 			self.approved.getApproved(customid, YYYY_MM, function(err, approvedList) {
 				if(err) return reply(err);
-				else return reply(approvedList);
+				else 		return reply(approvedList);
 			});
 		}
 	},
@@ -303,7 +307,7 @@ Controller.prototype = {
 			 	} else {
 			 		self.approved.updateApproved(customid, YYYY_MM, function(err) {
 					if(err) return reply(err);
-					else return reply("successfully approved");
+					else 		return reply("successfully approved");
 					});
 				}
 			});

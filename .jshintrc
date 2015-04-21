@@ -1,0 +1,5 @@
+{
+	"strict" 			  : true,
+	"sub"           : true,
+	"plusplus"      : false
+}

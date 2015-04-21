@@ -26,7 +26,7 @@ Account.prototype = {
 
 		self.storageClient.queryEntities(self.tableName, query, null, function(err, result, response) {
 			if(err) return callback(err);
-			else return callback(null, result.entries);
+			else 		return callback(null, result.entries);
 		});
 	},
 
@@ -36,9 +36,7 @@ Account.prototype = {
 
 		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, email, function entityQueried(err, entity) {
 			if(err) return callback(err);
-			else {
-				return deAzurifier(entity, callback);
-			}
+			else 		return deAzurifier(entity, callback);
 		});
 	},
 

@@ -1,8 +1,7 @@
-var React 	 = require("react"),
-		Griddle  = require("griddle-react"),
-		fakeData = require("./fakedata.json");
+var React 	= require("react"),
+		Griddle = require("griddle-react");
 
-var ReportData = React.createClass({
+var ReportViewer = React.createClass({
 
 	onClick: function(e) {
 		"use strict";
@@ -13,24 +12,11 @@ var ReportData = React.createClass({
 
 	render: function() {
 		"use strict";
-
-		var columns = [];
-
-		var columnMeta = [
-		  {
-		  "columnName": "chickendippers",
-		  "order": 1,
-		  "locked": false,
-		  "visible": true,
-		  "customComponent": CustomIDForm
-		  }
-		];
-
 		return (
 			<div>
 				<h3 className="sub-header">View Reports</h3>
 				<div>
-					<div className="btn-group btn-group-justified" role="group" aria-label="...">
+					<div className="btn-group btn-group-justified tableSelector" role="group" aria-label="...">
 					  <div className="btn-group" role="group">
 					    <button type="button" className="btn btn-success" value="approved" onClick={this.onClick}>Approved</button>
 					  </div>
@@ -54,6 +40,7 @@ var ReportData = React.createClass({
 });
 
 var CustomIDForm = React.createClass({
+
 	render: function() {
 		"use strict";
 
@@ -62,8 +49,9 @@ var CustomIDForm = React.createClass({
 				<input type="text" name="customid" value="" />
 				<button type="submit" />
 			</form>
-			);
+		);
 	}
+
 });
 
-module.exports = ReportData;
+module.exports = ReportViewer;

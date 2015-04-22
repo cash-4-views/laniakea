@@ -49,9 +49,6 @@ var ReportApprover = React.createClass({
 			            </select>
 			          </div>
 			          <div className="col-md-1">
-			            <button id="submit" value="view" className="btn btn-primary" onClick={this.onClick}>View</button>
-			          </div>
-			          <div className="col-md-1">
 			            <button id="submit" value="download" className="btn btn-primary" onClick={this.onClick}>Download</button>
 			          </div>
 			          <div className="col-md-1">

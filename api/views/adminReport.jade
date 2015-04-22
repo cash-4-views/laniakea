@@ -51,7 +51,7 @@ html
 									.col-md-3
 										select#YYYY_MM.form-control.input-md(name='YYYY_MM')
 											if reportlist
-												each YYYY_MM in reportlist
+												each YYYY_MM, key in reportlist
 													option(value=YYYY_MM) #{YYYY_MM}
 											else
 												option hi
@@ -59,7 +59,7 @@ html
 										button#submit.btn.btn-primary(name='submit', type="submit") Select
 					h3.sub-header Approve a report
 					.row.placeholders
-						form.form-horizontal(action="/api/v1/accounts", method="POST")
+						form.form-horizontal(action="/api/v1/accounts", method="GET")
 							fieldset
 								.form-group
 									label.col-md-2.control-label(for='customid') Custom ID

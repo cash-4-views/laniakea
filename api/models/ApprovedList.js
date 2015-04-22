@@ -5,8 +5,8 @@ function ApprovedList(storageClient, tableName, partitionKey) {
 	"use strict";
 
 	this.storageClient = storageClient;
-	this.tableName = tableName;
-	this.partitionKey = partitionKey || "approvedlist";
+	this.tableName 		 = tableName;
+	this.partitionKey  = partitionKey || "approvedlist";
 	this.storageClient.createTableIfNotExists(tableName, function tableCreated(err) {
 		if(err) throw err;
 	});
@@ -25,7 +25,7 @@ ApprovedList.prototype = {
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
 			if(err) return callback(err);
-			else return callback(null, results.entries);
+			else 		return callback(null, results.entries);
 		});
 	},
 
@@ -33,30 +33,19 @@ ApprovedList.prototype = {
 		"use strict";
 		var self = this;
 
-		// This logic can be condensed to a simple upsert
-		// as long as objectAzurifier does its thing
-		// Also now the leading _ specification is not required
-		// As that is taken care of by objectAzurifier
 		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, customid, function entityQueried(err, entity) {
 			if(err) return callback(err);
-			else if(!entity) {
-				var newObj = {};
+			else {
+				var newObj = entity || {};
+				if(!entity) newObj[customid] = customid;
+
 				newObj[YYYY_MM] = YYYY_MM;
-				newObj[customid] = customid;
 
 				objectAzurifier(self.partitionKey, customid, null, newObj, function(error, processedObj) {
-					self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
+					self.storageClient.insertOrMergeEntity(self.tableName, processedObj, function entityInserted(err) {
 						if(err) return callback(err);
-						else return callback(null);
+						else 		return callback(null);
 					});
-				});
-			} else {
-				if(!entity["_" + YYYY_MM]) entity[YYYY_MM] = {};
-				entity["_" + YYYY_MM]._ = YYYY_MM;
-
-				self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
-					if(err) return callback(err);
-					else return callback(null);
 				});
 			}
 

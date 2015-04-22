@@ -40,20 +40,5 @@ html
 										span.sr-only (current)
 				.col-sm-10.col-sm-offset-2.col-md-11.col-md-offset-1.main
 					h1.page-header Reports
-					h3.sub-header Select a report
-					.row.placeholders
-						form.form-horizontal(action="/api/v1/accounts", method="GET")
-							fieldset
-								.form-group
-									label.col-md-2.control-label(for='YYYY_MM') Report
-									.col-md-3
-										select#YYYY_MM.form-control.input-md(name='YYYY_MM')
-											if reportlist
-												each YYYY_MM, key in reportlist
-													option(value=YYYY_MM) #{YYYY_MM}
-											else
-												option hi
-									.col-md-1
-										button#submit.btn.btn-primary(name='submit', type="submit") Select
 					#content
 		script(src='/assets/js/main.js')

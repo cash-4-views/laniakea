@@ -1,46 +1,82 @@
-var React = require("react");
-var ReportData = require("./ReportData");
+var React 					= require("react"),
+		request 				= require("superagent"),
+		ReportSelector 	= require("./ReportSelector"),
+		ReportApprover  = require("./ReportApprover"),
+		ReportData 			= require("./ReportData");
 
 var ReportApp = React.createClass({
 
 	getInitialState: function() {
 		"use strict";
 
-		return {YYYY_MM: "2015_01"};
+		return {
+			dates: null,
+			YYYY_MM: null,
+			customidList: null,
+			report: null,
+		};
+	},
+
+	componentDidMount: function() {
+		"use strict";
+
+		request.get("/api/v1/reports")
+						.end(function(err, res){
+							if (this.isMounted()) {
+								var dates = res.body;
+								console.log(res);
+								this.setState({dates: dates});
+							}
+					  }.bind(this));
+	},
+
+	selectReport: function(date) {
+		"use strict";
+
+		request.get("/api/v1/reports/customidList")
+						.query({date: date})
+						.end(function(err, res) {
+							if(this.isMounted()) {
+								var idObj = res.body;
+								this.setState({YYYY_MM: date, customidList: idObj});
+							}
+						}.bind(this));
+	},
+
+	downloadReport: function(customid) {
+		"use strict";
+		// Why is this not downloading? Response comes correctly but doesn't download
+		request.get("/api/v1/reports/" + this.state.YYYY_MM)
+						.query({customid: customid, csv: true})
+						.end();
+	},
+
+	approveReport: function(customid) {
+		"use strict";
+
+		request.put("/api/v1/approvedlist/" + customid)
+						.send({YYYY_MM: this.state.YYYY_MM})
+						.end(function(err, res) {
+							if(this.isMounted()) {
+								if(err) console.log(err);
+								else console.log(res.body);
+							}
+						}.bind(this));
 	},
 
 	render: function() {
 		"use strict";
+		var sections = [];
 
-		var url = "/api/v1/reports/" + this.state.YYYY_MM;
+		if(this.state.dates) 				sections.push(<ReportSelector dates={this.state.dates} selectReport={this.selectReport}/>);
+		if(this.state.customidList) sections.push(<ReportApprover customidList={this.state.customidList}
+																								downloadReport={this.downloadReport}
+																								approveReport={this.approveReport}/>);
+		if(this.state.report) 			sections.push(<ReportData report={this.state.report} />);
 
 		return (
 			<div>
-				<h3 className="sub-header">Approve a report</h3>
-			  <div className="row placeholders">
-			    <form action={url} method="GET" className="form-horizontal">
-			      <fieldset>
-			        <div className="form-group">
-			          <label for="customid" className="col-md-2 control-label">Custom ID</label>
-			          <div className="col-md-3">
-			            <select id="customid" name="customid" className="form-control input-md">
-			              <option value="Royal_Albert_Hall">Royal Albert Hall</option>
-			            </select>
-			          </div>
-			          <div className="col-md-1">
-			            <button id="submit" type="submit" className="btn btn-primary">View</button>
-			          </div>
-			          <div className="col-md-1">
-			            <button id="submit" name="csv" value="true" type="submit" className="btn btn-primary">Download</button>
-			          </div>
-			          <div className="col-md-1">
-			            <button id="submit" name="submit" type="submit" className="btn btn-primary">Approve</button>
-			          </div>
-			        </div>
-			      </fieldset>
-			    </form>
-			  </div>
-			  <ReportData />
+				{sections}
 		  </div>
 		);
 

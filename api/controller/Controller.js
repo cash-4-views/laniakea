@@ -42,12 +42,14 @@ Controller.prototype = {
 
 		self.account.getSingleAccount(deets.email, function(err, returnedAccount) {
 			if(err) return reply(err);
-			self.account.comparePassword(deets.password, deAzurifier(returnedAccount).password, function(err) {
+			var acc = deAzurifier(returnedAccount);
+
+			self.account.comparePassword(deets.password, acc.password, function(err) {
 				if(err) return reply(err);
 
 				var profile = {
-					email: returnedAccount.email,
-					customid: returnedAccount.customid
+					email: acc.email,
+					customid: acc.customid
 				};
 
 				req.auth.session.clear();
@@ -83,9 +85,9 @@ Controller.prototype = {
 
 		var customid = req.auth.credentials.customid;
 
-		self.approvedList.getApproved(customid, null, function(err, approvedList) {
+		self.approvedList.getApproved(customid, function(err, approvedList) {
 			if(err) return reply(err);
-			else 		return reply.view("account", {user: req.auth.credentials, approvedList: approvedList});
+			else 		return reply.view("account", {user: req.auth.credentials, approvedList: deAzurifier(approvedList)});
 		});
 	},
 
@@ -98,7 +100,6 @@ Controller.prototype = {
 		if(!req.auth.credentials.admin) return reply.redirect("/account");
 		if(page === "reports") {
 			self.report.getReportList(function(err, listObject){
-				console.log(deAzurifier(listObject, false));
 				if(err) return reply(err);
 				else 		return reply.view("adminReport", {reportlist: deAzurifier(listObject, false)});
 			});
@@ -190,8 +191,8 @@ Controller.prototype = {
 		var self = this;
 
 		var creds 			= req.auth.credentials,
-				PKey 		 		= req.params.YYYY_MM,
-				customid 		= (req.params.customid === undefined) ? null : req.params.customid,
+				YYYY_MM 		= req.params.YYYY_MM,
+				customid 		= (req.query.customid === "true") ? true : (req.query.customid === "false") ? false : req.query.customid,
 				csv 			 	= req.query.csv,
 				approveBool = (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null;
 
@@ -199,15 +200,17 @@ Controller.prototype = {
 			if(!creds.admin && customid !== creds.customid) {
 				return reply().code(403);
 			} else {
-				self.approvedList.getApproved(customid, PKey, function(err, approvedArray) {
+				self.approvedList.getApproved(customid, function(err, approvedEntity) {
 
-					if(!creds.admin && approvedArray.length === 0) {
+					if(!creds.admin && !approvedEntity["_" + YYYY_MM]) {
 						return reply("That report is not available to you yet");
 					} else {
-						self.report.getReport(PKey, customid, approveBool, function(err, reportResults) {
+						self.report.getReport(YYYY_MM, customid, approveBool, function(err, reportResults) {
 							if(err) return reply(err);
 							return deAzurifier(reportResults, false, function(err, formattedArray) {
-								if(csv) return reply(Baby.unparse(formattedArray)).type("text/csv");
+								if(csv) return reply(Baby.unparse(formattedArray))
+																	.type("text/csv")
+																	.header("Content-Disposition", "attachment; filename="+ YYYY_MM + "_" + customid + ".csv");
 								else 		return reply(formattedArray);
 							});
 
@@ -223,7 +226,9 @@ Controller.prototype = {
 
 				return deAzurifier(totalResults, true, function(err, formattedArray) {
 					if(err) 			return reply(err);
-					else if(csv) 	return reply(Baby.unparse(formattedArray)).type("text/csv");
+					else if(csv) 	return reply(Baby.unparse(formattedArray))
+																	.type("text/csv")
+																	.header("Content-Disposition", "attachment; filename="+  PKey + ".csv");
 					else 					return reply(formattedArray);
 				});
 			});

@@ -1,6 +1,6 @@
 var React = require("react");
-var ReportData = require("./components/ReportData");
+var ReportApp = require("./components/ReportApp");
 
 React.render(
-	<ReportData />, document.getElementById("content")
+	<ReportApp />, document.getElementById("content")
 );

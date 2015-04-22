@@ -30,7 +30,7 @@ function router(ctrlr) {
 		{ path: "/login", 																			method: ["GET", "POST"], 	handler: ctrlr.login.bind(ctrlr), 						config: tryButDontRedirectMePleaseConfig 	},
 		{ path: "/logout", 																			method: "GET", 						handler: ctrlr.logout.bind(ctrlr) 																											},
 
-		{ path: "/myaccount", 																	method: "GET", 						handler: ctrlr.myAccount.bind(ctrlr) 																										},
+		{ path: "/account", 																		method: "GET", 						handler: ctrlr.myAccount.bind(ctrlr) 																										},
 		{ path: "/admin/{page?}", 															method: "GET", 						handler: ctrlr.admin.bind(ctrlr) 																												},
 
 		// api
@@ -41,7 +41,7 @@ function router(ctrlr) {
 		// reports
 		{ path: "/api/v1/reports", 															method: "GET",  					handler: ctrlr.getReportList.bind(ctrlr) 																										},
 		{ path: "/api/v1/reports", 															method: "POST", 					handler: ctrlr.createReport.bind(ctrlr),			config: csvConfig 							 					},
-		{ path: "/api/v1/reports/{YYYY_MM}/{customid?}", 				method: "GET",  					handler: ctrlr.getReport.bind(ctrlr) 																										},
+		{ path: "/api/v1/reports/{YYYY_MM}", 										method: "GET",  					handler: ctrlr.getReport.bind(ctrlr) 																										},
 		{ path: "/api/v1/reports/{YYYY_MM}/{videoid_policy}", 	method: "PUT",  					handler: ctrlr.updateReportRow.bind(ctrlr)		 																					},
 
 		// approved

@@ -14,18 +14,13 @@ function ApprovedList(storageClient, tableName, partitionKey) {
 
 ApprovedList.prototype = {
 
-	getApproved: function(customid, YYYY_MM, callback) {
+	getApproved: function(customid, callback) {
 		"use strict";
 		var self = this;
 
-		var query = new azure.TableQuery()
-													.where("RowKey == ?", customid);
-
-		if(YYYY_MM) query = query.and("_" + YYYY_MM + " == ?", YYYY_MM);
-
-		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
+		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, customid, function entityQueried(err, entity) {
 			if(err) return callback(err);
-			else 		return callback(null, results.entries);
+			else 		return callback(null, entity);
 		});
 	},
 

@@ -3,6 +3,7 @@ var azure 		 = require("azure-storage"),
 		Account 	 = require("../api/models/Account"),
 		test 			 = require("tape");
 
+// Instantiate the ting
 var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey);
 		account 		 = new Account(tableSvc, config.atable);
 

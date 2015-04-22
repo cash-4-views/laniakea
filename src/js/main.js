@@ -1,6 +1,7 @@
 var React 		 = require("react");
 var request 	 = require("superagent");
-var ReportData = require("./components/ReportData");
+
+var ReportApp = require("./components/ReportApp");
 
 var dataArray;
 
@@ -39,4 +40,4 @@ var ReportPage = React.createClass({
 React.render(
 	<ReportPage />,
 	document.getElementById("content")
-	);
+);

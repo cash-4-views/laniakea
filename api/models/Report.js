@@ -9,7 +9,7 @@ function Report(storageClient, tableName) {
 	"use strict";
 
 	this.storageClient = storageClient;
-	this.tableName = tableName;
+	this.tableName 		 = tableName;
 	this.storageClient.createTableIfNotExists(tableName, function tableCreated(err) {
 		if(err) throw err;
 	});
@@ -26,10 +26,11 @@ Report.prototype = {
 		var query = new azure.TableQuery()
 		  										.where("PartitionKey == ?", YYYY_MM);
 
-		if(customid === false) query = query.and("Custom_ID != ?", '');
-		else if(customid !== null) query = query.and("Custom_ID == ?", customid);
+		if(customid === true)  						query = query.and("Custom_ID != ?", '');
+		else if(customid === false) 			query = query.and("Custom_ID == ?", '');
+		else if(customid !== undefined) 	query = query.and("Custom_ID == ?", customid);
 
-		if(approved === true) query = query.and("approved == ?", true);
+		if(approved === true) 			query = query.and("approved == ?", true);
 		else if(approved === false) query = query.and("approved != ?", true);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
@@ -96,7 +97,8 @@ Report.prototype = {
 
 					var errorCounter = 0,
 							holderLength = azurifiedReportHolder.length,
-							base  	 		 = Math.floor(holderLength/1000),
+							base  	 		 = Math.ceil(holderLength/1000),
+							errorArray 	 = [],
 							n;
 
 					azurifiedReportHolder.forEach(function(rep, ind) {
@@ -106,32 +108,38 @@ Report.prototype = {
 							}
 							if (err) {
 								errorCounter += 1;
-								var errorObj = {
+								errorArray.push({
 									ind: ind,
 									err: err,
 									rep: rep
-								};
-								fs.appendFile("errorlog.json", JSON.stringify(errorObj), function(err) {
-									return;
 								});
 							}
 							if(ind === holderLength-1) {
 								customidObject.RowKey = "y" + YYYY_MM;
 								objectAzurifier("customidlist", "RowKey", null, customidObject, function(err, azurifiedList) {
-									console.log(azurifiedList);
 									self.storageClient.insertOrReplaceEntity(self.tableName, azurifiedList, function(err) {
 										if (err) {
-											console.log(err);
 											errorCounter += 1;
-											var errorObj = {
+											errorArray.push({
 												ind: "customidlist",
 												err: err,
 												rep: azurifiedList
-											};
+											});
 										}
-										console.log("Done, that took ", Date.now() - timestampPrep, "/ms to upload " + holderLength + " rows and there were " + errorCounter, " errors");
-										if(errorCounter) console.log("Check errorlog.json for details");
-										return callback(null, "success!");
+										self.updateReportList(YYYY_MM, function(err) {
+											if (err) {
+												errorCounter += 1;
+												errorArray.push({
+													ind: "customidlist",
+													err: err,
+													rep: azurifiedList
+												});
+											}
+											console.log("Done, that took ", Date.now() - timestampPrep, "/ms to upload " + holderLength + " rows and there were " + errorCounter, " errors");
+											if(errorCounter) console.log("Check errorlog.json for details");
+											fs.appendFile("errorlog.json", JSON.stringify(errorArray));
+											return callback(null, "success!");
+										});
 									});
 								});
 							}
@@ -165,18 +173,45 @@ Report.prototype = {
 			if(err) return callback(err);
 			var field;
 
-			objectAzurifier(null, null, null, updateObj, function(err, azurifiedObj) {
-				for (field in azurifiedObj) {
-					if(azurifiedObj.hasOwnProperty(field)) {
-						if(!entity[field]) entity[field] = {};
-						entity[field]._ = updateObj[field]._;
-					}
+			for(field in updateObj) {
+				if(updateObj.hasOwnProperty(field)){
+					entity[field] = updateObj[field];
 				}
-			});
+			}
 
-			self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
+			objectAzurifier(null, null, null, entity, function(err, azurifiedObj) {
+				self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(err) {
+					if(err) return callback(err);
+					else 		return callback(null);
+				});
+			});
+		});
+	},
+
+	getReportList: function(callback) {
+		"use strict";
+		var self = this;
+
+		self.storageClient.retrieveEntity(self.tableName, "reportlist", "reports", function entityQueried(err, entity) {
+			if(err) return callback(err);
+			else 		return callback(null, entity);
+		});
+	},
+
+	updateReportList: function(YYYY_MM, callback) {
+		"use strict";
+		var self = this;
+
+		self.storageClient.retrieveEntity(self.tableName, "reportlist", "reports", function entityQueried(err, entity) {
+			if(err) return callback(err);
+			entity[YYYY_MM] = YYYY_MM;
+
+			objectAzurifier(null, null, null, entity, function(err, azurifiedObj) {
 				if(err) return callback(err);
-				else return callback(null);
+				else self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(err) {
+					if(err) return callback(err);
+					else 		return callback(null);
+				});
 			});
 		});
 	},
@@ -185,15 +220,9 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		var nextContinuationToken = null;
-
-		var query = new azure.TableQuery()
-		  										.where("PartitionKey == ?", "customidlist")
-		  										.and("RowKey == ?", "y" + YYYY_MM);
-
-		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
+		self.storageClient.retrieveEntity(self.tableName, "customidlist", "y" + YYYY_MM, function entityQueried(err, entity) {
 			if(err) return callback(err);
-			return callback(null, results.entries);
+			else 		return callback(null, entity);
 		});
 	},
 
@@ -208,7 +237,7 @@ Report.prototype = {
 				ele.approved = {_: true, $: "Edm.Boolean"};
 				self.storageClient.mergeEntity(self.tableName, ele, function(err, res) {
 					if(err) return callback(err);
-					else return callback(null);
+					else	  return callback(null);
 				});
 			});
 

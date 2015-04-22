@@ -5,7 +5,6 @@ var fs 					 = require("fs"),
 
 function Controller(models, toolbox) {
 	"use strict";
-
 	this.account 			= models.account;
 	this.approvedList = models.approvedList;
 	this.report 			= models.report;
@@ -17,7 +16,6 @@ Controller.prototype = {
 	statics: {
 		directory: {
 			path: Path.resolve(__dirname + '/../../public'),
-			index: true
 		}
 	},
 
@@ -311,5 +309,6 @@ Controller.prototype = {
 	}
 
 };
+
 
 module.exports = Controller;

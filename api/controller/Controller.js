@@ -29,7 +29,6 @@ Controller.prototype = {
 		"use strict";
 		var self = this;
 
-		console.log(req.method);
 		if(req.method.toUpperCase() === "GET") {
 			if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
 			else if(req.auth.isAuthenticated) return reply.redirect("/account");
@@ -41,13 +40,14 @@ Controller.prototype = {
 
 		self.account.getSingleAccount(deets.email, function(err, returnedAccount) {
 			if(err) return reply(err);
+			var acc = deAzurifier(returnedAccount);
 
-			self.account.comparePassword(deets.password, returnedAccount.password, function(err) {
+			self.account.comparePassword(deets.password, acc.password, function(err) {
 				if(err) return reply(err);
 
 				var profile = {
-					email: returnedAccount.email,
-					customid: returnedAccount.customid
+					email: acc.email,
+					customid: acc.customid
 				};
 
 				req.auth.session.clear();
@@ -83,9 +83,9 @@ Controller.prototype = {
 
 		var customid = req.auth.credentials.customid;
 
-		self.approvedList.getApproved(customid, null, function(err, approvedList) {
+		self.approvedList.getApproved(customid, function(err, approvedList) {
 			if(err) return reply(err);
-			else 		return reply.view("account", {user: req.auth.credentials, approvedList: approvedList});
+			else 		return reply.view("account", {user: req.auth.credentials, approvedList: deAzurifier(approvedList)});
 		});
 	},
 
@@ -93,12 +93,17 @@ Controller.prototype = {
 		"use strict";
 		var self = this;
 
-		if(!req.auth.credentials.admin) return reply.redirect("/account");
+		var page = req.params.page;
 
-		self.account.getAccounts(function(err, accounts) {
-			if(err) return reply(err);
-			else 		return reply.view("admin", {accounts: accounts});
-		});
+		if(!req.auth.credentials.admin) return reply.redirect("/account");
+		if(page === "reports") {
+				return reply.view("adminReport");
+		} else {
+			self.account.getAccounts(function(err, accounts) {
+				if(err) return reply(err);
+				else 		return reply.view("admin", {accounts: accounts});
+			});
+		}
 	},
 
 // API
@@ -137,9 +142,9 @@ Controller.prototype = {
 
 			var mailAccount = {
 				subscribed: true,
-				address: req.payload.email,
-				name: req.payload.customid,
-				vars: {}
+				address 	: req.payload.email,
+				name 			: req.payload.customid,
+				vars 			: {}
 			};
 
 			self.account.createSingleAccount(newAccount, function(err) {
@@ -170,8 +175,8 @@ Controller.prototype = {
 
 		self.account.getSingleAccount(email, function(err, account) {
 			if(err) 			return reply(err).code(404);
-			else if(csv) 	return reply(Baby.unparse(account)).type("text/csv");
-			else 					return reply(account);
+			else if(csv) 	return reply(Baby.unparse(deAzurifier(account, false))).type("text/csv");
+			else 					return reply(deAzurifier(account, false));
 		});
 	},
 
@@ -181,8 +186,8 @@ Controller.prototype = {
 		var self = this;
 
 		var creds 			= req.auth.credentials,
-				PKey 		 		= req.params.YYYY_MM,
-				customid 		= (req.params.customid === undefined) ? null : req.params.customid,
+				YYYY_MM 		= req.params.YYYY_MM,
+				customid 		= (req.query.customid === "true") ? true : (req.query.customid === "false") ? false : req.query.customid,
 				csv 			 	= req.query.csv,
 				approveBool = (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null;
 
@@ -190,16 +195,17 @@ Controller.prototype = {
 			if(!creds.admin && customid !== creds.customid) {
 				return reply().code(403);
 			} else {
-				self.approvedList.getApproved(customid, PKey, function(err, approvedArray) {
+				self.approvedList.getApproved(customid, function(err, approvedEntity) {
 
-					if(!creds.admin && approvedArray.length === 0) {
+					if(!creds.admin && !approvedEntity["_" + YYYY_MM]) {
 						return reply("That report is not available to you yet");
 					} else {
-						self.report.getReport(PKey, customid, approveBool, function(err, reportResults) {
+						self.report.getReport(YYYY_MM, customid, approveBool, function(err, reportResults) {
 							if(err) return reply(err);
-
-							return deAzurifier(reportResults, function(err, formattedArray) {
-								if(csv) return reply(Baby.unparse(formattedArray)).type("text/csv");
+							return deAzurifier(reportResults, false, function(err, formattedArray) {
+								if(csv) return reply(Baby.unparse(formattedArray))
+																	.type("text/csv")
+																	.header("Content-Disposition", "attachment; filename="+ YYYY_MM + "_" + customid + ".csv");
 								else 		return reply(formattedArray);
 							});
 
@@ -213,9 +219,11 @@ Controller.prototype = {
 			self.report.getReport(PKey, customid, approveBool, function(err, totalResults) {
 				if(err) return reply(err);
 
-				return deAzurifier(totalResults, function(err, formattedArray) {
+				return deAzurifier(totalResults, true, function(err, formattedArray) {
 					if(err) 			return reply(err);
-					else if(csv) 	return reply(Baby.unparse(formattedArray)).type("text/csv");
+					else if(csv) 	return reply(Baby.unparse(formattedArray))
+																	.type("text/csv")
+																	.header("Content-Disposition", "attachment; filename='"+  PKey + "'.csv");
 					else 					return reply(formattedArray);
 				});
 			});
@@ -263,7 +271,36 @@ Controller.prototype = {
 
 		self.report.updateReportRow(PKey, RKey, req.payload, function(err) {
 			if(err) return reply(err);
-			else return reply(null);
+			else 		return reply(null);
+		});
+	},
+
+	getReportList: function(req, reply) {
+		"use strict";
+		var self = this;
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+		self.report.getReportList(function(err, list) {
+			if(err) return reply(err);
+			else  	return reply(deAzurifier(list));
+		});
+	},
+
+	getCustomIDList: function(req, reply) {
+		"use strict";
+		var self = this;
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+		var date = req.query.date;
+
+		self.report.getCustomIDList(date, function(err, idListObj) {
+			if(err) return reply(err);
+			else  	deAzurifier(idListObj, false, function(err, formattedObj) {
+				if(err) console.log(err);
+				return 	reply(formattedObj);
+			});
 		});
 	},
 
@@ -280,17 +317,18 @@ Controller.prototype = {
 		} else {
 			self.approved.getApproved(customid, YYYY_MM, function(err, approvedList) {
 				if(err) return reply(err);
-				else return reply(approvedList);
+				else 		return reply(approvedList);
 			});
 		}
 	},
 
+	// Use payload rather than params
 	updateApproved: function(req, reply) {
 		"use strict";
 		var self = this;
 
 		var customid = req.params.customid,
-				YYYY_MM  = req.params[YYYY_MM];
+				YYYY_MM  = req.payload[YYYY_MM];
 
 		if(!req.auth.credentials.admin) {
 			return reply("You're not authorised to do that");
@@ -301,7 +339,7 @@ Controller.prototype = {
 			 	} else {
 			 		self.approved.updateApproved(customid, YYYY_MM, function(err) {
 					if(err) return reply(err);
-					else return reply("successfully approved");
+					else 		return reply("successfully approved");
 					});
 				}
 			});

@@ -1,7 +1,6 @@
 var azure  					= require("azure-storage"),
 		bcrypt 					= require("bcrypt-nodejs"),
-		objectAzurifier = require("../utils/objectAzurifier"),
-		deAzurifier 		= require("../utils/deAzurifier");
+		objectAzurifier = require("../utils/objectAzurifier");
 
 function Account(storageClient, tableName) {
 	"use strict";
@@ -21,12 +20,12 @@ Account.prototype = {
 		var self = this;
 
 		var query = new azure.TableQuery()
-											.select(["customid", "email", "phone"])
-											.where("PartitionKey == ?", self.partitionKey);
+													.select(["customid", "email", "phone"])
+													.where("PartitionKey == ?", self.partitionKey);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function(err, result, response) {
 			if(err) return callback(err);
-			else return callback(null, result.entries);
+			else 		return callback(null, result.entries);
 		});
 	},
 
@@ -36,9 +35,7 @@ Account.prototype = {
 
 		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, email, function entityQueried(err, entity) {
 			if(err) return callback(err);
-			else {
-				return deAzurifier(entity, callback);
-			}
+			else 		return callback(null, entity);
 		});
 	},
 
@@ -49,7 +46,7 @@ Account.prototype = {
 		objectAzurifier(self.partitionKey, "email", null, item, function(error, processedAccount) {
 			self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
  				if(err) return callback(err);
-				else return callback(null);
+				else 		return callback(null);
 			});
 		});
 	},
@@ -62,18 +59,17 @@ Account.prototype = {
 			if(err) return callback(err);
 			var field;
 
-			objectAzurifier(YYYY_MM, "Video ID", "Policy", updateObj, function(err, azurifiedObj) {
-				for (field in azurifiedObj) {
-					if(azurifiedObj.hasOwnProperty(field)) {
-						if(!entity[field]) entity[field] = {};
-						entity[field]._ = updateObj[field]._;
-					}
+			for(field in updateObj) {
+				if(updateObj.hasOwnProperty(field)){
+					entity[field] = updateObj[field];
 				}
-			});
+			}
 
-			self.storageClient.updateEntity(self.tableName, entity, function entityUpdated(err) {
-				if(err) return callback(err);
-				else return callback(null);
+			objectAzurifier(null, null, null, entity, function(err, azurifiedObj) {
+				self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(err) {
+					if(err) return callback(err);
+					else 		return callback(null);
+				});
 			});
 		});
 	},
@@ -82,9 +78,9 @@ Account.prototype = {
 		"use strict";
 
 		bcrypt.compare(password1, password2, function(err, res) {
-			if(err) return callback(err);
+			if(err) 			return callback(err);
 			else if(!res) return callback("dodgy password");
-			else return callback(null);
+			else 					return callback(null);
 		});
 	},
 
@@ -93,7 +89,7 @@ Account.prototype = {
 
 		bcrypt.hash(password, null, null, function(err, hash) {
 			if(err) return callback(err);
-			else return callback(null, hash);
+			else 		return callback(null, hash);
 		});
 	}
 

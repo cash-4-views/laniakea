@@ -46,7 +46,7 @@ function objectAzurifier(PartitionKey, RowKey1, RowKey2, objectToAzurify, callba
 	if(PartitionKey) azurifiedObj.PartitionKey = entityStrGen(PartitionKey);
 	if(RowKey1 && RowKey2) azurifiedObj.RowKey = entityStrGen(objectToAzurify[RowKey1] + "_" + objectToAzurify[RowKey2]);
 	else if (RowKey1) azurifiedObj.RowKey 		 = entityStrGen(objectToAzurify[RowKey1]);
-	else if (RowKey2) return callback("Rowkey must be entered as either the 2nd input or as 2nd + 3rd");
+	else if (RowKey2) return callback(new Error("Rowkey must be entered as either the 2nd input or as 2nd + 3rd"));
 
 	for(var prop in objectToAzurify) {
 		if(objectToAzurify.hasOwnProperty(prop) && prop !== '') {

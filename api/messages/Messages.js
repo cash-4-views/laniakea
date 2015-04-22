@@ -14,7 +14,7 @@ var messageTemplates = {
   	"use strict";
 
     message.subject = "Monthly report available";
-    message.text    = "The PREVIOUS_MONTH revenue report is now available. Please visit 'https://www.w00d_chipper/login' to download it.";
+    message.text    = "A new revenue report is now available. Please visit 'https://www.w00d_chipper/account' to download it.";
     return message;
   }
 };

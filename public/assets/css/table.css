@@ -43,7 +43,7 @@
 	width:20%;
 }
 .griddle table{
-	width: auto;
+	width: 100%;
 	table-layout:fixed;
 }
 
@@ -85,4 +85,8 @@
 
 .griddle .griddle-next{
 	text-align:right;
+}
+
+.tableSelector {
+	padding-bottom: 10px;
 }

@@ -17,47 +17,43 @@ function Report(storageClient, tableName) {
 
 Report.prototype = {
 
-	getReport: function(YYYY_MM, customid, approved, callback) {
+	getReport: function(YYYY_MM, customid, approved, getAll, callback) {
 		"use strict";
 		var self = this;
 
-		var nextContinuationToken = null;
-
-		var query = new azure.TableQuery()
-		  										.where("PartitionKey == ?", YYYY_MM);
-
-		if(customid === true)  						query = query.and("Custom_ID != ?", '');
-		else if(customid === false) 			query = query.and("Custom_ID == ?", '');
-		else if(customid !== undefined) 	query = query.and("Custom_ID == ?", customid);
-
-		if(approved === true) 			query = query.and("approved == ?", true);
-		else if(approved === false) query = query.and("approved != ?", true);
+		var query = queryMaker(YYYY_MM, customid, approved);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
 			if(err) return callback(err);
 			else if (results.continuationToken) {
-        nextContinuationToken = results.continuationToken;
-				var batchOfRows = results.entries;
 
-        return self.getNextBatch(query, nextContinuationToken, batchOfRows, callback);
+				var batchOfRows = results.entries;
+				console.log(results.continuationToken);
+        if(getAll) 	return self.getNextBatch(query, results.continuationToken, batchOfRows, true, callback);
+        else 				return callback(null, batchOfRows, results.continuationToken);
       } else {
 				return callback(null, results.entries);
 			}
 		});
 	},
 
-	getNextBatch: function(query, continuationToken, batchOfRows, callback) {
+	getNextBatch: function(queryOrOptions, continuationToken, batchOfRows, getAll, callback) {
 		"use strict";
 		var self = this;
+
+		var q = queryOrOptions,
+				query = q instanceof azure.TableQuery ? q : queryMaker(q.YYYY_MM, q.customid, q.approved);
 
 		if (!continuationToken) return callback(null, batchOfRows);
 		else self.storageClient.queryEntities(self.tableName, query, continuationToken, function entitiesQueried(err, newRows) {
 			if(err) return callback(err);
 
-			var totalResults = batchOfRows.concat(newRows.entries);
+			var totalResults = batchOfRows ? batchOfRows.concat(newRows.entries) : newRows.entries;
 			var nextContinuationToken = newRows.continuationToken;
 
-			return self.getNextBatch(query, nextContinuationToken, totalResults, callback);
+			if(getAll) 	return self.getNextBatch(query, nextContinuationToken, totalResults, true, callback);
+			else 				return callback(null, totalResults, nextContinuationToken);
+
 		});
 	},
 
@@ -230,14 +226,28 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		self.getReport(YYYY_MM, customid, null, function(err, arrayOfResults) {
-			if(err) return callback(err);
 
-			arrayOfResults.map(function(ele) {
-				ele.approved = {_: true, $: "Edm.Boolean"};
-				self.storageClient.mergeEntity(self.tableName, ele, function(err, res) {
-					if(err) return callback(err);
-					else	  return callback(null);
+		self.getReport(YYYY_MM, customid, null, true, function entitiesQueried(error, arrayOfResults) {
+			if(error) return callback(error);
+
+			var len = arrayOfResults.length,
+					errorArray = [];
+
+			arrayOfResults.forEach(function(rep, ind) {
+				rep.approved = {_: true, $: "Edm.Boolean"};
+				self.storageClient.updateEntity(self.tableName, rep, function entityUpdated(err) {
+					if(err) {
+						errorArray.push({
+							ind: ind,
+							err: err,
+							rep: rep
+						});
+					}
+					if (ind === len-1) {
+						console.log("done " + (len - errorArray.length) + " rows approved, " + errorArray.length + " errors");
+						if(errorArray.length === 0) errorArray = null;
+						return callback(errorArray);
+					}
 				});
 			});
 
@@ -248,3 +258,21 @@ Report.prototype = {
 };
 
 module.exports = Report;
+
+function queryMaker(YYYY_MM, customid, approved) {
+	"use strict";
+
+	var query = new azure.TableQuery()
+	  										.where("PartitionKey == ?", YYYY_MM);
+
+	if(customid === true)  						query = query.and("Custom_ID != ?", '');
+	else if(customid === false) 			query = query.and("Custom_ID == ?", '');
+	else if(customid !== undefined) 	query = query.and("Custom_ID == ?", customid);
+
+	if(approved === true) 						query = query.and("approved == ?", true);
+	else if(approved === false) 			query = query.and("approved != ?", true);
+
+	return query;
+
+}
+

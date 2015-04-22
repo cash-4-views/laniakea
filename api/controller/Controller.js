@@ -181,6 +181,7 @@ Controller.prototype = {
 	},
 
 // Reports
+	// This one needs some tidying up am i right yes i am
 	getReport: function(req, reply) {
 		"use strict";
 		var self = this;
@@ -189,18 +190,21 @@ Controller.prototype = {
 				YYYY_MM 		= req.params.YYYY_MM,
 				customid 		= (req.query.customid === "true") ? true : (req.query.customid === "false") ? false : req.query.customid,
 				csv 			 	= req.query.csv,
-				approveBool = (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null;
+				approveBool = (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null,
+				getAll 			= req.query.getAll;
 
-		if(customid) {
+		if(customid && customid !== true) {
 			if(!creds.admin && customid !== creds.customid) {
 				return reply().code(403);
 			} else {
 				self.approvedList.getApproved(customid, function(err, approvedEntity) {
 
 					if(!creds.admin && !approvedEntity["_" + YYYY_MM]) {
+
 						return reply("That report is not available to you yet");
 					} else {
-						self.report.getReport(YYYY_MM, customid, approveBool, function(err, reportResults) {
+
+						self.report.getReport(YYYY_MM, customid, approveBool, true, function(err, reportResults) {
 							if(err) return reply(err);
 							return deAzurifier(reportResults, false, function(err, formattedArray) {
 								if(csv) return reply(Baby.unparse(formattedArray))
@@ -213,20 +217,45 @@ Controller.prototype = {
 					}
 				});
 			}
-		} else if(!customid) {
+		} else {
+
 			if(!creds.admin) return reply().code(403);
+			else if(!req.query.nextRowKey) {
+				self.report.getReport(YYYY_MM, customid, approveBool, getAll, function(errGet, totalResults, contToken) {
+					if(errGet) return reply(errGet);
 
-			self.report.getReport(PKey, customid, approveBool, function(err, totalResults) {
-				if(err) return reply(err);
-
-				return deAzurifier(totalResults, true, function(err, formattedArray) {
-					if(err) 			return reply(err);
-					else if(csv) 	return reply(Baby.unparse(formattedArray))
-																	.type("text/csv")
-																	.header("Content-Disposition", "attachment; filename='"+  PKey + "'.csv");
-					else 					return reply(formattedArray);
+					return deAzurifier(totalResults, true, function(errAzure, formattedArray) {
+						if(errAzure) 			return reply(errAzure);
+						else if(csv) 	return reply(Baby.unparse(formattedArray))
+																		.type("text/csv")
+																		.header("Content-Disposition", "attachment; filename='"+  PKey + "'.csv");
+						else 					return reply({results: formattedArray, token: contToken});
+					});
 				});
-			});
+			} else {
+				var queryOpts = {
+					YYYY_MM : YYYY_MM,
+					customid: customid,
+					approved: approveBool
+				};
+
+				var token = {
+					nextPartitionKey: req.query.nextPartitionKey,
+					nextRowKey 			: req.query.nextRowKey,
+					targetLocation 	: req.query.targetLocation
+				};
+
+				self.report.getNextBatch(queryOpts, token, null, getAll, function(errGet, results, contToken) {
+					if(errGet) 		return reply(errGet);
+
+					return deAzurifier(results, true, function(errAzure, formattedArray) {
+						if(errAzure)	return console.log(errAzure);
+						else 					return reply({results: formattedArray, token: contToken});
+					});
+				});
+
+
+			}
 		}
 	},
 
@@ -328,7 +357,7 @@ Controller.prototype = {
 		var self = this;
 
 		var customid = req.params.customid,
-				YYYY_MM  = req.payload[YYYY_MM];
+				YYYY_MM  = req.payload.YYYY_MM;
 
 		if(!req.auth.credentials.admin) {
 			return reply("You're not authorised to do that");
@@ -337,9 +366,9 @@ Controller.prototype = {
 				if(err) {
 					return reply("There was an error approving" + err);
 			 	} else {
-			 		self.approved.updateApproved(customid, YYYY_MM, function(err) {
-					if(err) return reply(err);
-					else 		return reply("successfully approved");
+			 		self.approvedList.updateApproved(customid, YYYY_MM, function(err) {
+						if(err) return reply().code(500);
+						else 		return reply("Successfully approved the " + YYYY_MM + " report for " + customid);
 					});
 				}
 			});

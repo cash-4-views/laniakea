@@ -28,18 +28,22 @@ ApprovedList.prototype = {
 		"use strict";
 		var self = this;
 
-		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, customid, function entityQueried(err, entity) {
-			if(err) return callback(err);
-			else {
+		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, customid, function entityQueried(errFind, entity) {
+			if(errFind && errFind.statusCode !== 404) {
+				console.log(errFind);
+				return callback(errFind);
+			} else {
 				var newObj = entity || {};
 				if(!entity) newObj[customid] = customid;
 
 				newObj[YYYY_MM] = YYYY_MM;
 
-				objectAzurifier(self.partitionKey, customid, null, newObj, function(error, processedObj) {
-					self.storageClient.insertOrMergeEntity(self.tableName, processedObj, function entityInserted(err) {
-						if(err) return callback(err);
-						else 		return callback(null);
+				objectAzurifier(self.partitionKey, customid, null, newObj, function(errAzure, processedObj) {
+					delete processedObj[customid];
+					console.log(errAzure, processedObj);
+					self.storageClient.insertOrMergeEntity(self.tableName, processedObj, function entityInserted(errInsert) {
+						if(errInsert) return callback(errInsert);
+						else 					return callback(null);
 					});
 				});
 			}

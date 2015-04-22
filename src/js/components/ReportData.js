@@ -1,5 +1,4 @@
-var React = require("react"),
-	  Griddle = require("griddle-react"),
+var React 	 = require("react"),
 		Griddle  = require("griddle-react"),
 		fakeData = require("./fakedata.json");
 
@@ -50,11 +49,6 @@ var CustomIDForm = React.createClass({
 		"use strict";
 
 		return (
-			<div className="DataTable" >
-				<h4> ReportData </h4>
-
-			</div>
-		);
 			<form action="POST" url="/mejulie" >
 				<input type="text" name="customid" value="" />
 				<button type="submit" />

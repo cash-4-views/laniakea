@@ -8,6 +8,16 @@ var ReportData = React.createClass({
 
 		var columns = [];
 
+		var columnMeta = [
+		  {
+		  "columnName": "chickendippers",
+		  "order": 1,
+		  "locked": false,
+		  "visible": true,
+		  "customComponent": CustomIDForm
+		  }
+		];
+
 		return (
 			<div>
 				<div>
@@ -25,6 +35,7 @@ var ReportData = React.createClass({
 				</div>
 				<Griddle results={fakeData}
 					tableClassName="table" showFilter={true}
+					columnMetadata={columnMeta}
 					showSettings={true} className="DataTable"
 					useGriddleStyles={false} />
 			</div>
@@ -36,12 +47,10 @@ var CustomIDForm = React.createClass({
 	render: function() {
 		"use strict";
 
-		var url = "/submit/" + this.props.rowData.state;
-
 		return (
-			<form action="POST" url={url} onSubmit={this.onSubmit}>
-				<input type="text" name="customid" value="" onChange={this.onChange}/>
-				<button type="submit" onSubmit={this.onSubmit}/>
+			<form action="POST" url="/mejulie" >
+				<input type="text" name="customid" value="" />
+				<button type="submit" />
 			</form>
 			);
 	}

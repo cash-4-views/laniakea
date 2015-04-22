@@ -42,8 +42,7 @@ Controller.prototype = {
 
 		self.account.getSingleAccount(deets.email, function(err, returnedAccount) {
 			if(err) return reply(err);
-
-			self.account.comparePassword(deets.password, returnedAccount.password, function(err) {
+			self.account.comparePassword(deets.password, deAzurifier(returnedAccount).password, function(err) {
 				if(err) return reply(err);
 
 				var profile = {
@@ -94,11 +93,15 @@ Controller.prototype = {
 		"use strict";
 		var self = this;
 
-		var page = req.params.param;
+		var page = req.params.page;
 
 		if(!req.auth.credentials.admin) return reply.redirect("/account");
 		if(page === "reports") {
-			return reply.view("adminReport");
+			self.report.getReportList(function(err, listObject){
+				console.log(deAzurifier(listObject, false));
+				if(err) return reply(err);
+				else 		return reply.view("adminReport", {reportlist: deAzurifier(listObject, false)});
+			});
 		} else {
 			self.account.getAccounts(function(err, accounts) {
 				if(err) return reply(err);
@@ -176,8 +179,8 @@ Controller.prototype = {
 
 		self.account.getSingleAccount(email, function(err, account) {
 			if(err) 			return reply(err).code(404);
-			else if(csv) 	return reply(Baby.unparse(account)).type("text/csv");
-			else 					return reply(account);
+			else if(csv) 	return reply(Baby.unparse(deAzurifier(account, false))).type("text/csv");
+			else 					return reply(deAzurifier(account, false));
 		});
 	},
 
@@ -203,7 +206,6 @@ Controller.prototype = {
 					} else {
 						self.report.getReport(PKey, customid, approveBool, function(err, reportResults) {
 							if(err) return reply(err);
-
 							return deAzurifier(reportResults, false, function(err, formattedArray) {
 								if(csv) return reply(Baby.unparse(formattedArray)).type("text/csv");
 								else 		return reply(formattedArray);
@@ -273,6 +275,18 @@ Controller.prototype = {
 		});
 	},
 
+	getReportList: function(req, reply) {
+		"use strict";
+		var self = this;
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+		self.report.getReportList(function(err, list) {
+			if(err) return reply(err);
+			else  	return reply(list);
+		});
+	},
+
 // Approved
 	getApproved: function(req, reply) {
 		"use strict";
@@ -291,6 +305,7 @@ Controller.prototype = {
 		}
 	},
 
+	// Use payload rather than params
 	updateApproved: function(req, reply) {
 		"use strict";
 		var self = this;

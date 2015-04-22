@@ -43,10 +43,11 @@ function router(ctrlr) {
 		{ path: "/api/v1/reports", 															method: "POST", 					handler: ctrlr.createReport.bind(ctrlr),			config: csvConfig 							 					},
 		{ path: "/api/v1/reports/{YYYY_MM}", 										method: "GET",  					handler: ctrlr.getReport.bind(ctrlr) 																										},
 		{ path: "/api/v1/reports/{YYYY_MM}/{videoid_policy}", 	method: "PUT",  					handler: ctrlr.updateReportRow.bind(ctrlr)		 																					},
+		{ path: "/api/v1/reports/customidList", 								method: "GET",  					handler: ctrlr.getCustomIDList.bind(ctrlr) 																										},
 
 		// approved
 		{ path: "/api/v1/approvedlist/{customid}/{YYYY_MM?}",		method: "GET",  					handler: ctrlr.getApproved.bind(ctrlr) 																									},
-		{ path: "/api/v1/approvedlist/{customid}/{YYYY_MM}",		method: "POST", 					handler: ctrlr.updateApproved.bind(ctrlr) 																							}
+		{ path: "/api/v1/approvedlist/{customid}",							method: "PUT",	 					handler: ctrlr.updateApproved.bind(ctrlr) 																							}
 
 	];
 }

@@ -220,15 +220,9 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		var nextContinuationToken = null;
-
-		var query = new azure.TableQuery()
-		  										.where("PartitionKey == ?", "customidlist")
-		  										.and("RowKey == ?", "y" + YYYY_MM);
-
-		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
+		self.storageClient.retrieveEntity(self.tableName, "customidlist", "y" + YYYY_MM, function entityQueried(err, entity) {
 			if(err) return callback(err);
-			else 		return callback(null, results.entries);
+			else 		return callback(null, entity);
 		});
 	},
 

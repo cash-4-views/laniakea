@@ -99,10 +99,7 @@ Controller.prototype = {
 
 		if(!req.auth.credentials.admin) return reply.redirect("/account");
 		if(page === "reports") {
-			self.report.getReportList(function(err, listObject){
-				if(err) return reply(err);
-				else 		return reply.view("adminReport", {reportlist: deAzurifier(listObject, false)});
-			});
+				return reply.view("adminReport");
 		} else {
 			self.account.getAccounts(function(err, accounts) {
 				if(err) return reply(err);
@@ -228,7 +225,7 @@ Controller.prototype = {
 					if(err) 			return reply(err);
 					else if(csv) 	return reply(Baby.unparse(formattedArray))
 																	.type("text/csv")
-																	.header("Content-Disposition", "attachment; filename="+  PKey + ".csv");
+																	.header("Content-Disposition", "attachment; filename='"+  PKey + "'.csv");
 					else 					return reply(formattedArray);
 				});
 			});
@@ -288,7 +285,24 @@ Controller.prototype = {
 
 		self.report.getReportList(function(err, list) {
 			if(err) return reply(err);
-			else  	return reply(list);
+			else  	return reply(deAzurifier(list));
+		});
+	},
+
+	getCustomIDList: function(req, reply) {
+		"use strict";
+		var self = this;
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+		var date = req.query.date;
+
+		self.report.getCustomIDList(date, function(err, idListObj) {
+			if(err) return reply(err);
+			else  	deAzurifier(idListObj, false, function(err, formattedObj) {
+				if(err) console.log(err);
+				return 	reply(formattedObj);
+			});
 		});
 	},
 
@@ -316,7 +330,7 @@ Controller.prototype = {
 		var self = this;
 
 		var customid = req.params.customid,
-				YYYY_MM  = req.params[YYYY_MM];
+				YYYY_MM  = req.payload[YYYY_MM];
 
 		if(!req.auth.credentials.admin) {
 			return reply("You're not authorised to do that");

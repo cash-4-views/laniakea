@@ -26,8 +26,9 @@ Report.prototype = {
 		var query = new azure.TableQuery()
 		  										.where("PartitionKey == ?", YYYY_MM);
 
-		if(customid === false) 			query = query.and("Custom_ID != ?", '');
-		else if(customid !== null) 	query = query.and("Custom_ID == ?", customid);
+		if(customid === true)  						query = query.and("Custom_ID != ?", '');
+		else if(customid === false) 			query = query.and("Custom_ID == ?", '');
+		else if(customid !== undefined) 	query = query.and("Custom_ID == ?", customid);
 
 		if(approved === true) 			query = query.and("approved == ?", true);
 		else if(approved === false) query = query.and("approved != ?", true);

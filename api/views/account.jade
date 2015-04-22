@@ -1,9 +1,49 @@
-doctype html
+doctype html(lang='en')
+head
+		meta(charset='utf-8')
+		meta(http-equiv='X-UA-Compatible', content='IE=edge')
+		meta(name='viewport', content='width=device-width, initial-scale=1')
+		title Admin Dashboard
+		link(href='/assets/css/bootstrap.min.css', rel='stylesheet')
+		link(href='/assets/css/dashboard.css', rel='stylesheet')
+		link(href='/assets/css/main.css', rel='stylesheet')
 body
-	h1 this is the account page
-	h2 The following reports are available for download:
-	each thing in approvedList
-		each prop, key in thing
-			if(key.indexOf("y") === 0)
-				h1 #{prop._}
-				a(href="/getCSV/" + prop._) Download
+	nav.navbar.navbar-inverse.navbar-fixed-top
+		.container-fluid
+			.navbar-header
+				button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#navbar', aria-expanded='false', aria-controls='navbar')
+					span.sr-only Toggle navigation
+					span.icon-bar
+					span.icon-bar
+					span.icon-bar
+				a.navbar-brand(href='#') Laniakea
+			#navbar.navbar-collapse.collapse
+				ul.nav.navbar-nav.navbar-right
+					li.disabled
+						a #{user.email}
+					li
+						a(href='/logout') Logout
+	.container-fluid
+		.row
+			.col-sm-2.col-md-1.sidebar
+				ul.nav.nav-sidebar
+			.col-sm-10.col-sm-offset-2.col-md-11.col-md-offset-1.main
+				h1.page-header Your Account
+				h3(classname='sub-header') Download a report
+				.table-responsive.col-md-6
+					table.table.table-striped
+						tbody
+							if approvedList
+								each YYYY_MM in approvedList
+									tr
+										form.form-horizontal(action="/api/v1/reports/"+YYYY_MM, method='GET')
+											fieldset
+												div(class='form-group')
+													td.year #{YYYY_MM.replace("_", "/")}
+													td
+														div
+															input.shadow(type="text", name="customid", value=user.customid)
+															button.download#submit(name='csv', value='true', type='submit', class='btn btn-primary') Download
+								else
+									tr
+										td There are no reports available for download yet. An email will be sent to your inbox when one becomes available

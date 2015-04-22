@@ -32,14 +32,12 @@ html
 			.row
 				.col-sm-2.col-md-1.sidebar
 					ul.nav.nav-sidebar
-						li
-							a(href='#') Accounts
-						li.active
-							a(href='#')
-								| Reports
-								span.sr-only (current)
-						li
-							a(href='#') Uploads
+						if reportlist
+							each YYYY_MM, key in reportlist
+								li.active
+									a(href='#')
+										| #{YYYY_MM}
+										span.sr-only (current)
 				.col-sm-10.col-sm-offset-2.col-md-11.col-md-offset-1.main
 					h1.page-header Reports
 					h3.sub-header Select a report
@@ -57,21 +55,5 @@ html
 												option hi
 									.col-md-1
 										button#submit.btn.btn-primary(name='submit', type="submit") Select
-					h3.sub-header Approve a report
-					.row.placeholders
-						form.form-horizontal(action="/api/v1/accounts", method="GET")
-							fieldset
-								.form-group
-									label.col-md-2.control-label(for='customid') Custom ID
-									.col-md-3
-										select#customid.form-control.input-md(name='customid')
-											if approvedlist
-												each id in approvedlist
-													option(value=id) #{id}
-											else
-												option hi
-									.col-md-1
-										button#submit.btn.btn-primary(name='submit', type="submit") Approve
-					h3.sub-header View Reports
 					#content
 		script(src='/assets/js/main.js')

@@ -20,6 +20,7 @@ var ReportData = React.createClass({
 
 		return (
 			<div>
+				<h3 className="sub-header">View Reports</h3>
 				<div>
 					<div className="btn-group btn-group-justified" role="group" aria-label="...">
 					  <div className="btn-group" role="group">

@@ -16,7 +16,7 @@ var ReportViewer = React.createClass({
 				"order": 1,
 				"locked": false,
 				"visible": true,
-				"displayName": (report && report[0] && report[0].Custom_ID) ? "RowKey" : "Custom ID",
+				"displayName": "RowKey",
 				"customComponent": CustomIDForm
 			}
 		];
@@ -69,7 +69,7 @@ var CustomIDForm = React.createClass({
 		return (
 		    <div className="input-group">
 		      {alreadyGotACustomID ? null : bouteille}
-		      <input type="text" className="form-control" ref="customid" placeholder={alreadyGotACustomID ? this.props.data : "Custom ID"} disabled={alreadyGotACustomID}/>
+		      <input type="text" className="form-control" ref="customid" placeholder={alreadyGotACustomID ? this.props.data : "Enter a Custom ID"} disabled={alreadyGotACustomID}/>
 		    </div>
 		);
 	}

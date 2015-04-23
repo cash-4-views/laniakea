@@ -10,7 +10,10 @@ var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey);
 test("The getReport function", function(t) {
 	"use strict";
 
-	t.end();
+	report.getReport("2016_01", "Terry_Teriyaki", false, false, function(err, results, continuationToken) {
+		t.notOk(err, "should not return an error");
+		t.end();
+	});
 });
 
 test("The getNextBatch function", function(t) {

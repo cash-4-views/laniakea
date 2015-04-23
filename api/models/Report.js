@@ -83,6 +83,7 @@ Report.prototype = {
 				},
 
 				complete: function(results) {
+					// This complete callback runs twice for some reason
 					if(bloodyTwice) {
 						return;
 					}

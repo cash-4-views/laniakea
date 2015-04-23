@@ -24,9 +24,9 @@ function Messages(mailConfig) {
 
 
 	this.mailgun 					= mailgun({ apiKey : mailConfig.apiKey, domain : mailConfig.domain });
-	this.mailLists 				= mailConfig.mailLists;
+	this.mailLists 				= "members@" + mailConfig.domain;
 	this.domain 					= mailConfig.domain;
-	this.list 	 					= this.mailgun.lists("members@" + this.domain);
+	this.list 	 					= this.mailgun.lists(this.mailLists);
 }
 
 Messages.prototype = {

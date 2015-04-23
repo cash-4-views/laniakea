@@ -10,7 +10,7 @@ module.exports = {
 				password: process.env.COOKIESECRET || require("./credentials.json").cookie.cookie_secret
 	},
 	mailgun : {
-				apiKey   	: 												 require("./credentials.json").mailgun.mgApiKey,
-				domain		: process.env.DOMAIN 		|| require("./credentials.json").mailgun.mgDomain
+				apiKey   	: process.env.MGAPIKEY 		|| require("./credentials.json").mailgun.mgApiKey,
+				domain		: process.env.MGDOMAIN 		|| require("./credentials.json").mailgun.mgDomain
 	}
 };

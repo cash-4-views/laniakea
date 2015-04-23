@@ -90,3 +90,12 @@
 .tableSelector {
 	padding-bottom: 10px;
 }
+
+.btn-group-justified.tableSelector>.btn-group.chief {
+	width: 25%;
+}
+
+
+.btn-group-justified.tableSelector>.btn-group.appended {
+	width: 5%;
+}

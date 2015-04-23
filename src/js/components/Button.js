@@ -14,8 +14,12 @@ var Button = React.createClass({
 		"use strict";
 
 		return(
-			<div className="btn-group" role="group">
-			  <button type="button" className={"btn btn-"+this.props.type} value={this.props.value} onClick={this.onClick}>{this.props.value[0].toUpperCase() + this.props.value.slice(1)}</button>
+			<div className={"btn-group carrier "+this.props.size}  role="group">
+			  <button type="button" className={"btn btn-"+this.props.type}
+			  				value={this.props.value} disabled={this.props.isDisabled}
+			  				onClick={this.onClick}>
+			  				{this.props.content}
+			  </button>
 			</div>
 			);
 	}

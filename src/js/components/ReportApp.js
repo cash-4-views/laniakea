@@ -89,15 +89,23 @@ var ReportApp = React.createClass({
 			report: (this.state.panel === panel) ? this.state.report : []
 		});
 
-		ReportAPIUtils.getReportRows(this.state.YYYY_MM, queryObject, this._onReceivingResults);
+		ReportAPIUtils.getReportRows(this.state.YYYY_MM, queryObject, null, this._onReceivingResults);
 
 	},
 
-	getMoreResults: function() {
+	getMoreResults: function(getTheRest) {
 		"use strict";
 
-		ReportAPIUtils.getReportRows(this.state.YYYY_MM, this.state.currentQuery, this._onReceivingResults);
+		ReportAPIUtils.getReportRows(this.state.YYYY_MM, this.state.currentQuery, getTheRest, this._onReceivingResults);
 
+	},
+
+	submitCustomID: function(customid, rowkey) {
+		"use strict";
+
+		ReportAPIUtils.submitCustomID(this.state.YYYY_MM, customid, rowkey, function(success) {
+			console.log(success);
+		});
 	},
 
 
@@ -110,6 +118,8 @@ var ReportApp = React.createClass({
 																								downloadReport={this.downloadReport}
 																								approveReport={this.approveReport} />);
 		if(this.state.YYYY_MM) 			sections.push(<ReportViewer report={this.state.report}
+																								panel={this.state.panel}
+																								submitCustomID={this.submitCustomID}
 																								switchReportPanel={this.switchReportPanel}
 																								getMoreResults={this.getMoreResults} />);
 

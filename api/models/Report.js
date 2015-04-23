@@ -28,7 +28,7 @@ Report.prototype = {
 			else if (results.continuationToken) {
 
 				var batchOfRows = results.entries;
-				console.log(results.continuationToken);
+
         if(getAll) 	return self.getNextBatch(query, results.continuationToken, batchOfRows, true, callback);
         else 				return callback(null, batchOfRows, results.continuationToken);
       } else {
@@ -41,15 +41,15 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		var q = queryOrOptions,
+		var q 		= queryOrOptions,
 				query = q instanceof azure.TableQuery ? q : queryMaker(q.YYYY_MM, q.customid, q.approved);
 
 		if (!continuationToken) return callback(null, batchOfRows);
 		else self.storageClient.queryEntities(self.tableName, query, continuationToken, function entitiesQueried(err, newRows) {
 			if(err) return callback(err);
 
-			var totalResults = batchOfRows ? batchOfRows.concat(newRows.entries) : newRows.entries;
-			var nextContinuationToken = newRows.continuationToken;
+			var totalResults = batchOfRows ? batchOfRows.concat(newRows.entries) : newRows.entries,
+					nextContinuationToken = newRows.continuationToken;
 
 			if(getAll) 	return self.getNextBatch(query, nextContinuationToken, totalResults, true, callback);
 			else 				return callback(null, totalResults, nextContinuationToken);
@@ -62,9 +62,9 @@ Report.prototype = {
 		var self = this;
 
 		var azurifiedReportHolder = [],
-				customidObject = {},
-				timestampPrep = Date.now(),
-				bloodyTwice = false;
+				customidObject 				= {},
+				timestampPrep					= Date.now(),
+				bloodyTwice 					= false;
 
 		csvTrimmer(csvReport, null, null, function(err, trimmedCSV) {
 			if(err) return callback(err);

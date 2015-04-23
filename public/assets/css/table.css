@@ -1,0 +1,156 @@
+.griddle-container{
+	border:1px solid #DDD;
+}
+
+.griddle .top-section{
+	margin-bottom: 10px;
+	clear:both;
+	display:table;
+	width:100%;
+}
+
+.griddle .griddle-filter{
+	float:left;
+	width:50%;
+	text-align:left;
+	color:#222;
+	min-height:1px;
+}
+
+.griddle-filter>.filter-container{
+	width: 67%;
+}
+
+.griddle .griddle-settings-toggle{
+	float:left;
+	width:50%;
+	text-align:right;
+}
+
+.griddle .griddle-settings{
+	background-color:#FFF;
+	border:1px solid #DDD;
+	color:#222;
+	padding:10px;
+	margin-bottom:10px;
+}
+
+.griddle .griddle-settings .griddle-columns{
+	clear:both;
+	display:table;
+	width:100%;
+	border-bottom:1px solid #EDEDED;
+	margin-bottom:10px;
+}
+
+.griddle .griddle-settings .griddle-column-selection{
+	float:left;
+	width:20%;
+}
+.griddle table{
+	width: 100%;
+	table-layout:fixed;
+}
+
+.griddle th{
+	background-color:#EDEDEF;
+	border:0px;
+	border-bottom:1px solid #DDD;
+	color:#222;
+	padding:5px;
+	min-width: 175px;
+	font-size: 16px;
+}
+
+.griddle td{
+	padding:5px;
+	background-color:#FFF;
+	border-top-color:#DDD;
+	color:#222;
+	font-size: 14px;
+}
+
+.griddle .footer-container{
+	padding:0px;
+	background-color:#EDEDED;
+	border:0px;
+	color:#222;
+}
+
+.griddle .griddle-previous, .griddle .griddle-page, .griddle .griddle-next{
+	float:left;
+	width:33%;
+	min-height:1px;
+	margin-top:5px;
+}
+
+.griddle .griddle-page{
+	text-align:center;
+}
+
+.griddle .griddle-next{
+	text-align:right;
+}
+
+.tableSelector {
+	padding-bottom: 10px;
+}
+
+.btn-group-justified.tableSelector>.btn-group.chief {
+	width: 25%;
+}
+
+.btn-group-justified.tableSelector>.btn-group.appended {
+	width: 5%;
+}
+.spinner {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  z-index: 999999;
+  margin-top: 1px;
+  margin-left: 2px;
+}
+
+.cube1, .cube2 {
+  background-color: white;
+  width: 7px;
+  height: 7px;
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  -webkit-animation: cubemove 1.8s infinite ease-in-out;
+  animation: cubemove 1.8s infinite ease-in-out;
+}
+
+.cube2 {
+  -webkit-animation-delay: -0.9s;
+  animation-delay: -0.9s;
+}
+
+@-webkit-keyframes cubemove {
+  25% { -webkit-transform: translateX(15px) rotate(-90deg) scale(0.5) }
+  50% { -webkit-transform: translateX(15px) translateY(15px) rotate(-180deg) }
+  75% { -webkit-transform: translateX(0px) translateY(15px) rotate(-270deg) scale(0.5) }
+  100% { -webkit-transform: rotate(-360deg) }
+}
+
+@keyframes cubemove {
+  25% {
+    transform: translateX(15px) rotate(-90deg) scale(0.5);
+    -webkit-transform: translateX(15px) rotate(-90deg) scale(0.5);
+  } 50% {
+    transform: translateX(15px) translateY(15px) rotate(-179deg);
+    -webkit-transform: translateX(15px) translateY(15px) rotate(-179deg);
+  } 50.1% {
+    transform: translateX(15px) translateY(15px) rotate(-180deg);
+    -webkit-transform: translateX(15px) translateY(15px) rotate(-180deg);
+  } 75% {
+    transform: translateX(0px) translateY(15px) rotate(-270deg) scale(0.5);
+    -webkit-transform: translateX(0px) translateY(15px) rotate(-270deg) scale(0.5);
+  } 100% {
+    transform: rotate(-360deg);
+    -webkit-transform: rotate(-360deg);
+  }
+}

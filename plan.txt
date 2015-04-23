@@ -1,0 +1,56 @@
+The process:
+1. Rebecca is informed by youtube that there is a new report available for download
+2. We then get the content from the CMS in csv form
+	* For now, we use filesystem, until we learn more about this
+3. We then split the csv:
+	* Firstly, we grab the section sorted by video id, ending at legend
+	* Then we group rows together by their custom id
+	* If a row doesn't have a custom id, we group it with other lonely rows
+	* We then split the sorted document by custom id group
+	------ come back here
+	* We then generate individual csvs according to these groups
+	* We then save these csvs to a database --- do research on csvs and database
+		* How do we store the data? csv or json or what?
+		* Each collection is a custom id group + date
+		(alternative: each collection is a custom id group, document is a month)
+
+4. We then make this data available for review and editing at a designated location
+	* When the admin visits the review page, they are displayed all of the sorted data
+	* The custom id field for each row is editable via a text input field
+	* 'Pon clicking the respective save button,
+		i. first, we update the custom id
+		ii. we then rewrite it to the new collection based on the custom id and month
+		iii. we then delete it from its current collection
+	* The page then re-renders with the updated data (all o' it?)
+
+	* Each id group has an 'approve' button, which
+		i. makes that data available for download at the client's account page
+		ii. sends an email to the client notifying them of the available report, and containing
+			* a link to their account page, which is a restricted area
+
+5. Locations & authentication
+	* USERS: Collection. Each document has:
+		i. username (custom id or email or w/e)
+		ii. hashed and salted password
+		iii. email address
+		iv. phone number
+		v. rebecca status
+	* ROUTES 		-	Auth:
+		* Login page	- None
+		* Logout 		- Client/Rebecca
+		* Account page	- Client (custom id)
+		* Admin page	- Rebecca
+
+
+6. The client arrives at the login page, where they are shown a form with the following fields through which they can log in
+	* username (custom id)
+	* password
+	* submit button
+		* On submit, the login details are checked against our db
+		* If found & correct, the client's session is set depending on privileges
+		* They are then directed to their account page
+
+7. The client arrives at the account page, where they are shown
+	* A sorted list of months, with their corresponding reports available for download (button for download)
+
+

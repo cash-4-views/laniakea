@@ -26,7 +26,7 @@ Further potential features include:
 ## How to use
 ```
 git clone
-cd laniakeia
+cd wood_chipper
 npm install
 npm start
 ```

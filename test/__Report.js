@@ -5,6 +5,8 @@ var azure 		 = require("azure-storage"),
 var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey);
 		report 			 = new Report(tableSvc, config.rtable);
 
+// insert a report into the table here
+
 test("The getReport function", function(t) {
 	"use strict";
 

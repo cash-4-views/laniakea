@@ -32,12 +32,6 @@ html
 			.row
 				.col-sm-2.col-md-1.sidebar
 					ul.nav.nav-sidebar
-						if reportlist
-							each YYYY_MM, key in reportlist
-								li.active
-									a(href='#')
-										| #{YYYY_MM}
-										span.sr-only (current)
 				.col-sm-10.col-sm-offset-2.col-md-11.col-md-offset-1.main
 					h1.page-header Reports
 					#content

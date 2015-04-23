@@ -103,6 +103,11 @@
 .btn-group-justified.tableSelector>.btn-group.appended {
 	width: 5%;
 }
+
+.table>thead>tr>th {
+	overflow: hidden;
+}
+
 .spinner {
   width: 32px;
   height: 32px;

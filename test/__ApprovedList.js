@@ -49,7 +49,7 @@ test("The getApproved function, with a second argument", function(t) {
 			_YYYY_MM 		: {_: "2015_01"}
 		};
 
-		tableSvc.insertEntity(config.atable, approvedTing,{echoContent: true} function(error, result, response) {
+		tableSvc.insertEntity(config.atable, approvedTing,{echoContent: true}, function(error, result, response) {
 			t.notOk(error, "shouldn't throw an error in the preparation");
 			var objectWeWant = result;
 

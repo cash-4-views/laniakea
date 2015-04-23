@@ -28,3 +28,13 @@ node_modules
 
 # Bloody macs
 .DS_Store
+
+# Bloody data
+sampledata
+
+# Bloody credentials
+credentials.json
+testcredentials.json
+
+#Build
+public/assets/js/main.js

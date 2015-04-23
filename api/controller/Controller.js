@@ -252,7 +252,7 @@ Controller.prototype = {
 				var token = {
 					nextPartitionKey: req.query.nextPartitionKey,
 					nextRowKey 			: req.query.nextRowKey,
-					targetLocation 	: req.query.targetLocation
+					targetLocation 	: +req.query.targetLocation
 				};
 
 				self.report.getNextBatch(queryOpts, token, null, getAll, function(errGet, results, contToken) {
@@ -309,7 +309,7 @@ Controller.prototype = {
 				RKey		 	= req.params.videoid_policy;
 
 		self.report.updateReportRow(PKey, RKey, req.payload, function(err) {
-			if(err) return reply(err);
+			if(err) console.log(err);
 			else 		return reply(null);
 		});
 	},

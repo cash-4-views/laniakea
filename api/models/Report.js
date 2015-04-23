@@ -176,6 +176,7 @@ Report.prototype = {
 			}
 
 			objectAzurifier(null, null, null, entity, function(err, azurifiedObj) {
+				console.log(azurifiedObj);
 				self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(err) {
 					if(err) return callback(err);
 					else 		return callback(null);
@@ -202,10 +203,10 @@ Report.prototype = {
 			if(err) return callback(err);
 			entity[YYYY_MM] = YYYY_MM;
 
-			objectAzurifier(null, null, null, entity, function(err, azurifiedObj) {
-				if(err) return callback(err);
-				else self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(err) {
-					if(err) return callback(err);
+			objectAzurifier(null, null, null, entity, function(errAzure, azurifiedObj) {
+				if(errAzure) return callback(errAzure);
+				else self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(errUpdate) {
+					if(err) return callback(errUpdate);
 					else 		return callback(null);
 				});
 			});

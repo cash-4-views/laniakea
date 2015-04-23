@@ -55,7 +55,7 @@ function objectAzurifier(PartitionKey, RowKey1, RowKey2, objectToAzurify, callba
 																		.trim()
 																		.replace(illegalSpace, "_")
 																		.replace(illegalCharacters2, ""),
-					myNewValue = objectToAzurify[prop]._ || objectToAzurify[prop];
+					myNewValue = objectToAzurify[prop].hasOwnProperty("_") ? objectToAzurify[prop]._ : objectToAzurify[prop];
 
 			azurifiedObj[queueBarger(slightlyMoreLegal)] = entityStrGen(myNewValue);
 		}

@@ -43,14 +43,29 @@ module.exports = {
 						});
 	},
 
-	getReportRows: function(YYYY_MM, queryObject, onReceivingDataFn) {
+	getReportRows: function(YYYY_MM, queryObject, getTheRest, onReceivingDataFn) {
 		"use strict";
 
+		if(getTheRest) queryObject.getAll = true;
+		console.log(queryObject);
 		request.get("/api/v1/reports/" + YYYY_MM)
 						.query(queryObject)
 						.end(function(err, res) {
 							if(err) console.log("Error: " + err);
 							onReceivingDataFn(res.body.results, res.body.token, queryObject);
+						});
+	},
+
+	submitCustomID: function(YYYY_MM, customid, rowkey) {
+		"use strict";
+
+		console.log(YYYY_MM, customid, rowkey);
+
+		request.put("/api/v1/reports/" + YYYY_MM + "/" + rowkey)
+						.send({Custom_ID: customid})
+						.end(function(err, res) {
+							if(err) console.log("Error: " + err);
+							console.log(res.body);
 						});
 	}
 

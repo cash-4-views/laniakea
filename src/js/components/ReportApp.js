@@ -1,8 +1,8 @@
 var React 					= require("react"),
-		request 				= require("superagent"),
 		ReportSelector 	= require("./ReportSelector"),
 		ReportApprover  = require("./ReportApprover"),
-		ReportViewer 		= require("./ReportViewer");
+		ReportViewer 		= require("./ReportViewer"),
+		ReportAPIUtils 	= require("../utils/ReportAPIUtils");
 
 var ReportApp = React.createClass({
 
@@ -17,56 +17,46 @@ var ReportApp = React.createClass({
 			report 			: [],
 			currentQuery: {}
 		};
+
 	},
 
 	componentDidMount: function() {
 		"use strict";
 
-		request.get("/api/v1/reports")
-						.end(function(err, res){
-							if (this.isMounted()) {
-								var dates = res.body;
-								console.log(res);
-								this.setState({dates: dates});
-							}
-					  }.bind(this));
+		ReportAPIUtils.getReportList(function(datesFromServer) {
+			if (this.isMounted()) {
+				this.setState({dates: datesFromServer});
+			}
+		}.bind(this));
+
 	},
 
 	selectReport: function(date) {
 		"use strict";
+			ReportAPIUtils.selectReportFromList(date, function(idsFromServer) {
+				if(this.isMounted()) {
+					this.setState({YYYY_MM: date, customidList: idsFromServer});
+				}
+			}.bind(this));
 
-		request.get("/api/v1/reports/customidList")
-						.query({date: date})
-						.end(function(err, res) {
-							if(this.isMounted()) {
-								var idObj = res.body;
-								this.setState({YYYY_MM: date, customidList: idObj});
-							}
-						}.bind(this));
 	},
 
 	downloadReport: function(customid) {
 		"use strict";
-		// Why is this not downloading? Response comes correctly but doesn't download
-		request.get("/api/v1/reports/" + this.state.YYYY_MM)
-						.query({customid: customid, csv: true})
-						.end();
+
+		ReportAPIUtils.downloadReportForID(this.state.YYYY_MM, customid);
+
 	},
 
 	approveReport: function(customid) {
 		"use strict";
 
-		request.put("/api/v1/approvedlist/" + customid)
-						.send({YYYY_MM: this.state.YYYY_MM})
-						.end(function(err, res) {
-							if(this.isMounted()) {
-								if(err) console.log(err);
-								else {
-									console.log(res);
-									this.setState({alert: res});
-								}
-							}
-						}.bind(this));
+		ReportAPIUtils.approveReportForID(this.state.YYYY_MM, customid, function(alert) {
+				if(this.isMounted()) {
+					this.setState({alert: alert});
+				}
+			}.bind(this));
+
 	},
 
 	switchReportPanel: function(panel) {
@@ -74,50 +64,42 @@ var ReportApp = React.createClass({
 
 		var queryObject = {};
 
-		if(panel === "approved") queryObject.approved = true;
-		else if(panel === "unapproved") {
-			queryObject.customid = true;
-			queryObject.approved = false;
-		}
-		else if(panel === "unassigned") queryObject.customid = false;
+		switch(panel) {
+			case "approved":
+			// Deliberate fallthrough to default
 
-		this.setState({panel: panel, report: []});
-		request.get("/api/v1/reports/" + this.state.YYYY_MM)
-						.query(queryObject)
-						.end(this._onReceivingResults);
+			case "unapproved":
+				queryObject.customid = true;
+				queryObject.approved = false;
+				break;
+
+			case "unassigned":
+				queryObject.customid = false;
+				break;
+
+			default:
+				queryObject.approved = true;
+				break;
+
+		}
+
+		this.setState({
+			panel: panel,
+			// Unsure if this is a good thing - perhaps they should be able to refresh it
+			report: (this.state.panel === panel) ? this.state.report : []
+		});
+
+		ReportAPIUtils.getReportRows(this.state.YYYY_MM, queryObject, this._onReceivingResults);
+
 	},
 
 	getMoreResults: function() {
 		"use strict";
 
-		var queryObject = this.state.currentQuery;
+		ReportAPIUtils.getReportRows(this.state.YYYY_MM, this.state.currentQuery, this._onReceivingResults);
 
-		request.get("/api/v1/reports" + this.state.YYYY_MM)
-						.query(queryObject)
-						.end(this._onReceivingResults);
 	},
 
-	_onReceivingResults: function(err, res) {
-		"use strict";
-
-		if(this.isMounted()) {
-			if(err) console.log(err);
-			else {
-				var queryObject = this.state.currentQuery;
-				console.log(res);
-				if(res.body.token) {
-					for(var prop in res.body.token) {
-						queryObject[prop] = res.body.token[prop];
-					}
-				} else {
-					delete queryObject.nextPartitionKey;
-					delete queryObject.nextRowKey;
-					delete queryObject.targetLocation;
-				}
-				this.setState({report: this.state.report.concat(res.body.results), currentQuery: queryObject});
-			}
-		}
-	},
 
 	render: function() {
 		"use strict";
@@ -137,7 +119,26 @@ var ReportApp = React.createClass({
 		  </div>
 		);
 
-	}
+	},
+
+	_onReceivingResults: function(results, token, queryObject) {
+		"use strict";
+
+		if(this.isMounted()) {
+			if(token) {
+				for(var prop in token) {
+					queryObject[prop] = token[prop];
+				}
+			} else {
+				delete queryObject.nextPartitionKey;
+				delete queryObject.nextRowKey;
+				delete queryObject.targetLocation;
+			}
+
+			this.setState({report: this.state.report.concat(results), currentQuery: queryObject});
+		}
+
+	},
 
 });
 

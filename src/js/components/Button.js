@@ -13,6 +13,13 @@ var Button = React.createClass({
 	render: function() {
 		"use strict";
 
+		var loader = (
+			<div className="spinner">
+			  <div className="cube1"></div>
+			  <div className="cube2"></div>
+			</div>
+			);
+
 		return(
 			<div className={"btn-group carrier "+this.props.size}  role="group">
 			  <button type="button" className={"btn btn-"+this.props.type}
@@ -20,6 +27,7 @@ var Button = React.createClass({
 			  				onClick={this.onClick}>
 			  				{this.props.content}
 			  </button>
+			  {this.props.isLoading ? loader : undefined}
 			</div>
 			);
 	}

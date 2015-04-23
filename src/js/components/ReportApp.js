@@ -14,6 +14,7 @@ var ReportApp = React.createClass({
 			YYYY_MM 		: null,
 			customidList: null,
 			panel 			: null,
+			loadingPanel: null,
 			report 			: [],
 			currentQuery: {}
 		};
@@ -85,6 +86,7 @@ var ReportApp = React.createClass({
 
 		this.setState({
 			panel: panel,
+			loadingPanel: panel,
 			// Unsure if this is a good thing - perhaps they should be able to refresh it
 			report: (this.state.panel === panel) ? this.state.report : []
 		});
@@ -96,8 +98,8 @@ var ReportApp = React.createClass({
 	getMoreResults: function(getTheRest) {
 		"use strict";
 
+		this.setState({loadingPanel: this.state.panel});
 		ReportAPIUtils.getReportRows(this.state.YYYY_MM, this.state.currentQuery, getTheRest, this._onReceivingResults);
-
 	},
 
 	submitCustomID: function(customid, rowkey) {
@@ -118,6 +120,7 @@ var ReportApp = React.createClass({
 																								downloadReport={this.downloadReport}
 																								approveReport={this.approveReport} />);
 		if(this.state.YYYY_MM) 			sections.push(<ReportViewer report={this.state.report}
+																								loadingPanel={this.state.loadingPanel}
 																								panel={this.state.panel}
 																								submitCustomID={this.submitCustomID}
 																								switchReportPanel={this.switchReportPanel}
@@ -145,7 +148,7 @@ var ReportApp = React.createClass({
 				delete queryObject.targetLocation;
 			}
 
-			this.setState({report: this.state.report.concat(results), currentQuery: queryObject});
+			this.setState({report: this.state.report.concat(results), currentQuery: queryObject, loadingPanel: null});
 		}
 
 	},

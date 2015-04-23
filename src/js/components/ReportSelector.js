@@ -25,25 +25,26 @@ var ReportHeader = React.createClass({
 		}
 
 		return (
-			<h3 className="sub-header">Select a report
-			  <div className="row placeholders">
-			    <form className="form-horizontal" onSubmit={this.onSubmit}>
-			      <fieldset>
-			        <div className="form-group">
-			          <label className="col-md-2 control-label">Report</label>
-			          <div className="col-md-3">
-			            <select id="YYYY_MM" ref="reportselect" className="form-control input-md">
-			              {datesList}
-			            </select>
-			          </div>
-			          <div className="col-md-1">
-			            <button id="submit" type="submit" className="btn btn-primary" onSubmit={this.onSubmit}>Select</button>
-			          </div>
-			        </div>
-			      </fieldset>
-			    </form>
-			  </div>
-			</h3>
+			<div>
+				<h3 className="sub-header">Select a report</h3>
+				  <div className="row placeholders">
+				    <form className="form-horizontal" onSubmit={this.onSubmit}>
+				      <fieldset>
+				        <div className="form-group">
+				          <label className="col-md-2 control-label">Date</label>
+				          <div className="col-md-3">
+				            <select id="YYYY_MM" ref="reportselect" className="form-control input-md">
+				              {datesList}
+				            </select>
+				          </div>
+				          <div className="col-md-1">
+				            <button id="submit" type="submit" className="btn btn-primary" onSubmit={this.onSubmit}>Select</button>
+				          </div>
+				        </div>
+				      </fieldset>
+				    </form>
+				  </div>
+				</div>
 			);
 	}
 

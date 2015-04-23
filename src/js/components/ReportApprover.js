@@ -25,11 +25,20 @@ var ReportApprover = React.createClass({
 		}
 	},
 
+	onChange: function(e) {
+		"use strict";
+
+		this.props.changeSelected(e.target.value);
+	},
+
 	render: function() {
 		"use strict";
 
 		var customidArray = [],
-				customids 		= this.props.customidList;
+				customids 		= this.props.customidList,
+				downloadurl 	= this.props.selectedID ? "/api/v1/reports/" + this.props.YYYY_MM +
+													"?customid=" + this.props.selectedID +
+													"&csv=true" : null;
 
 		for(var customid in customids) {
 			customidArray.push(<option key={customids[customid]} value={customids[customid]}>{customids[customid]}</option>);
@@ -44,15 +53,21 @@ var ReportApprover = React.createClass({
 			        <div className="form-group">
 			          <label for="customid" className="col-md-2 control-label">Custom ID</label>
 			          <div className="col-md-3">
-			            <select id="customid" ref="customidselect" className="form-control input-md">
+			            <select id="customid" ref="customidselect" className="form-control input-md" value={this.props.selectedID} onChange={this.onChange}>
+			            	<option selected>Select an ID</option>
 			            	{customidArray}
 			            </select>
 			          </div>
 			          <div className="col-md-1">
-			            <button id="submit" value="download" className="btn btn-primary" onClick={this.onClick}>Download</button>
+			            {this.props.selectedID ?
+			            		<button id="approver" value="download" className="btn btn-primary">
+				          			<a href={downloadurl} id="dl" target="_blank">Download</a>
+			            		</button> : <span /> }
 			          </div>
 			          <div className="col-md-1">
-			            <button id="submit" value="approve" className="btn btn-primary" onClick={this.onClick}>Approve</button>
+			          	{this.props.selectedID ?
+				            <button id="approver" value="approve" className="btn btn-primary" onClick={this.onClick}>Approve</button> :
+			          	<span />}
 			          </div>
 			        </div>
 			      </fieldset>

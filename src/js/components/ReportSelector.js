@@ -38,7 +38,7 @@ var ReportHeader = React.createClass({
 				            </select>
 				          </div>
 				          <div className="col-md-1">
-				            <button id="submit" type="submit" className="btn btn-primary" onSubmit={this.onSubmit}>Select</button>
+				            <button type="submit" className="btn btn-primary" onSubmit={this.onSubmit}>Select</button>
 				          </div>
 				        </div>
 				      </fieldset>

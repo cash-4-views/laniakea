@@ -144,17 +144,16 @@ Controller.prototype = {
 				subscribed: true,
 				address 	: req.payload.email,
 				name 			: req.payload.customid,
-				vars 			: {}
 			};
 
-			self.account.createSingleAccount(newAccount, function(err) {
-				if(err) return reply(err.statusCode + ": " + err.code);
+			self.account.createSingleAccount(newAccount, function(createAccountError) {
+				if(createAccountError) return reply(createAccountError.statusCode + ": " + createAccountError.code);
 				else {
-					self.messages.addToMailingList(mailAccount, function(error) {
-						if(err) console.log("list error: ", error);
+					self.messages.addToMailingList(mailAccount, function(mailListError) {
+						if(mailListError) console.log("list error: ", mailListError);
 					});
-					self.messages.sendEmail("approve", newAccount, function(error) {
-						if(err) console.log("list error: ", error);
+					self.messages.sendEmail("approve", newAccount.email, newAccount.customid, function(sendEmailError) {
+						if(sendEmailError) console.log("list error: ", sendEmailError);
 						return reply("Account successfully created, a confirmation email has been sent to you");
 					});
 				}
@@ -372,13 +371,16 @@ Controller.prototype = {
 		if(!req.auth.credentials.admin) {
 			return reply("You're not authorised to do that");
 		} else {
-			self.report.approveAllOfCustomID(YYYY_MM, customid, function(err) {
-				if(err) {
-					return reply("There was an error approving" + err);
+			self.report.approveAllOfCustomID(YYYY_MM, customid, function(errApprove) {
+				if(errApprove) {
+					return reply("There was an error approving" + errApprove);
 			 	} else {
-			 		self.approvedList.updateApproved(customid, YYYY_MM, function(err) {
-						if(err) return reply().code(500);
-						else 		return reply("Successfully approved the " + YYYY_MM + " report for " + customid);
+			 		self.approvedList.updateApproved(customid, YYYY_MM, function(errUpdate) {
+						if(errUpdate) return reply().code(500);
+						else self.messages.sendEmail("notify", null, customid, function(errSend) {
+							if (errSend) console.log("approval error: " + errSend);
+							return reply("Successfully approved the " + YYYY_MM + " report for " + customid);
+						});
 					});
 				}
 			});

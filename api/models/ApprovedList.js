@@ -40,7 +40,7 @@ ApprovedList.prototype = {
 
 				objectAzurifier(self.partitionKey, customid, null, newObj, function(errAzure, processedObj) {
 					delete processedObj[customid];
-					console.log(errAzure, processedObj);
+					// console.log(errAzure, processedObj);
 					self.storageClient.insertOrMergeEntity(self.tableName, processedObj, function entityInserted(errInsert) {
 						if(errInsert) return callback(errInsert);
 						else 					return callback(null);

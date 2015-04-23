@@ -29,7 +29,10 @@ module.exports = {
 		// Why is this not downloading? Response comes correctly but doesn't download
 		request.get("/api/v1/reports/" + YYYY_MM)
 						.query({customid: customid, csv: true})
-						.end();
+						.end(function(err, res) {
+							if(err) console.log(err);
+							else console.log(res);
+						});
 	},
 
 	approveReportForID: function(YYYY_MM, customid, onSuccess) {

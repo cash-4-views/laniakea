@@ -16,7 +16,8 @@ var ReportApp = React.createClass({
 			panel 			: null,
 			loadingPanel: null,
 			report 			: [],
-			currentQuery: {}
+			currentQuery: {},
+			selectedID  : null
 		};
 
 	},
@@ -36,7 +37,7 @@ var ReportApp = React.createClass({
 		"use strict";
 			ReportAPIUtils.selectReportFromList(date, function(idsFromServer) {
 				if(this.isMounted()) {
-					this.setState({YYYY_MM: date, customidList: idsFromServer});
+					this.setState({YYYY_MM: date, customidList: idsFromServer });
 				}
 			}.bind(this));
 
@@ -58,6 +59,12 @@ var ReportApp = React.createClass({
 				}
 			}.bind(this));
 
+	},
+
+	changeSelected: function(selectedID) {
+		"use strict";
+
+		this.setState({selectedID: selectedID});
 	},
 
 	switchReportPanel: function(panel) {
@@ -117,8 +124,11 @@ var ReportApp = React.createClass({
 
 		if(this.state.dates) 				sections.push(<ReportSelector dates={this.state.dates} selectReport={this.selectReport} />);
 		if(this.state.customidList) sections.push(<ReportApprover customidList={this.state.customidList}
+																								YYYY_MM={this.state.YYYY_MM}
+																								selectedID={this.state.selectedID}
 																								downloadReport={this.downloadReport}
-																								approveReport={this.approveReport} />);
+																								approveReport={this.approveReport}
+																								changeSelected={this.changeSelected}/>);
 		if(this.state.YYYY_MM) 			sections.push(<ReportViewer report={this.state.report}
 																								loadingPanel={this.state.loadingPanel}
 																								panel={this.state.panel}

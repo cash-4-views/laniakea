@@ -154,3 +154,19 @@
     -webkit-transform: rotate(-360deg);
   }
 }
+
+
+a#dl {
+	color: white;
+	text-decoration: none;
+}
+
+a#dl:hover {
+	color: white;
+	text-decoration: none;
+}
+
+#approver {
+	width:94px;
+	height:34px;
+}

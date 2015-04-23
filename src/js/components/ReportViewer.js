@@ -1,14 +1,8 @@
 var React 	= require("react"),
+		Button 	= require("./Button"),
 		Griddle = require("griddle-react");
 
 var ReportViewer = React.createClass({
-
-	onClick: function(e) {
-		"use strict";
-
-		e.preventDefault();
-		this.props.switchReportPanel(e.target.value);
-	},
 
 	render: function() {
 		"use strict";
@@ -17,15 +11,9 @@ var ReportViewer = React.createClass({
 				<h3 className="sub-header">View Reports</h3>
 				<div>
 					<div className="btn-group btn-group-justified tableSelector" role="group" aria-label="...">
-					  <div className="btn-group" role="group">
-					    <button type="button" className="btn btn-success" value="approved" onClick={this.onClick}>Approved</button>
-					  </div>
-					  <div className="btn-group" role="group">
-					    <button type="button" className="btn btn-info" value="unapproved" onClick={this.onClick}>Unapproved</button>
-					  </div>
-					  <div className="btn-group" role="group">
-					    <button type="button" className="btn btn-warning" value="unassigned" onClick={this.onClick}>Unassigned</button>
-					  </div>
+					  <Button type="success" value="approved" onClickCallback={this.props.switchReportPanel} />
+					  <Button type="info" value="unapproved" onClickCallback={this.props.switchReportPanel} />
+					  <Button type="warning" value="unassigned" onClickCallback={this.props.switchReportPanel} />
 					</div>
 				</div>
 				<Griddle results={this.props.report}

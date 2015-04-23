@@ -181,6 +181,14 @@ Controller.prototype = {
 	},
 
 // Reports
+
+	/*
+	*	If a customid is included as part of the query, it can be:
+	*		true 	 		: request for any report row with customid 								(admin)
+	*		false  	  : request for any report row without a customid 					(admin)
+	*		{other}   : request for any report row with the specified customid 	(admin, approved for user)
+	*/
+
 	// This one needs some tidying up am i right yes i am
 	getReport: function(req, reply) {
 		"use strict";
@@ -190,7 +198,7 @@ Controller.prototype = {
 				YYYY_MM 		= req.params.YYYY_MM,
 				customid 		= (req.query.customid === "true") ? true : (req.query.customid === "false") ? false : req.query.customid,
 				csv 			 	= req.query.csv,
-				approveBool = (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null,
+				approved 		= (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null,
 				getAll 			= req.query.getAll;
 
 		if(customid && customid !== true) {
@@ -204,7 +212,7 @@ Controller.prototype = {
 						return reply("That report is not available to you yet");
 					} else {
 
-						self.report.getReport(YYYY_MM, customid, approveBool, true, function(err, reportResults) {
+						self.report.getReport(YYYY_MM, customid, approved, true, function(err, reportResults) {
 							if(err) return reply(err);
 							return deAzurifier(reportResults, false, function(err, formattedArray) {
 								if(csv) return reply(Baby.unparse(formattedArray))
@@ -221,7 +229,7 @@ Controller.prototype = {
 
 			if(!creds.admin) return reply().code(403);
 			else if(!req.query.nextRowKey) {
-				self.report.getReport(YYYY_MM, customid, approveBool, getAll, function(errGet, totalResults, contToken) {
+				self.report.getReport(YYYY_MM, customid, approved, getAll, function(errGet, totalResults, contToken) {
 					if(errGet) return reply(errGet);
 
 					return deAzurifier(totalResults, true, function(errAzure, formattedArray) {
@@ -236,7 +244,7 @@ Controller.prototype = {
 				var queryOpts = {
 					YYYY_MM : YYYY_MM,
 					customid: customid,
-					approved: approveBool
+					approved: approved
 				};
 
 				var token = {
@@ -314,6 +322,7 @@ Controller.prototype = {
 			if(err) return reply(err);
 			else  	return reply(deAzurifier(list));
 		});
+
 	},
 
 	getCustomIDList: function(req, reply) {
@@ -331,6 +340,7 @@ Controller.prototype = {
 				return 	reply(formattedObj);
 			});
 		});
+
 	},
 
 // Approved
@@ -344,9 +354,9 @@ Controller.prototype = {
 		if(!req.auth.credentials.admin && customid !== req.auth.credentials.customid) {
 			return reply("You're not authorised to do that");
 		} else {
-			self.approved.getApproved(customid, YYYY_MM, function(err, approvedList) {
+			self.approvedList.getApproved(customid, YYYY_MM, function(err, approvedEntity) {
 				if(err) return reply(err);
-				else 		return reply(approvedList);
+				else 		return reply(approvedEntity);
 			});
 		}
 	},

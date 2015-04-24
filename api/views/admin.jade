@@ -66,15 +66,6 @@ body
 									input#phone.form-control.input-md(name='phone', type='text', placeholder='01234555666')
 								.col-md-1
 									button#submit.btn.btn-primary(name='submit', type="submit") Create
-				h3.sub-header Upload a CSV report
-				.row.placeholders
-					form.form-horizontal(action="/api/v1/reports", method="POST", enctype='multipart/form-data')
-						.form-group
-							label.col-md-2.control-label(for='upload') Upload Your File
-							.col-md-2
-								input#upload.input-file(name='upload-report', type='file')
-							.col-md-1
-								button#submit.btn.btn-primary(type='submit', value='Upload') Upload
 
 	script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js')
 	script(src='/assets/js/bootstrap.min.js')

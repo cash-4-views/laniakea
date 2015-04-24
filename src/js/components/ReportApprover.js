@@ -37,7 +37,7 @@ var ReportApprover = React.createClass({
 			    <form className="form-horizontal">
 			      <fieldset>
 			        <div className="form-group">
-			          <label for="customid" className="col-md-2 control-label">Custom ID</label>
+			          <label className="col-md-2 control-label">Custom ID</label>
 			          <div className="col-md-3">
 			            <select id="customid" ref="customidselect" className="form-control input-md" value={this.props.selectedID} onChange={this.onChange}>
 			            	<option defaultValue="Select an ID"></option>

@@ -1,6 +1,7 @@
 var React 					= require("react"),
 		ReportAlert 		= require("./ReportAlert"),
 		ReportSelector 	= require("./ReportSelector"),
+		ReportUploader 	= require("./ReportUploader"),
 		ReportApprover  = require("./ReportApprover"),
 		ReportViewer 		= require("./ReportViewer"),
 		ReportAPIUtils 	= require("../utils/ReportAPIUtils");
@@ -34,6 +35,12 @@ var ReportApp = React.createClass({
 			}
 		}.bind(this));
 
+	},
+
+	uploadReport: function(reportCSV) {
+		"use strict";
+
+		ReportAPIUtils.uploadReport(reportCSV);
 	},
 
 	selectReport: function(date) {
@@ -131,11 +138,13 @@ var ReportApp = React.createClass({
 
 	render: function() {
 		"use strict";
-		var section1 = [];
+		var sections = [],
+				topleft;
+
+		if(this.state.dates) 				topleft = 	 (<ReportSelector key="ReportSelector"
+																									dates={this.state.dates} selectReport={this.selectReport} />);
 		if(this.state.alert)				sections.push(<ReportAlert key="ReportAlert" alert={this.state.alert}
 																									closeAlert={this.closeAlert} />);
-		if(this.state.dates) 				sections.push(<ReportSelector key="ReportSelector"
-																									dates={this.state.dates} selectReport={this.selectReport} />);
 		if(this.state.customidList) sections.push(<ReportApprover key="ReportApprover"
 																									customidList={this.state.customidList}
 																									YYYY_MM={this.state.YYYY_MM}
@@ -154,7 +163,15 @@ var ReportApp = React.createClass({
 
 		return (
 			<div>
-				{sections}
+				<div className="row">
+					<div className="col-md-6">
+						{topleft}
+					</div>
+					<div className="col-md-6">
+						<ReportUploader uploadReport={this.uploadReport}/>
+					</div>
+		  	</div>
+		  	{sections}
 		  </div>
 		);
 

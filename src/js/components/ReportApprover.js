@@ -1,28 +1,14 @@
-var React = require("react");
+var React  = require("react"),
+		Button = require("./Button");
 
 var ReportApprover = React.createClass({
 
-	onClick: function(e) {
+	onClickCallback: function() {
 		"use strict";
 
-		e.preventDefault();
+		var selectedID = React.findDOMNode(this.refs.customidselect).value;
 
-		var selectedID = React.findDOMNode(this.refs.customidselect).value,
-				buttonClicked = e.target.value;
-
-		switch(buttonClicked) {
-
-			case "download":
-				this.props.downloadReport(selectedID);
-				break;
-
-			case "approve":
-				this.props.approveReport(selectedID);
-				break;
-
-			default:
-				return;
-		}
+		this.props.approveReport(selectedID);
 	},
 
 	onChange: function(e) {
@@ -51,22 +37,24 @@ var ReportApprover = React.createClass({
 			    <form className="form-horizontal">
 			      <fieldset>
 			        <div className="form-group">
-			          <label for="customid" className="col-md-2 control-label">Custom ID</label>
+			          <label className="col-md-2 control-label">Custom ID</label>
 			          <div className="col-md-3">
 			            <select id="customid" ref="customidselect" className="form-control input-md" value={this.props.selectedID} onChange={this.onChange}>
-			            	<option selected>Select an ID</option>
+			            	<option defaultValue="Select an ID"></option>
 			            	{customidArray}
 			            </select>
 			          </div>
-			          <div className="col-md-1">
+			          <div className="col-md-1 approver">
 			            {this.props.selectedID ?
-			            		<button id="approver" value="download" className="btn btn-primary">
+			            		<button className="btn btn-primary" value="download">
 				          			<a href={downloadurl} id="dl" target="_blank">Download</a>
 			            		</button> : <span /> }
 			          </div>
 			          <div className="col-md-1">
 			          	{this.props.selectedID ?
-				            <button id="approver" value="approve" className="btn btn-primary" onClick={this.onClick}>Approve</button> :
+				            <Button size="approver" value="approve" type="primary"
+				            		isLoading={this.props.loadingBtn} onClickCallback={this.onClickCallback}
+				            		isDisabled={false} content={this.props.loadingBtn ? "" : "Approve"} /> :
 			          	<span />}
 			          </div>
 			        </div>

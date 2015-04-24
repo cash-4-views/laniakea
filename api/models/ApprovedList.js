@@ -29,10 +29,8 @@ ApprovedList.prototype = {
 		var self = this;
 
 		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, customid, function entityQueried(errFind, entity) {
-			if(errFind && errFind.statusCode !== 404) {
-				console.log(errFind);
-				return callback(errFind);
-			} else {
+			if(errFind && errFind.statusCode !== 404) return callback(errFind);
+			else {
 				var newObj = entity || {};
 				if(!entity) newObj[customid] = customid;
 
@@ -40,7 +38,6 @@ ApprovedList.prototype = {
 
 				objectAzurifier(self.partitionKey, customid, null, newObj, function(errAzure, processedObj) {
 					delete processedObj[customid];
-					// console.log(errAzure, processedObj);
 					self.storageClient.insertOrMergeEntity(self.tableName, processedObj, function entityInserted(errInsert) {
 						if(errInsert) return callback(errInsert);
 						else 					return callback(null);

@@ -2,6 +2,18 @@ var request = require("superagent");
 
 module.exports = {
 
+	uploadReport: function(reportCSV) {
+		"use strict";
+
+		request.post("/api/v1/reports")
+						.type("form")
+						.field("upload-report", reportCSV)
+						.end(function(err, res) {
+							console.log(err, res);
+						});
+
+	},
+
 	getReportList: function(onReceivingDataFn) {
 		"use strict";
 
@@ -41,8 +53,8 @@ module.exports = {
 		request.put("/api/v1/approvedlist/" + customid)
 						.send({YYYY_MM: YYYY_MM})
 						.end(function(err, res) {
-							if(err) console.log("Error: " + err);
-							else return onSuccess(res.text);
+							if(err) return onSuccess({type: "Error!", content: err});
+							else 		return onSuccess({type: "Success!", content: "Report approved. Email sent to user"});
 						});
 	},
 
@@ -59,7 +71,7 @@ module.exports = {
 						});
 	},
 
-	submitCustomID: function(YYYY_MM, customid, rowkey) {
+	submitCustomID: function(YYYY_MM, customid, rowkey, onSuccess) {
 		"use strict";
 
 		console.log(YYYY_MM, customid, rowkey);
@@ -67,8 +79,8 @@ module.exports = {
 		request.put("/api/v1/reports/" + YYYY_MM + "/" + rowkey)
 						.send({Custom_ID: customid})
 						.end(function(err, res) {
-							if(err) console.log("Error: " + err);
-							console.log(res.body);
+							if(err) return onSuccess({type: "Error!", content: err});
+							else 		return onSuccess({type: "Success!", content: "Report approved"});
 						});
 	}
 

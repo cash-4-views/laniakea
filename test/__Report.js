@@ -1,5 +1,5 @@
 var azure 		 = require("azure-storage"),
-		config 		 = require("./testconfig").database;
+		config 		 = require("./config/testconfig").database;
 		test 			 = require("tape");
 
 var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey);

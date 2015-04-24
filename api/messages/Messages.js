@@ -70,7 +70,6 @@ Messages.prototype = {
 		var self = this;
 
 		self.createMessage(emailType, email, customid, function(err, message) {
-			console.log(err, message);
 			self.mailgun.messages().send(message, function(senderror) {
 				if (senderror) {
 					console.log("SendError: " + senderror);
@@ -87,9 +86,14 @@ Messages.prototype = {
 		"use strict";
 		var self = this;
 
-		self.list.members().list(function(err, body) {
-			if (err) console.log("list err: " + err);
-			self.searchMailList(customid, body.items, callback);
+		self.list.members().list(function(errList, body) {
+			if (errList) console.log("list err: " + errList);
+			console.log(body);
+			self.searchMailList(customid, body.items, function(err, memberEmail) {
+				console.log(err, memberEmail)
+				if(err) return callback(err);
+				else 		return callback(null, memberEmail);
+			});
 		});
 	},
 
@@ -107,9 +111,7 @@ Messages.prototype = {
 	createMessage: function(emailType, email, customid, callback) {
 		"use strict";
 		var self = this;
-
 		if(!email) {
-
 			self.getRecipient(customid, function(error, emailAddress) {
 				console.log(emailAddress, emailType);
 

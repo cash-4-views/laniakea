@@ -1,16 +1,16 @@
 var azure 		 		= require("azure-storage"),
-		config 		 		= require("./testconfig").database,
+		config 		 		= require("./config/testconfig").database,
 		ApprovedList 	= require("../api/models/ApprovedList"),
 		test 			 		= require("tape");
 
 var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey);
-		approvedList = new ApprovedList(tableSvc, config.atable);
+		approvedList = new ApprovedList(tableSvc, "APPROVEDTESTING");
 
-test("The ApprovedList function ", function(t) {
+test("The ApprovedList constructer ", function(t) {
 	"use strict";
 
 	t.equal(approvedList.storageClient, tableSvc, "should return an object with the storage client we specified");
-	t.equal(approvedlist.tableName, config.atable, "should return an object with the table name specified");
+	t.equal(approvedlist.tableName, "APPROVEDTESTING", "should return an object with the table name specified");
 	t.equal(approvedlist.PartitionKey, "approvedlist", "should return an object with the partitionkey as our default value");
 	t.end();
 });
@@ -25,7 +25,7 @@ test("The getApproved function, null second argument, ", function(t) {
 		_YYYY_MM 		: {_: "2015_01"}
 	};
 
-	tableSvc.insertEntity(config.atable, approvedTing, {echoContent: true}, function(error, result, response) {
+	tableSvc.insertEntity("APPROVEDTESTING", approvedTing, {echoContent: true}, function(error, result, response) {
 		t.notOk(error, "shouldn't throw an error in the preparation");
 		var objectWeWant = result;
 
@@ -49,7 +49,7 @@ test("The getApproved function, with a second argument", function(t) {
 			_YYYY_MM 		: {_: "2015_01"}
 		};
 
-		tableSvc.insertEntity(config.atable, approvedTing,{echoContent: true}, function(error, result, response) {
+		tableSvc.insertEntity("APPROVEDTESTING", approvedTing,{echoContent: true}, function(error, result, response) {
 			t.notOk(error, "shouldn't throw an error in the preparation");
 			var objectWeWant = result;
 
@@ -72,12 +72,12 @@ test("The updateApproved function, with an existing entity, ", function(t) {
 		_2010_01 		: {_: "2010_02"}
 	};
 
-	tableSvc.insertEntity(config.atable, approvedTing, {echoContent: true}, function(error, result, response) {
+	tableSvc.insertEntity("APPROVEDTESTING", approvedTing, {echoContent: true}, function(error, result, response) {
 
 		approvedlist.updateApproved("another_new_object", "2017_03", function(err) {
 			t.notOk(err, "should not return an error");
 
-			tableSvc.retrieveEntity(config.atable, "approvedlist", "newspaper", function(error, item) {
+			tableSvc.retrieveEntity("APPROVEDTESTING", "approvedlist", "newspaper", function(error, item) {
 				t.equal(item["_2016_01"], objectWePutIn["2017_03"], "should have successfully updated the object");
 				t.equal(item["_2010_02"], objectWePutIn["2010_02"], "should not have modified other properties of the item");
 				t.end();
@@ -100,7 +100,7 @@ test("The updateApproved function, with an existing entity and field, ", functio
 	approvedlist.updateApproved("Francois_Hollande", "2016_01", function(err) {
 		t.notOk(err, "should not return an error");
 
-		tableSvc.retrieveEntity(config.atable, "approvedlist", "newspaper", function(error, item) {
+		tableSvc.retrieveEntity("APPROVEDTESTING", "approvedlist", "newspaper", function(error, item) {
 			t.notOk(error, "should not return an error");
 			t.equal(item["_2016_01"], objectWePutIn["2016_01"], "should have successfully updated the object to the same as before");
 			t.equal(item["_2010_02"], objectWePutIn["2010_02"], "should not have modified other properties of the item");
@@ -115,13 +115,22 @@ test("The updateApproved function, with a new entity, ", function(t) {
 	approvedlist.updateApproved("timmy and the crew", "2016_01", function(err) {
 		t.notOk(err, "should not return an error");
 
-		tableSvc.retrieveEntity(config.atable, "approvedlist", "newEntity", function(error, item) {
+		tableSvc.retrieveEntity("APPROVEDTESTING", "approvedlist", "newEntity", function(error, item) {
 			t.notOk(error, "should not return an error");
 			t.ok(item, "should have successfully created the entity");
 			t.equal(item["timmy_and_the_crew"], objectWePutIn["timmy and the crew"], "should have successfully created the object with a valid name");
 			t.equal(item["_2016_01"], objectWePutIn["2016_01"], "should have successfully created the object with the correct field");
 			t.end();
 		});
+		t.end();
+	});
+});
+
+test("Cleaning up after ourselves - deleting the table, ", function(t) {
+	"use strict";
+
+	tableSvc.deleteTable("APPROVEDTESTING", function(err) {
+		t.notOk(err, "should successfully delete the table");
 		t.end();
 	});
 });

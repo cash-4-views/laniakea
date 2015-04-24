@@ -228,6 +228,7 @@ Report.prototype = {
 	getCustomIDList: function(YYYY_MM, callback) {
 		"use strict";
 		var self = this;
+		console.log("getting ids");
 
 		self.storageClient.retrieveEntity(self.tableName, "customidlist", "y" + YYYY_MM, function entityQueried(err, entity) {
 			if(err) return callback(err);

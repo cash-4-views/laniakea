@@ -145,8 +145,10 @@ Report.prototype = {
 												});
 											}
 											console.log("Done, that took ", Date.now() - timestampPrep, "/ms to upload " + holderLength + " rows and there were " + errorCounter, " errors");
-											if(errorCounter) console.log("Check errorlog.json for details");
-											fs.appendFile("errorlog.json", JSON.stringify(errorArray));
+											if(errorCounter) {
+												console.log("Check errorlog.json for details");
+												fs.appendFile("errorlog.json", JSON.stringify(errorArray));
+											}
 										});
 									});
 								});

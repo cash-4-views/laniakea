@@ -1,5 +1,5 @@
 var React 			   = require("react"),
-		Button 				 = require("./Button"),
+		ButtonTray 		 = require("./ButtonTray"),
 		ReportAPIUtils = require("../utils/ReportAPIUtils"),
 		Griddle 			 = require("griddle-react");
 
@@ -24,14 +24,7 @@ var ReportViewer = React.createClass({
 		return (
 			<div>
 				<h3 className="sub-header">View Reports</h3>
-				<div className="btn-group btn-group-justified tableSelector" role="group" aria-label="...">
-					  <Button type="success" size="chief" 	 value="approved"   content="Approved"   onClickCallback={this.props.switchReportPanel} isLoading={this.props.loadingPanel==="approved"}/>
-					  <Button type="success" size="appended" value="Fetch All"  content="All" 		   onClickCallback={this.props.getMoreResults} 		isDisabled={this.props.panel!=="approved"}/>
-					  <Button type="info" 	 size="chief" 	 value="unapproved" content="Unapproved" onClickCallback={this.props.switchReportPanel} isLoading={this.props.loadingPanel==="unapproved"}/>
-					  <Button type="info" 	 size="appended" value="Fetch All"  content="All"			   onClickCallback={this.props.getMoreResults} 		isDisabled={this.props.panel!=="unapproved"}/>
-					  <Button type="warning" size="chief" 	 value="unassigned" content="Unassigned" onClickCallback={this.props.switchReportPanel} isLoading={this.props.loadingPanel==="unassigned"}/>
-					  <Button type="warning" size="appended" value="Fetch All"  content="All" 			 onClickCallback={this.props.getMoreResults} 		isDisabled={this.props.panel!=="unassigned"}/>
-				</div>
+				<ButtonTray switchReportPanel={this.props.switchReportPanel} getMoreResults={this.props.switchReportPanel} loadingPanel={this.props.loadingPanel} panel={this.props.panel} />
 				<Griddle results={this.props.report}
 					columnMetadata={columnMeta}
 					columns={columns}
@@ -54,8 +47,8 @@ var CustomIDForm = React.createClass({
 
 		var rowkey 	 = this.props.data,
 				customid = React.findDOMNode(this.refs.customid).value;
-		console.log(this.props);
-		ReportAPIUtils.submitCustomID(this.props.rowData.PartitionKey, customid, rowkey);
+
+		ReportAPIUtils.submitCustomID(this.props.rowData.PartitionKey, customid, rowkey, function(alert) {console.log(alert);});
 	},
 
 	render: function() {

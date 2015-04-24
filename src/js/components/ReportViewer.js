@@ -16,7 +16,7 @@ var ReportViewer = React.createClass({
 				"order": 1,
 				"locked": false,
 				"visible": true,
-				"displayName": "RowKey",
+				"displayName": "Custom ID",
 				"customComponent": CustomIDForm
 			}
 		];
@@ -41,28 +41,69 @@ var ReportViewer = React.createClass({
 
 var CustomIDForm = React.createClass({
 
+	getInitialState: function() {
+		"use strict";
+
+		return({status: null});
+	},
+
 	onClick: function(e) {
 		"use strict";
+		var self = this;
+
 		e.preventDefault();
+
+		this.setState({status: "clicked"});
 
 		var rowkey 	 = this.props.data,
 				customid = React.findDOMNode(this.refs.customid).value;
 
-		ReportAPIUtils.submitCustomID(this.props.rowData.PartitionKey, customid, rowkey, function(alert) {console.log(alert);});
+		ReportAPIUtils.submitCustomID(this.props.rowData.PartitionKey, customid, rowkey, function(alert) {
+			console.log("done");
+			self.setState({status: alert.type});
+		});
 	},
 
 	render: function() {
 		"use strict";
+		var buttonClass;
+
+		switch (this.state.status) {
+
+			case "Success!":
+				buttonClass = "btn btn-info glyphicon glyphicon-ok";
+				break;
+
+			case "Error!":
+				buttonClass = "btn btn-danger glyphicon glyphicon-remove";
+				break;
+
+			case "clicked":
+				buttonClass = "btn btn-warning";
+				break;
+
+			default:
+				buttonClass = "btn btn-warning glyphicon glyphicon-edit";
+				break;
+		}
+
+		var loadingAnimation = (<div className="but spinner">
+														  <div className="cube1"></div>
+														  <div className="cube2"></div>
+														</div>);
+
 		var alreadyGotACustomID = this.props.rowData && this.props.rowData.Custom_ID,
 				bouteille = (<span className="input-group-btn">
-		        					<button className="btn btn-warning glyphicon glyphicon-ok" type="button" onClick={this.onClick}></button>
+		        					<button className={buttonClass} type="button" onClick={this.onClick} disabled={this.state.status !== null} >
+		        						{this.state.status === "clicked" ? loadingAnimation : <span />}
+		        					</button>
 		      					</span>);
 
 
 		return (
 		    <div className="input-group">
 		      {alreadyGotACustomID ? null : bouteille}
-		      <input type="text" className="form-control" ref="customid" placeholder={alreadyGotACustomID ? this.props.data : "Enter a Custom ID"} disabled={alreadyGotACustomID}/>
+		      <input type="text" className="form-control" ref="customid" placeholder={alreadyGotACustomID ? this.props.rowData.Custom_ID : "Enter a Custom ID"} disabled={alreadyGotACustomID || this.state.status !== null} />
 		    </div>
 		);
 	}

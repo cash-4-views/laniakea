@@ -364,7 +364,6 @@ Controller.prototype = {
 		}
 	},
 
-	// Use payload rather than params
 	updateApproved: function(req, reply) {
 		"use strict";
 		var self = this;

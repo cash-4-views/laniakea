@@ -175,3 +175,8 @@ a#dl:hover {
 	width:94px;
 	height:34px;
 }
+
+.but.spinner {
+width: 12px;
+height: 19px;
+}

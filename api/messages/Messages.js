@@ -90,7 +90,6 @@ Messages.prototype = {
 			if (errList) console.log("list err: " + errList);
 			console.log(body);
 			self.searchMailList(customid, body.items, function(err, memberEmail) {
-				console.log(err, memberEmail)
 				if(err) return callback(err);
 				else 		return callback(null, memberEmail);
 			});
@@ -113,7 +112,6 @@ Messages.prototype = {
 		var self = this;
 		if(!email) {
 			self.getRecipient(customid, function(error, emailAddress) {
-				console.log(emailAddress, emailType);
 
 				var message = {
 					from: "mail@" + self.domain,
@@ -123,7 +121,6 @@ Messages.prototype = {
 				getMessageTemplates(emailType, message, customid, callback);
 			});
 		}	else {
-			console.log(email, customid);
 				var message = {
 					from: "mail@" + self.domain,
 					to: email

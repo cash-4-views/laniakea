@@ -6,7 +6,6 @@ var Button = React.createClass({
 		"use strict";
 
 		e.preventDefault();
-		console.log(this.props.onClickCallback);
 		this.props.onClickCallback(e.target.value);
 
 	},

@@ -27,7 +27,7 @@ var ReportUploader = React.createClass({
 			  <div className="row placeholders">
 			    <form action="/api/v1/reports" method="POST" encType="multipart/form-data" className="form-horizontal">
 			      <div className="form-group">
-			        <label className="col-md-3 control-label">Upload Your File</label>
+			        <label className="col-md-4 control-label">Upload Your File</label>
 			        <div className="col-md-4">
 			          <input ref="upload-report" id="upload" name="upload-report" type="file" className="input-file"/>
 			        </div>

@@ -131,7 +131,7 @@ var ReportApp = React.createClass({
 
 	render: function() {
 		"use strict";
-		var sections = [];
+		var section1 = [];
 		if(this.state.alert)				sections.push(<ReportAlert key="ReportAlert" alert={this.state.alert}
 																									closeAlert={this.closeAlert} />);
 		if(this.state.dates) 				sections.push(<ReportSelector key="ReportSelector"

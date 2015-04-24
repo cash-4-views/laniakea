@@ -1,18 +1,36 @@
 {
-  "name": "laniakeia",
+  "name": "wood_chipper",
   "version": "1.0.0",
   "description": "Software for YouTube monthly report-generation",
+  "repository": "https://github.com/cash-4-views/wood_chipper.git",
   "main": "index.js",
   "scripts": {
-    "test": "node ./__tests__/* | tape"
+    "test": "node ./test/* | tap-spec"
   },
   "devDependencies": {
-    "shot": "^1.4.2",
-    "tape": "^3.5.0"
+    "browserify": "^9.0.8",
+    "gulp": "^3.8.11",
+    "gulp-browserify": "^0.5.1",
+    "gulp-concat": "^2.5.2",
+    "harmonize": "^1.4.1",
+    "reactify": "^1.1.0",
+    "tap-spec": "^3.0.0",
+    "tape": "^4.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.1.1"
   },
   "dependencies": {
-    "hapi": "^8.4.0"
+    "azure-storage": "^0.4.3",
+    "babyparse": "^0.4.3",
+    "bcrypt-nodejs": "0.0.3",
+    "griddle-react": "^0.2.12",
+    "hapi": "^8.4.0",
+    "hapi-auth-cookie": "^2.0.0",
+    "jade": "^1.9.2",
+    "mailgun-js": "^0.6.9",
+    "react": "^0.13.2",
+    "superagent": "^1.2.0"
   },
-  "author": "",
+  "author": "cash-4-views",
   "license": "ISC"
 }

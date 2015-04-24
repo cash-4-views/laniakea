@@ -62,7 +62,7 @@ module.exports = {
 		"use strict";
 
 		if(getTheRest) queryObject.getAll = true;
-		console.log(queryObject);
+
 		request.get("/api/v1/reports/" + YYYY_MM)
 						.query(queryObject)
 						.end(function(err, res) {
@@ -73,8 +73,6 @@ module.exports = {
 
 	submitCustomID: function(YYYY_MM, customid, rowkey, onSuccess) {
 		"use strict";
-
-		console.log(YYYY_MM, customid, rowkey);
 
 		request.put("/api/v1/reports/" + YYYY_MM + "/" + rowkey)
 						.send({Custom_ID: customid})

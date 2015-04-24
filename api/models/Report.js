@@ -92,16 +92,28 @@ Report.prototype = {
 					console.log("Parsing complete! Errors: ", results.errors);
 					console.log("Trimming, parsing and batching took ", Date.now()-timestampPrep, "/ms");
 
-					var errorCounter = 0,
-							holderLength = azurifiedReportHolder.length,
-							base  	 		 = Math.ceil(holderLength/1000),
-							errorArray 	 = [],
+					var errorCounter  = 0,
+							holderLength  = azurifiedReportHolder.length,
+							base  	 		  = Math.ceil(holderLength/100)*100,
+							errorArray 	  = [],
+							tBeforeUpload = Date.now(),
+							bigBatch      = holderLength > 1000,
 							n;
+
+					if(!bigBatch) callback(null, 0);
 
 					azurifiedReportHolder.forEach(function(rep, ind) {
 						self.storageClient.insertOrReplaceEntity(self.tableName, rep, function(err) {
-							if (ind%base === 0) {
-								console.log(ind/base/10, "% completed");
+							if ((ind*100)%base === 0) {
+								var percentCompleted = ((ind)/base)*100;
+
+								console.log(percentCompleted + "% completed");
+								if(bigBatch) {
+									if(percentCompleted === 1) {
+										var msTimeForOnePercent = Date.now() - tBeforeUpload;
+										return callback(null, msTimeForOnePercent*100);
+									}
+								}
 							}
 							if (err) {
 								errorCounter += 1;
@@ -135,7 +147,6 @@ Report.prototype = {
 											console.log("Done, that took ", Date.now() - timestampPrep, "/ms to upload " + holderLength + " rows and there were " + errorCounter, " errors");
 											if(errorCounter) console.log("Check errorlog.json for details");
 											fs.appendFile("errorlog.json", JSON.stringify(errorArray));
-											return callback(null, "success!");
 										});
 									});
 								});

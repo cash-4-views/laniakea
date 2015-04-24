@@ -8,7 +8,6 @@ var ReportHeader = React.createClass({
 		e.preventDefault();
 
 		var selectedDate = React.findDOMNode(this.refs.reportselect).value;
-		console.log(selectedDate);
 		this.props.selectReport(selectedDate);
 	},
 
@@ -32,7 +31,7 @@ var ReportHeader = React.createClass({
 				      <fieldset>
 				        <div className="form-group">
 				          <label className="col-md-2 control-label">Date</label>
-				          <div className="col-md-3">
+				          <div className="col-md-6">
 				            <select id="YYYY_MM" ref="reportselect" className="form-control input-md">
 				              {datesList}
 				            </select>

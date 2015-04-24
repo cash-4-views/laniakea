@@ -2,6 +2,18 @@ var request = require("superagent");
 
 module.exports = {
 
+	uploadReport: function(reportCSV) {
+		"use strict";
+
+		request.post("/api/v1/reports")
+						.type("form")
+						.field("upload-report", reportCSV)
+						.end(function(err, res) {
+							console.log(err, res);
+						});
+
+	},
+
 	getReportList: function(onReceivingDataFn) {
 		"use strict";
 

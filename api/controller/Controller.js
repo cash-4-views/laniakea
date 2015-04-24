@@ -270,11 +270,12 @@ Controller.prototype = {
 		"use strict";
 		var self = this;
 
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+		if(!req.payload["upload-report"]) return reply("No file sent").code(400);
+
 		var uploadInfo = req.payload['upload-report'].hapi;
 
-		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
 		if(uploadInfo.headers["content-type"] !== "text/csv") return reply("Not a csv");
-	  reply("Your report is being processed");
 
 		var date = uploadInfo.filename.match(/_([\d]{8})_/i)[1];
 
@@ -289,8 +290,11 @@ Controller.prototype = {
 
 	  uploadStream.on('end', function () {
 	    var data = body;
-	    self.report.createReport(YYYY_MM, data, function(err, alert) {
-	    	return console.log(alert);
+	    self.report.createReport(YYYY_MM, data, function(err, msETA) {
+	    	if(err) return reply(err);
+	    	else 		return reply("Your report is being processed. It should be fully uploaded" +
+	    													(msETA/1000/60 > 0 ? "in approximately " + (Math.ceil(msETA/1000/60)) + " minutes." :
+	    																							"shortly."));
 	    });
 		});
 	},

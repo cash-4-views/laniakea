@@ -103,3 +103,11 @@ body {
   display: inline-block;
   border-radius: 50%;
 }
+
+.alert.alert-dismissible {
+  position: fixed;
+  top: 55px;
+  right: 40px;
+  margin-bottom: 0;
+  height: 55px;
+}

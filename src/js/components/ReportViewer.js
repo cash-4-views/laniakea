@@ -54,7 +54,7 @@ var CustomIDForm = React.createClass({
 
 		var rowkey 	 = this.props.data,
 				customid = React.findDOMNode(this.refs.customid).value;
-
+		console.log(this.props);
 		ReportAPIUtils.submitCustomID(this.props.rowData.PartitionKey, customid, rowkey);
 	},
 

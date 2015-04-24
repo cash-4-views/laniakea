@@ -28,7 +28,7 @@ Further potential features include:
 git clone
 cd wood_chipper
 npm install
-npm start
+node app.js
 ```
 
 ## Tests

@@ -20,7 +20,6 @@ Account.prototype = {
 		var self = this;
 
 		var query = new azure.TableQuery()
-													.select(["customid", "email", "phone"])
 													.where("PartitionKey == ?", self.partitionKey);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function(err, result, response) {

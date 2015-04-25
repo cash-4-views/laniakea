@@ -5,18 +5,34 @@ var azure 		 = require("azure-storage"),
 
 // Instantiate the ting
 var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey),
-		tableName 	 = "ACCOUNTTESTING",
-		account 		 = new Account(tableSvc, tableName);
+		tableName 	 = config.atable,
+		account;
 
-test("The Account constructer ", function(t) {
+test("Preparation - deleting the table", function(t) {
+	"use strict";
+
+	tableSvc.doesTableExist(tableName, function(errPing, res) {
+		if(res) {
+			tableSvc.deleteTableIfExists(tableName, function(errDel, result) {
+				if(result) setTimeout(function() {return;}, 2000);
+			});
+		}
+
+		account = new Account(tableSvc, tableName);
+		setTimeout(t.end, 2000);
+	});
+
+});
+
+test("The Account constructor ", function(t) {
 	"use strict";
 
 	t.equal(account.storageClient, tableSvc, "should return an object with the storage client we specified");
 	t.equal(account.tableName, "ACCOUNTTESTING", "should return an object with the table name specified");
 	t.equal(account.partitionKey, "users", "should return an object with the partitionkey as our default value");
 
-	tableSvc.createTable(tableName, function(err) {
-		t.ok(err, "should return an error as the table has already been created");
+	tableSvc.doesTableExist(tableName, function(errPing, res) {
+		t.ok(res, "should create a table");
 		t.end();
 	});
 });
@@ -46,16 +62,20 @@ test("The getAccounts function", function(t) {
 
 	var arrayOfAccountsWeWant = [];
 
-	tableSvc.insertEntity(tableName, newAccount2, {echoContent: true}, function(err1, result1, response2) {
+	tableSvc.insertEntity(tableName, newAccount1, {echoContent: true}, function(err1, result1, response1) {
 		t.notOk(err1, "shouldn't throw an error writing account 1");
+		delete result1[".metadata"];
 		arrayOfAccountsWeWant.push(result1);
 
 		tableSvc.insertEntity(tableName, newAccount2, {echoContent: true}, function(err2, result2, response2) {
 			t.notOk(err2, "shouldn't throw an error writing account 2");
+			delete result2[".metadata"];
 			arrayOfAccountsWeWant.push(result2);
 
 			account.getAccounts(function(err, accountsReturned) {
 				t.notOk(err, "shouldn't throw an error getting accounts");
+
+				if(accountsReturned) accountsReturned.forEach(function(acc) {delete acc[".metadata"];});
 				t.deepEqual(accountsReturned, arrayOfAccountsWeWant, "should return an array of the same objects we put in");
 				t.end();
 			});
@@ -77,21 +97,23 @@ test("The getSingleAccount function", function(t) {
 		admin 			: {_: "false"}
 	};
 
-	tableSvc.insertEntity(tableName, newAccount1, {echoContent: true}, function(err1, result1, response2) {
+	tableSvc.insertEntity(tableName, newAccount1, {echoContent: true}, function(err1, result1, response1) {
+		t.plan(5);
 		t.notOk(err1, "shouldn't throw an error writing account 1");
+
 		var accountWeWant = result1;
 
-		t.plan(4);
+		setTimeout(function() {
+			account.getSingleAccount("TERRIBLE_TESTER@TIMMY.COM", function(err, accountReturned) {
+				t.notOk(err, "shouldn't throw an error getting account an existing account");
+				t.deepEqual(accountReturned, accountWeWant, "should return the account we asked for");
+			});
 
-		account.getSingleAccount("TERRIBLE_TESTER@TIMMY.COM", function(err, accountReturned) {
-			t.notOk(err, "shouldn't throw an error getting account an existing account");
-			t.deepEqual(accountReturned, accountWeWant, "should return the account we asked for");
-		});
-
-		account.getSingleAccount("whoIsThis@nobody.com", function(err, accountReturned) {
-			t.ok(err, "should return us an error getting a non-existant account");
-			t.notOk(accountsReturned, "shouldn't return us any accounts");
-		});
+			account.getSingleAccount("whoIsThis@nobody.com", function(err, accountReturned) {
+				t.ok(err, "should return us an error getting a non-existant account");
+				t.notOk(accountReturned, "shouldn't return us any accounts");
+			});
+		}, 1000);
 
 	});
 });
@@ -110,14 +132,17 @@ test("The createSingleAccount function", function(t) {
 	account.createSingleAccount(accountWeWant, function(err) {
 		t.notOk(err, "shouldn't return an error creating the account");
 
-		tableSvc.retrieveEntity(tableName, "users", "FOUNDERSANDCULTISTS@home.com", function(err, entity){
-			t.equal(entity.customid_,  accountWeWant.customid, "should create the account with the provided customid");
-			t.equal(entity.password_,  accountWeWant.password, "should create the account with the provided password");
-			t.equal(entity.email_,		 accountWeWant.email,		 "should create the account with the provided email");
-			t.equal(entity.phone_,		 accountWeWant.phone,		 "should create the account with the provided phone");
-			t.equal(entity.admin_,		 accountWeWant.admin,		 "should create the account with the provided admin");
-			t.end();
-		});
+		setTimeout(function() {
+			tableSvc.retrieveEntity(tableName, "users", "FOUNDERSANDCULTISTS@home.com", function(err, entity){
+				t.equal(entity.customid._,  accountWeWant.customid, "should create the account with the provided customid");
+				t.equal(entity.password._,  accountWeWant.password, "should create the account with the provided password");
+				t.equal(entity.email._,		 accountWeWant.email,		 "should create the account with the provided email");
+				t.equal(entity.phone._,		 accountWeWant.phone,		 "should create the account with the provided phone");
+				t.equal(entity.admin._,		 accountWeWant.admin,		 "should create the account with the provided admin");
+				t.end();
+			});
+		}, 200);
+
 	});
 });
 

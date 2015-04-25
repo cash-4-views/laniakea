@@ -105,13 +105,16 @@ var ReportApp = React.createClass({
 		}
 
 		this.setState({
-			panel: panel,
 			loadingPanel: panel,
 			// Unsure if this is a good thing - perhaps they should be able to refresh it
 			report: (this.state.panel === panel) ? this.state.report : []
 		});
 
-		ReportAPIUtils.getReportRows(this.state.YYYY_MM, queryObject, null, this._onReceivingResults);
+		ReportAPIUtils.getReportRows(this.state.YYYY_MM, queryObject, null, function(results, token, queryObj) {
+			if(panel === this.state.loadingPanel) {
+				this._onReceivingResults(results, token, queryObj);
+			}
+		}.bind(this));
 
 	},
 
@@ -119,7 +122,11 @@ var ReportApp = React.createClass({
 		"use strict";
 
 		this.setState({loadingPanel: this.state.panel});
-		ReportAPIUtils.getReportRows(this.state.YYYY_MM, this.state.currentQuery, getTheRest, this._onReceivingResults);
+		ReportAPIUtils.getReportRows(this.state.YYYY_MM, this.state.currentQuery, getTheRest, function(results, token, queryObj) {
+			if(this.state.panel === this.state.loadingPanel) {
+				this._onReceivingResults(results, token, queryObj);
+			}
+		}.bind(this));
 	},
 
 	submitCustomID: function(customid, rowkey) {
@@ -185,7 +192,7 @@ var ReportApp = React.createClass({
 				delete queryObject.targetLocation;
 			}
 
-			this.setState({report: this.state.report.concat(results), currentQuery: queryObject, loadingPanel: null});
+			this.setState({report: this.state.report.concat(results), currentQuery: queryObject, panel: this.state.loadingPanel, loadingPanel: null});
 		}
 
 	},

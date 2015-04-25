@@ -1,5 +1,5 @@
 var React  = require("react"),
-		Button = require("./Button");
+		Button = require("../common/Button");
 
 var ButtonTray = React.createClass({
 

@@ -1,5 +1,5 @@
 var React  = require("react"),
-		Button = require("./Button");
+		Button = require("../common/Button");
 
 var ReportApprover = React.createClass({
 
@@ -47,8 +47,8 @@ var ReportApprover = React.createClass({
 			          <div className="col-md-1 approver">
 			            {this.props.selectedID ?
 			            		<button className="btn btn-primary" value="download">
-				          			<a href={downloadurl} id="dl" target="_blank">Download</a>
-			            		</button> : <span /> }
+				            		<a href={downloadurl} id="dl" target="_blank">Download</a>
+				            	</button> : <span /> }
 			          </div>
 			          <div className="col-md-1">
 			          	{this.props.selectedID ?

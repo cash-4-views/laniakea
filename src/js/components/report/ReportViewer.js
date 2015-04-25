@@ -1,6 +1,6 @@
 var React 			   = require("react"),
 		ButtonTray 		 = require("./ButtonTray"),
-		ReportAPIUtils = require("../utils/ReportAPIUtils"),
+		ReportAPIUtils = require("../../utils/ReportAPIUtils"),
 		Griddle 			 = require("griddle-react");
 
 var ReportViewer = React.createClass({
@@ -53,7 +53,7 @@ var CustomIDForm = React.createClass({
 
 		e.preventDefault();
 
-		this.setState({status: "clicked"});
+		this.setState({status: "Clicked!"});
 
 		var rowkey 	 = this.props.data,
 				customid = React.findDOMNode(this.refs.customid).value;
@@ -78,7 +78,7 @@ var CustomIDForm = React.createClass({
 				buttonClass = "btn btn-danger glyphicon glyphicon-remove";
 				break;
 
-			case "clicked":
+			case "Clicked!":
 				buttonClass = "btn btn-warning";
 				break;
 
@@ -95,7 +95,7 @@ var CustomIDForm = React.createClass({
 		var alreadyGotACustomID = this.props.rowData && this.props.rowData.Custom_ID,
 				bouteille = (<span className="input-group-btn">
 		        					<button className={buttonClass} type="button" onClick={this.onClick} disabled={this.state.status !== null} >
-		        						{this.state.status === "clicked" ? loadingAnimation : <span />}
+		        						{this.state.status === "Clicked!" ? loadingAnimation : <span />}
 		        					</button>
 		      					</span>);
 

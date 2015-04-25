@@ -24,17 +24,6 @@ module.exports = {
 						});
 	},
 
-	selectReportFromList: function(queryDate, onReceivingDataFn) {
-		"use strict";
-
-		request.get("/api/v1/reports/customidList")
-						.query({date: queryDate})
-						.end(function(err, res) {
-							if(err) console.log("Error: " + err);
-							return onReceivingDataFn(res.body);
-		});
-	},
-
 	downloadReportForID: function(YYYY_MM, customid) {
 		"use strict";
 

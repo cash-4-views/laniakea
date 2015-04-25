@@ -154,7 +154,7 @@ test("The objectAzurifier function - an input object with only one row key", fun
 	t.comment("| As the second row argument");
 	objectAzurifier(null, null, "admin", objectToAzurify, function(err, objectWeGotBack) {
 		t.ok(err, "should return an error");
-		t.notOk(objectWeGotBack, "shoult not return an object");
+		t.notOk(objectWeGotBack, "should not return an object");
 		t.end();
 	});
 });

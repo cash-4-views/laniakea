@@ -44,7 +44,7 @@ Account.prototype = {
 		var self = this;
 
 		objectAzurifier(self.partitionKey, "email", null, item, function(error, processedAccount) {
-			self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
+			self.storageClient.insertOrMergeEntity(self.tableName, processedAccount, function entityInserted(err) {
  				if(err) return callback(err);
 				else 		return callback(null);
 			});

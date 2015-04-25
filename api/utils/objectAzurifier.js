@@ -24,7 +24,7 @@ function objectAzurifier(PartitionKey, RowKey1, RowKey2, objectToAzurify, callba
 	"use strict";
 
 	if(typeof(objectToAzurify) !== 'object' || Array.isArray(objectToAzurify)) {
-		var err = new Error("Input must be an object or array");
+		var err = new Error("Input must be an object");
 		return callback(err);
 	}
 
@@ -42,6 +42,9 @@ function objectAzurifier(PartitionKey, RowKey1, RowKey2, objectToAzurify, callba
 	};
 
 	var azurifiedObj = {};
+
+	// Needed for uploading already-processed reports...
+	RowKey1 = objectToAzurify[RowKey1] ? RowKey1 : "Video_ID";
 
 	if(PartitionKey) azurifiedObj.PartitionKey = entityStrGen(PartitionKey);
 	if(RowKey1 && RowKey2) azurifiedObj.RowKey = entityStrGen(objectToAzurify[RowKey1] + "_" + objectToAzurify[RowKey2]);

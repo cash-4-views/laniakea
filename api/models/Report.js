@@ -97,10 +97,9 @@ Report.prototype = {
 							base  	 		  = Math.ceil(holderLength/100)*100,
 							errorArray 	  = [],
 							tBeforeUpload = Date.now(),
+							tForUpload1,
 							bigBatch      = holderLength > 1000,
 							n;
-
-					if(!bigBatch) callback(null, 0);
 
 					azurifiedReportHolder.forEach(function(rep, ind) {
 						self.storageClient.insertOrReplaceEntity(self.tableName, rep, function(err) {
@@ -109,8 +108,9 @@ Report.prototype = {
 
 								console.log(percentCompleted + "% completed");
 								if(bigBatch) {
-									if(percentCompleted === 1) {
-										var msTimeForOnePercent = Date.now() - tBeforeUpload;
+									if(percentCompleted === 1) tForUpload1 = Date.now();
+									if(percentCompleted === 2) {
+										var msTimeForOnePercent = Date.now() - tForUpload1;
 										return callback(null, msTimeForOnePercent*100);
 									}
 								}
@@ -126,7 +126,7 @@ Report.prototype = {
 							if(ind === holderLength-1) {
 								customidObject.RowKey = "y" + YYYY_MM;
 								objectAzurifier("customidlist", "RowKey", null, customidObject, function(err, azurifiedList) {
-									self.storageClient.insertOrReplaceEntity(self.tableName, azurifiedList, function(err) {
+									self.storageClient.insertOrMergeEntity(self.tableName, azurifiedList, function(err) {
 										if (err) {
 											errorCounter += 1;
 											errorArray.push({
@@ -149,6 +149,7 @@ Report.prototype = {
 												console.log("Check errorlog.json for details");
 												fs.appendFile("errorlog.json", JSON.stringify(errorArray));
 											}
+											if(!bigBatch) return callback(null, true);
 										});
 									});
 								});
@@ -212,13 +213,24 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		self.storageClient.retrieveEntity(self.tableName, "reportlist", "reports", function entityQueried(err, entity) {
+		var query = new azure.TableQuery()
+													 .where("PartitionKey eq ?", "reportlist")
+													 .and("RowKey eq ?", "reports");
+
+		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
+			var entity = result.entries;
+
+			if (result.entries.length === 0) {
+				entity = {};
+				entity.PartitionKey = "reportlist";
+				entity.RowKey = "reports";
+			}
 			entity[YYYY_MM] = YYYY_MM;
 
-			objectAzurifier(null, null, null, entity, function(errAzure, azurifiedObj) {
+			objectAzurifier("PartitionKey", "RowKey", null, entity, function(errAzure, azurifiedObj) {
 				if(errAzure) return callback(errAzure);
-				else self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(errUpdate) {
+				else self.storageClient.insertOrMergeEntity(self.tableName, azurifiedObj, function entityUpdated(errUpdate) {
 					if(err) return callback(errUpdate);
 					else 		return callback(null);
 				});
@@ -295,3 +307,31 @@ function reportQueryMaker(YYYY_MM, customid, approved) {
 
 }
 
+// just here as a note for tomorrow - searching rowkeys by startswith
+function queryForExistingCustomIDs() {
+	"use strict";
+
+	var whatIWant = "--DBLqSHUj4_monetize";
+	var my_string = "--DBLqSHUj4_";
+
+	var edgeString = my_string.substring(0,my_string.length-1) +
+	                    String.fromCharCode(my_string.charCodeAt(my_string.length-1)+1);
+
+	myArray = [
+	    "--DBLqSHUj4_monetize",
+	    "-DBLqSHUj4_monetize",
+	    "--DBLqSHUj4_nonetize",
+	    "--DBLqSHUj5_monetize",
+	    "--DBLqSHUj4_asset"
+	    ];
+
+	var newArr = [];
+
+	myArray.forEach(function(ele) {
+	    if(ele >= my_string && ele < edgeString) {
+	        newArr.push(ele);
+	    }
+	});
+
+	console.log(newArr);
+}

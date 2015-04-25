@@ -317,10 +317,10 @@ Controller.prototype = {
 	  uploadStream.on('end', function () {
 	    var data = body;
 	    self.report.createReport(YYYY_MM, data, function(err, msETA) {
-	    	if(err) return reply(err);
-	    	else 		return reply("Your report is being processed. It should be fully uploaded" +
-	    													(msETA/1000/60 > 0 ? "in approximately " + (Math.ceil(msETA/1000/60)) + " minutes." :
-	    																							"shortly."));
+	    	if(err) 							return reply(err);
+	    	else if(msETA===true) return reply("Your report has been uploaded");
+	    	else									return reply("Your report is being processed. It should be fully uploaded in approximately " +
+	    																				(Math.ceil(msETA/1000/60)) + " minutes.");
 	    });
 		});
 	},

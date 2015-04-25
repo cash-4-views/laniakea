@@ -24,7 +24,7 @@ var ReportViewer = React.createClass({
 		return (
 			<div>
 				<h3 className="sub-header">View Reports</h3>
-				<ButtonTray switchReportPanel={this.props.switchReportPanel} getMoreResults={this.props.switchReportPanel} loadingPanel={this.props.loadingPanel} panel={this.props.panel} />
+				<ButtonTray switchReportPanel={this.props.switchReportPanel} getMoreResults={this.props.getMoreResults} loadingPanel={this.props.loadingPanel} panel={this.props.panel} />
 				<Griddle results={this.props.report}
 					columnMetadata={columnMeta}
 					columns={columns}

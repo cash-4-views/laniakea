@@ -4,6 +4,7 @@ module.exports = {
 		dbkey : process.env.TEST_AZURE_STORAGE_ACCESS_KEY 			 	|| require("./testcredentials.json").database.azure_storage_access_key,
 		dburl : process.env.TEST_AZURE_STORAGE_CONNECTION_STRING 	|| require("./testcredentials.json").database.azure_storage_connection_string,
 		atable: "ACCOUNTTESTING",
-		rtable: "REPORTTESTING"
+		rtable: "REPORTTESTING",
+		ltable: "APPROVEDTESTING"
 	},
 };

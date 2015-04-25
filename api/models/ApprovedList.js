@@ -32,12 +32,12 @@ ApprovedList.prototype = {
 			if(errFind && errFind.statusCode !== 404) return callback(errFind);
 			else {
 				var newObj = entity || {};
-				if(!entity) newObj[customid] = customid;
+				if(!entity) newObj.RowKeyPlaceholder = customid;
 
 				newObj[YYYY_MM] = YYYY_MM;
 
-				objectAzurifier(self.partitionKey, customid, null, newObj, function(errAzure, processedObj) {
-					delete processedObj[customid];
+				objectAzurifier(self.partitionKey, "RowKeyPlaceholder", null, newObj, function(errAzure, processedObj) {
+					delete processedObj.RowKeyPlaceholder;
 					self.storageClient.insertOrMergeEntity(self.tableName, processedObj, function entityInserted(errInsert) {
 						if(errInsert) return callback(errInsert);
 						else 					return callback(null);

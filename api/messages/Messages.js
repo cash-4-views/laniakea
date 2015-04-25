@@ -99,7 +99,7 @@ Messages.prototype = {
 	searchMailList: function(customid, members, callback) {
 		"use strict";
 		var self = this;
-		members.some(function(member) {
+		members.forEach(function(member) {
 			if (customid === member.name) {
 				callback(null, member.address);
 				return true;

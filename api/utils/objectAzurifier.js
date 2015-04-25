@@ -10,7 +10,12 @@
 * See tests for examples
 *
 * @param {string}				 	PartitionKey					Optional			The partition key to use for the operation
-* @param {string}				 	RowKey1								Optional 			The key of the object to use as RowKey
+* @param {string}				 	RowKey1								Optional 			The key of the object to use as RowKey.
+																															Video ID is a special case for our purposes
+																															- if specified as RK1 but not found in the
+																															input object, Video_ID will be used instead.
+																															This can be generalised in the future as per
+																															the legal rules
 * @param {string}				 	RowKey2								Optional 			To concatenate with the first as RowKey
 * @param {object/array} 	objectToAzurify 			Required 			The object to contaminate
 *	@param {errorOrResult}	callback 							Required 			callback - contains error details
@@ -44,7 +49,9 @@ function objectAzurifier(PartitionKey, RowKey1, RowKey2, objectToAzurify, callba
 	var azurifiedObj = {};
 
 	// Needed for uploading already-processed reports...
-	RowKey1 = objectToAzurify[RowKey1] ? RowKey1 : "Video_ID";
+	if(RowKey1 === "Video ID"){
+		RowKey1 = objectToAzurify[RowKey1] ? RowKey1 : "Video_ID";
+	}
 
 	if(PartitionKey) azurifiedObj.PartitionKey = entityStrGen(PartitionKey);
 	if(RowKey1 && RowKey2) azurifiedObj.RowKey = entityStrGen(objectToAzurify[RowKey1] + "_" + objectToAzurify[RowKey2]);

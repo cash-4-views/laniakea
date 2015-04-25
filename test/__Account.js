@@ -1,25 +1,27 @@
 var azure 		 = require("azure-storage"),
+		bcrypt 		 = require("bcrypt-nodejs"),
 		config 		 = require("./config/testconfig").database,
 		Account 	 = require("../api/models/Account"),
 		test 			 = require("tape");
 
 // Instantiate the ting
 var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey),
-		tableName 	 = config.atable,
+		tableName 	 = config.atable + Date.now(),
 		account;
 
-test("Preparation - deleting the table", function(t) {
+test("Preparation", function(t) {
 	"use strict";
 
 	tableSvc.doesTableExist(tableName, function(errPing, res) {
 		if(res) {
+			t.comment("Table already exists. Deleting table...");
 			tableSvc.deleteTableIfExists(tableName, function(errDel, result) {
-				if(result) setTimeout(function() {return;}, 2000);
+				if(result) setTimeout(function() {return;}, 5000);
 			});
 		}
 
 		account = new Account(tableSvc, tableName);
-		setTimeout(t.end, 2000);
+		setTimeout(t.end, 500);
 	});
 
 });
@@ -28,7 +30,7 @@ test("The Account constructor ", function(t) {
 	"use strict";
 
 	t.equal(account.storageClient, tableSvc, "should return an object with the storage client we specified");
-	t.equal(account.tableName, "ACCOUNTTESTING", "should return an object with the table name specified");
+	t.equal(account.tableName, tableName, "should return an object with the table name specified");
 	t.equal(account.partitionKey, "users", "should return an object with the partitionkey as our default value");
 
 	tableSvc.doesTableExist(tableName, function(errPing, res) {
@@ -101,11 +103,13 @@ test("The getSingleAccount function", function(t) {
 		t.plan(5);
 		t.notOk(err1, "shouldn't throw an error writing account 1");
 
+		delete result1[".metadata"];
 		var accountWeWant = result1;
 
 		setTimeout(function() {
 			account.getSingleAccount("TERRIBLE_TESTER@TIMMY.COM", function(err, accountReturned) {
 				t.notOk(err, "shouldn't throw an error getting account an existing account");
+				if(accountReturned) delete accountReturned[".metadata"];
 				t.deepEqual(accountReturned, accountWeWant, "should return the account we asked for");
 			});
 
@@ -113,7 +117,7 @@ test("The getSingleAccount function", function(t) {
 				t.ok(err, "should return us an error getting a non-existant account");
 				t.notOk(accountReturned, "shouldn't return us any accounts");
 			});
-		}, 1000);
+		}, 200);
 
 	});
 });
@@ -134,11 +138,11 @@ test("The createSingleAccount function", function(t) {
 
 		setTimeout(function() {
 			tableSvc.retrieveEntity(tableName, "users", "FOUNDERSANDCULTISTS@home.com", function(err, entity){
-				t.equal(entity.customid._,  accountWeWant.customid, "should create the account with the provided customid");
-				t.equal(entity.password._,  accountWeWant.password, "should create the account with the provided password");
-				t.equal(entity.email._,		 accountWeWant.email,		 "should create the account with the provided email");
-				t.equal(entity.phone._,		 accountWeWant.phone,		 "should create the account with the provided phone");
-				t.equal(entity.admin._,		 accountWeWant.admin,		 "should create the account with the provided admin");
+				t.equal(entity.customid._,  accountWeWant.customid,  "should create the account with the provided customid");
+				t.equal(entity.password._,  accountWeWant.password,  "should create the account with the provided password");
+				t.equal(entity.email._,		  accountWeWant.email,		 "should create the account with the provided email");
+				t.equal(entity.phone._,		  accountWeWant.phone,		 "should create the account with the provided phone");
+				t.equal(entity.admin._,		  accountWeWant.admin,		 "should create the account with the provided admin");
 				t.end();
 			});
 		}, 200);
@@ -146,22 +150,78 @@ test("The createSingleAccount function", function(t) {
 	});
 });
 
-test("The updateSingleAccount function", function(t) {
+test("The updateSingleAccount function ", function(t) {
 	"use strict";
 
-	t.end();
+	var newAccount1 = {
+		PartitionKey: {_: "users"},
+		RowKey 			: {_: "TOOTHLESS_TONY@T.COM"},
+		customid 		: {_: "TOOTHLESS_TONY"},
+		password    : {_: "ensecure"},
+		email 			: {_: "TOOTHLESS_TONY@T.COM"},
+		phone 			: {_: "0111011110"},
+		admin 			: {_: "false"}
+	};
+
+	tableSvc.insertEntity(tableName, newAccount1, function(err1, result1, response1) {
+		t.plan(5);
+		t.notOk(err1, "shouldn't throw an error writing account 1 ");
+
+		var updateObj = {
+			customid: "NIGEL_FARAGE",
+			email: "DANGEROUS_DEREK@DOG.COM"
+		};
+
+		account.updateSingleAccount("TOOTHLESS_TONY@T.COM", updateObj, function(err) {
+			t.notOk(err, "shouldn't return an error");
+
+			tableSvc.retrieveEntity(tableName, "users", "TOOTHLESS_TONY@T.COM", function(err, entity) {
+				t.equal(entity.customid._,  updateObj.customid, 	"should successfully update the account customid");
+				t.equal(entity.email._, 		updateObj.email, 			"should successfully update the account email");
+				t.equal(entity.RowKey._, 		newAccount1.RowKey._, "shouldn't touch the rowkey email");
+				t.end();
+			});
+		});
+	});
 });
 
 test("The comparePassword function", function(t) {
 	"use strict";
 
-	t.end();
+		var password  = "password",
+				hashed 	  = "$2a$10$OZ9cHnpw.rAPwKExp5kiOuaDY/evHxGK1NdAV7f8vW2/AjDRXieNe",
+				hashBad   = "asfsafasfasfasfasfasfasfasfasfasf",
+				hashWrong = "$2a$10$baHD7BvzsLS5kDaC7A3lBelzpKqkEG92pj.FoN6OVrJ0TzdYIJMR6";
+
+		t.plan(3);
+
+		account.comparePassword(password, hashed, function(err) {
+			t.notOk(err, "should not return an error when comparing the same password");
+		});
+
+		account.comparePassword(password, hashBad, function(err) {
+			t.ok(err, "should return an error when given an invalid hash");
+		});
+
+		account.comparePassword(password, hashWrong, function(err) {
+			t.ok(err, "should return an error when given an incorrect password");
+		});
 });
 
-test("The encryptPassword function", function(t) {
+test("The hashPassword function", function(t) {
 	"use strict";
 
-	t.end();
+	var password   = "password",
+			hashWeWant = "$2a$10$OZ9cHnpw.rAPwKExp5kiOuaDY/evHxGK1NdAV7f8vW2/AjDRXieNe";
+
+	account.hashPassword(password, function(err, hash) {
+		t.notOk(err, "should not return an error when given a good password");
+
+		bcrypt.compare(password, hash, function(err, res) {
+			t.notOk(err, "should not return an error when comparing the new hash to the password");
+			t.end();
+		});
+	});
 });
 
 test("Cleaning up after ourselves - deleting the table, ", function(t) {

@@ -22,7 +22,7 @@ Account.prototype = {
 		var query = new azure.TableQuery()
 													.where("PartitionKey == ?", self.partitionKey);
 
-		self.storageClient.queryEntities(self.tableName, query, null, function(err, result, response) {
+		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
 			else 		return callback(null, result.entries);
 		});
@@ -32,9 +32,14 @@ Account.prototype = {
 		"use strict";
 		var self = this;
 
-		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, email, function entityQueried(err, entity) {
-			if(err) return callback(err);
-			else 		return callback(null, entity);
+		var query = new azure.TableQuery()
+													.where("PartitionKey == ?", self.partitionKey)
+													.and("email == ?", email);
+
+		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
+			if(err) 															return callback(err);
+			else if(result.entries.length === 0)	return callback(new Error("That account doesn't exist"));
+			else 																	return callback(null, result.entries[0]);
 		});
 	},
 
@@ -54,9 +59,14 @@ Account.prototype = {
 		"use strict";
 		var self = this;
 
-		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, email, function entityQueried(err, entity) {
+		var query = new azure.TableQuery()
+													.where("PartitionKey == ?", self.partitionKey)
+													.and("email == ?", email);
+
+		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
-			var field;
+			var entity = result.entries[0],
+					field;
 
 			for(field in updateObj) {
 				if(updateObj.hasOwnProperty(field)){
@@ -78,7 +88,7 @@ Account.prototype = {
 
 		bcrypt.compare(password1, password2, function(err, res) {
 			if(err) 			return callback(err);
-			else if(!res) return callback("dodgy password");
+			else if(!res) return callback(new Error("dodgy password"));
 			else 					return callback(null);
 		});
 	},

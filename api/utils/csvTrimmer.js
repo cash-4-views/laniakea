@@ -4,8 +4,9 @@ function csvTrimmer(csvToTrim, startInclusive, endExclusive, callback) {
 	var startBefore = startInclusive ? new RegExp("\n\n(?=" + startInclusive + ")") : /\n(?=Video ID)/g;
 	var endBefore   = endExclusive   ? new RegExp("\n\n(?=" + endExclusive + ")") : /\n\n(?=Legend)/g;
 
-	var startTrim  = csvToTrim.toString().split(startBefore);
-	var trimmedCSV = startTrim[1] ? startTrim[1].split(endBefore)[0] : null;
+	var startTrim  = csvToTrim.toString().split(startBefore),
+			midTrimCSV = startTrim[1] ? startTrim[1].split(endBefore)[0] : null,
+			trimmedCSV = midTrimCSV ? midTrimCSV : startTrim[1];
 
 	return callback(null, trimmedCSV);
 }

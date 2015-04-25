@@ -19,6 +19,23 @@ Test("The csvTrimmer function, without trim arguments", function(t) {
 	});
 });
 
+Test("The csvTrimmer function, without trim arguments, no matches", function(t) {
+	"use strict";
+
+	var stringWeWant =
+	"Video ID,first_name,last_name,email,phone_number,admin_rights\n" +
+	"123a4,Rory,Sedgwick,bigboy1101@gmail.com,01111999111,false\n" +
+	"4213zz,Dave,BeachSwimSuit,yahoo@excel.word,01234567890,true\n";
+
+	fs.readFile(__dirname + "/testdata/trimcsv2.csv", function(err, result) {
+		t.notOk(err, "Shouldn't get an error m80s");
+		csvTrimmer(result, null, null, function(err, trimmedCSV) {
+			t.equal(trimmedCSV, stringWeWant, "should return a successfully trimmed csv");
+			t.end();
+		});
+	});
+});
+
 Test("The csvTrimmer function, with a start trim argument", function(t) {
 	"use strict";
 

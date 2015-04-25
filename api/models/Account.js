@@ -55,13 +55,13 @@ Account.prototype = {
 		});
 	},
 
-	updateSingleAccount: function(email, updateObj, callback) {
+	updateSingleAccount: function(RowKey, updateObj, callback) {
 		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
 													.where("PartitionKey == ?", self.partitionKey)
-													.and("email == ?", email);
+													.and("RowKey == ?", RowKey);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
@@ -79,6 +79,25 @@ Account.prototype = {
 					if(err) return callback(err);
 					else 		return callback(null);
 				});
+			});
+		});
+	},
+
+	deleteSingleAccount: function(RowKey, callback) {
+		"use strict";
+		var self = this;
+
+		var query = new azure.TableQuery()
+													.where("PartitionKey == ?", self.partitionKey)
+													.and("RowKey == ?", RowKey);
+
+		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
+			if(err) return callback(err);
+			var entity = result.entries[0];
+
+			self.storageClient.deleteEntity(self.tableName, entity, function entityDeleted(errDel, res) {
+				if(err) return callback(err);
+				else 		return callback(null);
 			});
 		});
 	},

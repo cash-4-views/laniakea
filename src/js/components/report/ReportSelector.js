@@ -15,7 +15,9 @@ var ReportHeader = React.createClass({
 		"use strict";
 
 		var datesList = [],
-				dates 		= this.props.dates;
+				dates 		= this.props.dates,
+				downloadurl 	= this.props.YYYY_MM ? "/api/v1/reports/" + this.props.YYYY_MM +
+													"?csv=true&getAll=true" : null;
 
 		// Value should actually just be date, but currently workaround b/c database stored
 		// as yYYYY_MM rather than _YYYY_MM
@@ -39,6 +41,13 @@ var ReportHeader = React.createClass({
 				          <div className="col-md-1">
 				            <button type="submit" className="btn btn-primary" onSubmit={this.onSubmit}>Select</button>
 				          </div>
+				          {this.props.YYYY_MM ?
+					          <div className="col-md-1">
+				            	<button type="submit" className="btn btn-primary">
+				            		<a href={downloadurl} id="dl" target="_blank">Download</a>
+				            	</button>
+					          </div> : <span />
+				          }
 				        </div>
 				      </fieldset>
 				    </form>

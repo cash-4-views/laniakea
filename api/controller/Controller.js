@@ -93,17 +93,9 @@ Controller.prototype = {
 		"use strict";
 		var self = this;
 
-		var page = req.params.page;
-
 		if(!req.auth.credentials.admin) return reply.redirect("/account");
-		if(page === "reports") {
-				return reply.view("adminReport");
-		} else {
-			self.account.getAccounts(function(err, accounts) {
-				if(err) return reply(err);
-				else 		return reply.view("admin", {accounts: accounts});
-			});
-		}
+
+		return reply.view("admin");
 	},
 
 // API
@@ -179,6 +171,37 @@ Controller.prototype = {
 		});
 	},
 
+	updateSingleAccount: function(req, reply) {
+		"use strict";
+		var self = this;
+
+		var email 		= req.params.email,
+				updateObj = req.payload;
+
+		if(!req.auth.credentials.admin && req.params.email !== req.auth.credentials.email) {
+			return reply("You're not authorised to do that");
+		}
+
+		self.account.updateSingleAccount(email, function(err) {
+			if(err) 	return reply(err).code(404);
+			else 			return reply().code(204);
+		});
+	},
+
+	deleteSingleAccount: function(req, reply) {
+		"use strict";
+		var self = this;
+
+		var RowKey 		= req.params.email;
+
+		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+
+		self.account.deleteSingleAccount(RowKey, function(err) {
+			if(err) 	return reply(err).code(404);
+			else 			return reply().code(204);
+		});
+	},
+
 // Reports
 
 	/*
@@ -211,12 +234,13 @@ Controller.prototype = {
 						return reply("That report is not available to you yet");
 					} else {
 
+						var filename = "YoutubeRevenueReport_" + YYYY_MM.slice(0, 4) + YYYY_MM.slice(5) + "01_" + customid;
 						self.report.getReport(YYYY_MM, customid, approved, true, function(err, reportResults) {
 							if(err) return reply(err);
 							return deAzurifier(reportResults, false, function(err, formattedArray) {
 								if(csv) return reply(Baby.unparse(formattedArray))
 																	.type("text/csv")
-																	.header("Content-Disposition", "attachment; filename="+ YYYY_MM + "_" + customid + ".csv");
+																	.header("Content-Disposition", "attachment; filename="+ filename + ".csv");
 								else 		return reply(formattedArray);
 							});
 
@@ -232,10 +256,12 @@ Controller.prototype = {
 					if(errGet) return reply(errGet);
 
 					return deAzurifier(totalResults, true, function(errAzure, formattedArray) {
-						if(errAzure) 			return reply(errAzure);
+						if(errAzure) 	return reply(errAzure);
 						else if(csv) 	return reply(Baby.unparse(formattedArray))
 																		.type("text/csv")
-																		.header("Content-Disposition", "attachment; filename='"+  PKey + "'.csv");
+																		.header("Content-Disposition", "attachment; filename="+
+																							"YoutubeRevenueReport_" + YYYY_MM.slice(0, 4) +
+																							YYYY_MM.slice(5) + "01_.csv");
 						else 					return reply({results: formattedArray, token: contToken});
 					});
 				});
@@ -336,12 +362,24 @@ Controller.prototype = {
 
 		var date = req.query.date;
 
-		self.report.getCustomIDList(date, function(err, idListObj) {
+		self.report.getCustomIDList(date, function(err, idListArray) {
 			if(err) return reply(err);
-			else  	deAzurifier(idListObj, false, function(err, formattedObj) {
-				if(err) console.log(err);
-				return 	reply(formattedObj);
-			});
+			else {
+				var uniqueIDObj = {};
+
+				idListArray.forEach(function(year) {
+					var id;
+
+					for(id in year) {
+						uniqueIDObj[id] = year[id];
+					}
+				});
+
+				deAzurifier(uniqueIDObj, false, function(err, formattedObj) {
+					if(err) console.log(err);
+					return 	reply(formattedObj);
+				});
+			}
 		});
 
 	},

@@ -4,7 +4,8 @@ var React 					= require("react"),
 		ReportUploader 	= require("./ReportUploader"),
 		ReportApprover  = require("./ReportApprover"),
 		ReportViewer 		= require("./ReportViewer"),
-		ReportAPIUtils 	= require("../utils/ReportAPIUtils");
+		ReportAPIUtils 	= require("../../utils/ReportAPIUtils"),
+		CommonAPIUtils  = require("../../utils/CommonAPIUtils");
 
 var ReportApp = React.createClass({
 
@@ -45,11 +46,12 @@ var ReportApp = React.createClass({
 
 	selectReport: function(date) {
 		"use strict";
-			ReportAPIUtils.selectReportFromList(date, function(idsFromServer) {
-				if(this.isMounted()) {
-					this.setState({YYYY_MM: date, customidList: idsFromServer });
-				}
-			}.bind(this));
+
+		CommonAPIUtils.getCustomIDList(date, function(idsFromServer) {
+			if(this.isMounted()) {
+				this.setState({YYYY_MM: date, customidList: idsFromServer });
+			}
+		}.bind(this));
 
 	},
 
@@ -139,27 +141,19 @@ var ReportApp = React.createClass({
 	render: function() {
 		"use strict";
 		var sections = [],
+				s 			 = this.state,
 				topleft;
 
-		if(this.state.dates) 				topleft = 	 (<ReportSelector key="ReportSelector"
-																									dates={this.state.dates} selectReport={this.selectReport} />);
-		if(this.state.alert)				sections.push(<ReportAlert key="ReportAlert" alert={this.state.alert}
-																									closeAlert={this.closeAlert} />);
-		if(this.state.customidList) sections.push(<ReportApprover key="ReportApprover"
-																									customidList={this.state.customidList}
-																									YYYY_MM={this.state.YYYY_MM}
-																									selectedID={this.state.selectedID}
-																									loadingBtn={this.state.loadingBtn}
-																									downloadReport={this.downloadReport}
-																									approveReport={this.approveReport}
-																									changeSelected={this.changeSelected}/>);
-		if(this.state.YYYY_MM) 			sections.push(<ReportViewer  key="ReportViewer"
-																									report={this.state.report}
-																									loadingPanel={this.state.loadingPanel}
-																									panel={this.state.panel}
-																									submitCustomID={this.submitCustomID}
-																									switchReportPanel={this.switchReportPanel}
-																									getMoreResults={this.getMoreResults} />);
+		if(s.dates) 				topleft = 	 (<ReportSelector key="ReportSelector" YYYY_MM={s.YYYY_MM} dates={s.dates} selectReport={this.selectReport} />);
+		if(s.alert)					sections.push(<ReportAlert  	key="ReportAlert"  	 alert={s.alert} closeAlert={this.closeAlert} />);
+
+		if(s.customidList) 	sections.push(<ReportApprover key="ReportApprover" customidList={s.customidList} YYYY_MM={s.YYYY_MM}
+																					selectedID={s.selectedID} loadingBtn={s.loadingBtn} downloadReport={this.downloadReport}
+																					approveReport={this.approveReport} changeSelected={this.changeSelected}/>);
+
+		if(s.YYYY_MM) 			sections.push(<ReportViewer  	key="ReportViewer" report={s.report} loadingPanel={s.loadingPanel} panel={s.panel}
+																					submitCustomID={this.submitCustomID} 	 switchReportPanel={this.switchReportPanel}
+																					getMoreResults={this.getMoreResults} />);
 
 		return (
 			<div>

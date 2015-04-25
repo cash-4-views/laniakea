@@ -1,6 +1,6 @@
-var React = require("react");
-var ReportApp = require("./components/ReportApp");
+var React 		= require("react"),
+		AppHolder = require("./components/AppHolder");
 
 React.render(
-	<ReportApp />, document.getElementById("content")
+	<AppHolder />, document.getElementById("content")
 );

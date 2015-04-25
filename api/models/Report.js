@@ -21,7 +21,7 @@ Report.prototype = {
 		"use strict";
 		var self = this;
 
-		var query = queryMaker(YYYY_MM, customid, approved);
+		var query = reportQueryMaker(YYYY_MM, customid, approved);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, results) {
 			if(err) return callback(err);
@@ -42,7 +42,7 @@ Report.prototype = {
 		var self = this;
 
 		var q 		= queryOrOptions,
-				query = q instanceof azure.TableQuery ? q : queryMaker(q.YYYY_MM, q.customid, q.approved);
+				query = q instanceof azure.TableQuery ? q : reportQueryMaker(q.YYYY_MM, q.customid, q.approved);
 
 		if (!continuationToken) return callback(null, batchOfRows);
 		else self.storageClient.queryEntities(self.tableName, query, continuationToken, function entitiesQueried(err, newRows) {
@@ -190,7 +190,6 @@ Report.prototype = {
 			}
 
 			objectAzurifier(null, null, null, entity, function(err, azurifiedObj) {
-				console.log(azurifiedObj);
 				self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(err) {
 					if(err) return callback(err);
 					else 		return callback(null);
@@ -230,11 +229,15 @@ Report.prototype = {
 	getCustomIDList: function(YYYY_MM, callback) {
 		"use strict";
 		var self = this;
-		console.log("getting ids");
 
-		self.storageClient.retrieveEntity(self.tableName, "customidlist", "y" + YYYY_MM, function entityQueried(err, entity) {
+		var query = new azure.TableQuery()
+													.where("PartitionKey == ?", "customidlist");
+
+		if(YYYY_MM) query = query.and("RowKey == ?", "y" + YYYY_MM);
+
+		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
-			else 		return callback(null, entity);
+			else 		return callback(null, result.entries);
 		});
 	},
 
@@ -275,7 +278,7 @@ Report.prototype = {
 
 module.exports = Report;
 
-function queryMaker(YYYY_MM, customid, approved) {
+function reportQueryMaker(YYYY_MM, customid, approved) {
 	"use strict";
 
 	var query = new azure.TableQuery()

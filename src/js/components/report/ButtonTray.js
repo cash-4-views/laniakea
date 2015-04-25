@@ -9,7 +9,6 @@ var ButtonTray = React.createClass({
 		var currentPanel = this.props.panel;
 
 		function activePanelClass(panel) {
-				console.log(currentPanel, panel)
 			if(currentPanel === panel) {
 				return "selected";
 			} else return "unselected";

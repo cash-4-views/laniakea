@@ -5,7 +5,7 @@
   "repository": "https://github.com/cash-4-views/wood_chipper.git",
   "main": "index.js",
   "scripts": {
-    "test": "tape ./test/*.js | tap-spec"
+    "test": "tape ./test/*.js ./test/**/*.js | tap-spec"
   },
   "devDependencies": {
     "browserify": "^9.0.8",

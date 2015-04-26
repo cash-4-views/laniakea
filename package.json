@@ -28,7 +28,6 @@
     "hapi-auth-cookie": "^2.0.0",
     "jade": "^1.9.2",
     "mailgun-js": "^0.6.9",
-    "node-zip": "^1.1.0",
     "react": "^0.13.2",
     "react-typeahead": "^1.0.4",
     "superagent": "^1.2.0"

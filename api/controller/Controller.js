@@ -128,9 +128,10 @@ Controller.prototype = {
 				customid : req.payload.customid,
 				password : hash,
 				email 	 : req.payload.email,
-				phone 	 : req.payload.phone,
 				admin 	 : false
 			};
+
+			if(req.payload.phone) newAccount.phone = req.payload.phone;
 
 			var mailAccount = {
 				subscribed: true,
@@ -146,7 +147,7 @@ Controller.prototype = {
 					});
 					self.messages.sendEmail("approve", newAccount.email, newAccount.customid, function(sendEmailError) {
 						if(sendEmailError) console.log("list error: ", sendEmailError);
-						return reply("Account successfully created, a confirmation email has been sent to you");
+						return reply().code(200);
 					});
 				}
 			});

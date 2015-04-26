@@ -1,5 +1,5 @@
 var React 					= require("react"),
-		ReportAlert 		= require("./ReportAlert"),
+		ReportAlert 		= require("../common/Alert"),
 		ReportSelector 	= require("./ReportSelector"),
 		ReportUploader 	= require("./ReportUploader"),
 		ReportApprover  = require("./ReportApprover"),
@@ -157,7 +157,7 @@ var ReportApp = React.createClass({
 				topleft;
 
 		if(s.dates) 				topleft = 	 (<ReportSelector key="ReportSelector" YYYY_MM={s.YYYY_MM} dates={s.dates} selectReport={this.selectReport} />);
-		if(s.alert)					sections.push(<ReportAlert  	key="ReportAlert"  	 alert={s.alert} closeAlert={this.closeAlert} />);
+		if(s.alert)					sections.push(<Alert  	key="Alert"  	 alert={s.alert} closeAlert={this.closeAlert} />);
 
 		if(s.customidList) 	sections.push(<ReportApprover key="ReportApprover" customidList={s.customidList} YYYY_MM={s.YYYY_MM}
 																					selectedID={s.selectedID} loadingBtn={s.loadingBtn} downloadReport={this.downloadReport}

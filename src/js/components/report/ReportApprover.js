@@ -17,6 +17,12 @@ var ReportApprover = React.createClass({
 		this.props.changeSelected(e.target.value);
 	},
 
+	onSubmit: function(e) {
+		"use strict";
+
+		e.preventDefault();
+	},
+
 	render: function() {
 		"use strict";
 
@@ -46,7 +52,7 @@ var ReportApprover = React.createClass({
 			          </div>
 			          <div className="col-md-3 approver btn-group" role="group">
 			            {this.props.selectedID ?
-			            		<button className="btn btn-primary" value="download">
+			            		<button className="btn btn-primary" value="download" onSubmit={this.onSubmit}>
 				            		<a href={downloadurl} id="dl" target="_blank">Download</a>
 				            	</button> : <span /> }
 			          	{this.props.selectedID ?

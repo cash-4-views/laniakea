@@ -13,6 +13,17 @@ module.exports = {
 
 	},
 
+	createAccount: function(accountData, onSuccessfulCreationFn) {
+		"use strict";
+
+		request.post("/api/v1/accounts")
+						.send(accountData)
+						.end(function(err, res) {
+							if(err) return onSuccessfulCreationFn(err);
+							return onSuccessfulCreationFn(null);
+						});
+	},
+
 	updateAccount: function(RowKey, updateObj, onReceivingDataFn) {
 		"use strict";
 
@@ -28,7 +39,7 @@ module.exports = {
 						.send(accountObj)
 						.end(function(err, res) {
 							if(err) return onReceivingDataFn(err);
-							return onReceivingDataFn(res.body);
+							return onReceivingDataFn(null);
 						});
 	},
 
@@ -38,7 +49,7 @@ module.exports = {
 		request.del("/api/v1/accounts/" + RowKey)
 						.end(function(err, res) {
 							if(err) return onReceivingDataFn(err);
-							return onReceivingDataFn(res.body);
+							return onReceivingDataFn(null);
 						});
 	}
 

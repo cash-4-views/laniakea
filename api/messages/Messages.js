@@ -53,13 +53,13 @@ function Messages(mailConfig) {
 
 Messages.prototype = {
 
-	addToMailingList: function(data, onComplete) {
+	addToMailingList: function(account, onComplete) {
 		"use strict";
 		var self = this;
 
-		self.list.members().create(data, function(err, data) {
+		self.list.members().create(account, function(err, res) {
 			if (err) console.log("members err: " + err);
-			console.log("member added to mailing list: " + data.member.name);
+			console.log("member added to mailing list: " + account.address);
 		});
 	},
 

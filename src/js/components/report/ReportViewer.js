@@ -8,7 +8,7 @@ var ReportViewer = React.createClass({
 	render: function() {
 		"use strict";
 		var report = this.props.report,
-				columns = ["RowKey", "Asset_Title", "Video_Title", "Total_Earnings"];
+				columns = ["RowKey", "Asset_Title", "Video_Title", "Total_Earnings", "Video_ID", "Total_Views"];
 
 		var columnMeta = [
 			{

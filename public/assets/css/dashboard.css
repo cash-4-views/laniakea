@@ -125,3 +125,8 @@ a {
 .selected:hover {
 	text-decoration: underline;
 }
+
+button.btn.btn-primary {
+	background-color: #204d74;
+	border-color: #204d74;
+}

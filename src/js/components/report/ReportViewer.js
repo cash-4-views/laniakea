@@ -18,7 +18,15 @@ var ReportViewer = React.createClass({
 				"visible": true,
 				"displayName": "Custom ID",
 				"customComponent": CustomIDForm
-			}
+			},
+			{
+				"columnName": "Custom_ID",
+				"order": 2,
+				"locked": false,
+				"visible": true,
+				"displayName": "Custom ID (sort)"
+			},
+
 		];
 
 		return (

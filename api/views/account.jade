@@ -3,7 +3,7 @@ head
 		meta(charset='utf-8')
 		meta(http-equiv='X-UA-Compatible', content='IE=edge')
 		meta(name='viewport', content='width=device-width, initial-scale=1')
-		title Admin Dashboard
+		title Laniakea - Your Account
 		link(href='/assets/css/bootstrap.min.css', rel='stylesheet')
 		link(href='/assets/css/dashboard.css', rel='stylesheet')
 		link(href='/assets/css/main.css', rel='stylesheet')
@@ -20,7 +20,7 @@ body
 			#navbar.navbar-collapse.collapse
 				ul.nav.navbar-nav.navbar-right
 					li.disabled
-						a #{user.email}
+						a #{user.email._}
 					li
 						a(href='/logout') Logout
 	.container-fluid
@@ -35,15 +35,16 @@ body
 						tbody
 							if approvedList && approvedList.length
 								each YYYY_MM in approvedList
-									tr
-										form.form-horizontal(action="/api/v1/reports/"+YYYY_MM, method='GET')
-											fieldset
-												div(class='form-group')
-													td.year #{YYYY_MM.replace("_", "/")}
-													td
-														div
-															input.shadow(type="text", name="customid", value=user.customid)
-															button.download#submit(name='csv', value='true', type='submit', class='btn btn-primary') Download
+									each date in YYYY_MM
+										tr
+											form.form-horizontal(action="/api/v1/reports/"+date, method='GET')
+												fieldset
+													div(class='form-group')
+														td.year #{date.replace("_", "/")}
+														td
+															div
+																input.shadow(type="text", name="customid", value=user.customid)
+																button.download#submit(name='csv', value='true', type='submit', class='btn btn-primary') Download
 							else
 								tr
 									td There are no reports available for download yet. An email will be sent to your inbox when one becomes available

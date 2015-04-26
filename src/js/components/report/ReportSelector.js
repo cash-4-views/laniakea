@@ -32,13 +32,13 @@ var ReportHeader = React.createClass({
 				    <form className="form-horizontal" onSubmit={this.onSubmit}>
 				      <fieldset>
 				        <div className="form-group">
-				          <label className="col-md-2 control-label">Date</label>
-				          <div className="col-md-6">
+				          <label className="col-lg-2 control-label">Date</label>
+				          <div className="col-lg-6">
 				            <select id="YYYY_MM" ref="reportselect" className="form-control input-md">
 				              {datesList}
 				            </select>
 				          </div>
-				          <div className="col-md-3 btn-group" role="group">
+				          <div className="col-lg-4 btn-group" role="group">
 				            <button type="submit" className="btn btn-primary" onSubmit={this.onSubmit}>Select</button>
 				          {this.props.YYYY_MM ?
 				            	<button type="submit" className="btn btn-primary">

@@ -354,8 +354,14 @@ Controller.prototype = {
 				RKey		 	= req.params.videoid_policy;
 
 		self.report.updateReportRow(PKey, RKey, req.payload, function(err) {
-			if(err) console.log(err);
-			else 		return reply(null);
+			if(err) 												return reply(err);
+			else if(!req.payload.Custom_ID)	return reply(null);
+			else {
+				self.report.updateCustomIDList(PKey, req.payload.Custom_ID, function(errID) {
+					if(errID) return reply(errID);
+					else 			return reply(null);
+				});
+			}
 		});
 	},
 

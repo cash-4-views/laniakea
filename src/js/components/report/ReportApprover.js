@@ -44,13 +44,11 @@ var ReportApprover = React.createClass({
 			            	{customidArray}
 			            </select>
 			          </div>
-			          <div className="col-md-1 approver">
+			          <div className="col-md-3 approver btn-group" role="group">
 			            {this.props.selectedID ?
 			            		<button className="btn btn-primary" value="download">
 				            		<a href={downloadurl} id="dl" target="_blank">Download</a>
 				            	</button> : <span /> }
-			          </div>
-			          <div className="col-md-1">
 			          	{this.props.selectedID ?
 				            <Button size="approver" value="approve" type="primary"
 				            		isLoading={this.props.loadingBtn} onClickCallback={this.onClickCallback}

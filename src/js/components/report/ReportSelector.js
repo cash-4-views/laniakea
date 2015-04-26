@@ -38,16 +38,15 @@ var ReportHeader = React.createClass({
 				              {datesList}
 				            </select>
 				          </div>
-				          <div className="col-md-1">
+				          <div className="col-md-3 btn-group" role="group">
 				            <button type="submit" className="btn btn-primary" onSubmit={this.onSubmit}>Select</button>
-				          </div>
 				          {this.props.YYYY_MM ?
-					          <div className="col-md-1">
 				            	<button type="submit" className="btn btn-primary">
 				            		<a href={downloadurl} id="dl" target="_blank">Download</a>
-				            	</button>
-					          </div> : <span />
+				            	</button> :
+				            	<span />
 				          }
+				          </div>
 				        </div>
 				      </fieldset>
 				    </form>

@@ -10,7 +10,7 @@ var AccountApp = React.createClass({
 	getInitialState: function() {
 		"use strict";
 
-		return {accounts: null, customidList: null, alert: null};
+		return {accounts: null, customidList: null, alert: null, formCustomId: ""};
 	},
 
 	componentDidMount: function() {
@@ -27,6 +27,12 @@ var AccountApp = React.createClass({
 				this.setState({customidList: idsFromServer });
 			}
 		}.bind(this));
+	},
+
+	typeIntoTypeahead: function(e) {
+		"use strict";
+
+		this.setState({formCustomId: React.findDOMNode(e.target).value});
 	},
 
 	createAccount: function(accountObj) {
@@ -87,7 +93,8 @@ var AccountApp = React.createClass({
 				{this.state.alert ? <Alert key="Alert" alert={this.state.alert} closeAlert={this.closeAlert} /> : <span/>}
 				<h3 className="sub-header">Add an account</h3>
 				<div className="row placeholders">
-					<AccountCreator customids={this.state.customidList} createAccount={this.createAccount}/>
+					<AccountCreator customids={this.state.customidList} createAccount={this.createAccount}
+							typeIntoTypeahead={this.typeIntoTypeahead} />
 				</div>
 				<h3 className="sub-header">Manage accounts</h3>
 				<AccountViewer accounts={this.state.accounts} updateAccount={this.updateAccount}

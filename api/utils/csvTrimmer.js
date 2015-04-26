@@ -9,7 +9,6 @@ function csvTrimmer(csvToTrim, startInclusive, endExclusive, callback) {
 			midTrimCSV = startTrim[1]  ? (startTrim[1] + startTrim[2]).split(endBefore)[0] : null,
 			trimmedCSV = midTrimCSV ? midTrimCSV : startTrim[1] + startTrim[2];
 
-	console.log(trimmedCSV.trim());
 	return callback(null, trimmedCSV.trim());
 }
 

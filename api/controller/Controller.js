@@ -245,9 +245,9 @@ Controller.prototype = {
 			if(!creds.admin && customid !== creds.customid) {
 				return reply().code(403);
 			} else {
-				self.approvedList.getApproved(customid, null, function(err, approvedEntity) {
-
-					if(!creds.admin && !approvedEntity["_" + YYYY_MM]) {
+				self.approvedList.getApproved(customid, YYYY_MM, function(err, approvedEntity) {
+					console.log(approvedEntity, YYYY_MM);
+					if(!creds.admin && !approvedEntity.length) {
 
 						return reply("That report is not available to you yet");
 					} else {

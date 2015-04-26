@@ -1,5 +1,5 @@
 var React 					= require("react"),
-		ReportAlert 		= require("../common/Alert"),
+		Alert 			 		= require("../common/Alert"),
 		ReportSelector 	= require("./ReportSelector"),
 		ReportUploader 	= require("./ReportUploader"),
 		ReportApprover  = require("./ReportApprover"),
@@ -92,7 +92,8 @@ var ReportApp = React.createClass({
 
 		switch(panel) {
 			case "approved":
-			// Deliberate fallthrough to default
+				queryObject.approved = true;
+				break;
 
 			case "unapproved":
 				queryObject.customid = true;
@@ -104,8 +105,7 @@ var ReportApp = React.createClass({
 				break;
 
 			default:
-				queryObject.approved = true;
-				break;
+
 
 		}
 
@@ -126,12 +126,14 @@ var ReportApp = React.createClass({
 	getMoreResults: function(getTheRest) {
 		"use strict";
 
-		this.setState({loadingPanel: this.state.panel});
-		ReportAPIUtils.getReportRows(this.state.YYYY_MM, this.state.currentQuery, getTheRest, function(results, token, queryObj) {
-			if(this.state.panel === this.state.loadingPanel) {
-				this._onReceivingResults(results, token, queryObj);
-			}
-		}.bind(this));
+		if(this.state.currentQuery.nextRowKey) {
+			this.setState({loadingPanel: this.state.panel});
+			ReportAPIUtils.getReportRows(this.state.YYYY_MM, this.state.currentQuery, getTheRest, function(results, token, queryObj) {
+				if(this.state.panel === this.state.loadingPanel) {
+					this._onReceivingResults(results, token, queryObj);
+				}
+			}.bind(this));
+		}
 	},
 
 	submitCustomID: function(customid, rowkey) {

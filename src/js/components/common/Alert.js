@@ -1,7 +1,7 @@
 var React  = require("react"),
 		Button = require("../common/Button");
 
-var ReportAlert = React.createClass({
+var Alert = React.createClass({
 
 	render: function() {
 		"use strict";
@@ -18,4 +18,4 @@ var ReportAlert = React.createClass({
 	}
 });
 
-module.exports = ReportAlert;
+module.exports = Alert;

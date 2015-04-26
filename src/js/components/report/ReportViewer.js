@@ -110,4 +110,16 @@ var CustomIDForm = React.createClass({
 
 });
 
+var NumericField = React.createClass({
+
+	render: function() {
+		"use strict";
+
+		return(
+			<span>parseInt(this.props.data, 10)</span>
+			);
+	}
+
+});
+
 module.exports = ReportViewer;

@@ -18,7 +18,7 @@ var ReportApp = React.createClass({
 			customidList: null,
 			panel 			: null,
 			loadingPanel: null,
-			loadingBtn  : true,
+			loadingBtn  : false,
 			alert 			: null,
 			report 			: [],
 			currentQuery: {},
@@ -49,7 +49,12 @@ var ReportApp = React.createClass({
 
 		CommonAPIUtils.getCustomIDList(date, function(idsFromServer) {
 			if(this.isMounted()) {
-				this.setState({YYYY_MM: date, customidList: idsFromServer });
+				if(this.state.YYYY_MM === date) {
+					this.setState({YYYY_MM: date, customidList: idsFromServer });
+				} else {
+					this.setState({YYYY_MM: date, customidList: idsFromServer, report: [],
+													selectedID: null, panel: null, loadingPanel: null});
+				}
 			}
 		}.bind(this));
 
@@ -192,7 +197,14 @@ var ReportApp = React.createClass({
 				delete queryObject.targetLocation;
 			}
 
-			this.setState({report: this.state.report.concat(results), currentQuery: queryObject, panel: this.state.loadingPanel, loadingPanel: null});
+			var newReport = this.state.report.concat(results).map(function(ele) {
+				for(var prop in ele) {
+					ele[prop] = +ele[prop] || ele[prop];
+				}
+				return ele;
+			});
+
+			this.setState({report: newReport, currentQuery: queryObject, panel: this.state.loadingPanel, loadingPanel: null});
 		}
 
 	},

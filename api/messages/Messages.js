@@ -57,6 +57,7 @@ Messages.prototype = {
 		"use strict";
 		var self = this;
 
+		console.log(account);
 		self.list.members().create(account, function(err, res) {
 			if(err) return onComplete(err);
 			else 		return onComplete(null);
@@ -77,6 +78,7 @@ Messages.prototype = {
 		"use strict";
 		var self = this;
 
+		console.log(updateMailObj);
 		self.list.members(email).update(updateMailObj, function(err, res) {
 			if(err) return onComplete(err);
 			else 		return onComplete(null);

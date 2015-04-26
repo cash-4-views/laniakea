@@ -14,6 +14,7 @@ function ApprovedList(storageClient, tableName, partitionKey) {
 
 ApprovedList.prototype = {
 
+	// returns an array
 	getApproved: function(customid, YYYY_MM, callback) {
 		"use strict";
 		var self = this;

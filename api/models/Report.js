@@ -96,7 +96,6 @@ Report.prototype = {
 							holderLength  = azurifiedReportHolder.length,
 							base  	 		  = Math.ceil(holderLength/100)*100,
 							errorArray 	  = [],
-							tBeforeUpload = Date.now(),
 							tForUpload1,
 							bigBatch      = holderLength > 1000,
 							n;
@@ -170,7 +169,7 @@ Report.prototype = {
 		objectAzurifier(YYYY_MM, "Video ID", "Policy", report, function(error, azurifiedObj) {
 			self.storageClient.insertEntity(self.tableName, azurifiedObj, function entityInserted(err) {
 				if(err) return callback(err);
-				else return callback(null);
+				else  	return callback(null);
 			});
 		});
 	},
@@ -270,9 +269,8 @@ Report.prototype = {
 				entity[customid] = customid;
 
 				objectAzurifier(null, null, null, entity, function(errAzure, azurifiedObj) {
-					console.log(azurifiedObj);
-
 					if(errAzure) return callback(errAzure);
+
 					else self.storageClient.insertOrMergeEntity(self.tableName, azurifiedObj, function entityUpdated(errUpdate) {
 						if(errUpdate) return callback(errUpdate);
 						else 					return callback(null);
@@ -295,6 +293,7 @@ Report.prototype = {
 
 			arrayOfResults.forEach(function(rep, ind) {
 				rep.approved = {_: true, $: "Edm.Boolean"};
+
 				self.storageClient.updateEntity(self.tableName, rep, function entityUpdated(err) {
 					if(err) {
 						errorArray.push({
@@ -334,33 +333,4 @@ function reportQueryMaker(YYYY_MM, customid, approved) {
 
 	return query;
 
-}
-
-// just here as a note for tomorrow - searching rowkeys by startswith
-function queryForExistingCustomIDs() {
-	"use strict";
-
-	var whatIWant = "--DBLqSHUj4_monetize";
-	var my_string = "--DBLqSHUj4_";
-
-	var edgeString = my_string.substring(0,my_string.length-1) +
-	                    String.fromCharCode(my_string.charCodeAt(my_string.length-1)+1);
-
-	myArray = [
-	    "--DBLqSHUj4_monetize",
-	    "-DBLqSHUj4_monetize",
-	    "--DBLqSHUj4_nonetize",
-	    "--DBLqSHUj5_monetize",
-	    "--DBLqSHUj4_asset"
-	    ];
-
-	var newArr = [];
-
-	myArray.forEach(function(ele) {
-	    if(ele >= my_string && ele < edgeString) {
-	        newArr.push(ele);
-	    }
-	});
-
-	console.log(newArr);
 }

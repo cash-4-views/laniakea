@@ -11,23 +11,19 @@ test("Preparation", function(t) {
 	"use strict";
 
 	tableSvc.doesTableExist(tableName, function(errPing, res) {
-		if(errPing) {
-			t.comment(errPing);
-		} else if(res) {
+		if(res) {
 			t.comment("Table already exists. Deleting table...");
 			tableSvc.deleteTableIfExists(tableName, function(errDel, result) {
-				setTimeout(function() {
-					approvedList = new ApprovedList(tableSvc, tableName);
-					setTimeout(function(){t.end();}, 3000);
-				}, 20000);
+				if(result) setTimeout(function() {return;}, 5000);
 			});
-		} else {
-			approvedList = new ApprovedList(tableSvc, tableName);
-			setTimeout(function(){t.end();}, 500);
 		}
+
+		approvedList = new ApprovedList(tableSvc, tableName);
+		setTimeout(t.end, 500);
 	});
 
 });
+
 
 test("The ApprovedList constructer ", function(t) {
 	"use strict";
@@ -45,22 +41,44 @@ test("The ApprovedList constructer ", function(t) {
 test("The getApproved function ", function(t) {
 	"use strict";
 
-		var approvedTing = {
-			PartitionKey: {_: "approvedlist"},
-			RowKey 	 		: {_: "The_Main_Gang"},
-			_YYYY_MM 		: {_: "2015_01"}
-		};
+	var approvedTing = {
+		PartitionKey: {_: "approvedlist"},
+		RowKey 	 		: {_: "The_Main_Gang"},
+		_2015_01 		: {_: "2015_01"}
+	};
 
-		tableSvc.insertEntity(tableName, approvedTing, {echoContent: true}, function(error, result, response) {
-			t.notOk(error, "shouldn't throw an error in the preparation");
-			var objectWeWant = result;
+	t.plan(7);
 
-			approvedList.getApproved("The_Main_Gang", function(err, entity) {
+	tableSvc.insertEntity(tableName, approvedTing, {echoContent: true}, function(error, result, response) {
+		t.notOk(error, "shouldn't throw an error in the preparation");
+		delete result[".metadata"];
+
+		var objectWeWant = result;
+
+		setTimeout(function() {
+
+			approvedList.getApproved("The_Main_Gang", null, function(err, entities) {
+				t.comment("| No date parameter");
+
+				if(entities && entities[0]) delete entities[0][".metadata"];
+
 				t.notOk(err, "shouldn't throw an error");
-				t.deepEqual(entity, objectWeWant, "should return the object we put in");
-				t.end();
+				t.equal(entities.length, 1, "should return exactly one result");
+				t.deepEqual(entities[0], objectWeWant, "should return the object we put in");
 			});
-		});
+
+			approvedList.getApproved("The_Main_Gang", "2015_01", function(err, entities) {
+				t.comment("| With a date parameter");
+
+				if(entities && entities[0]) delete entities[0][".metadata"];
+
+				t.notOk(err, "shouldn't throw an error");
+				t.equal(entities.length, 1, "should return exactly one result");
+				t.deepEqual(entities[0], objectWeWant, "should return the object we put in");
+			});
+
+		}, 0);
+	});
 });
 
 test("The updateApproved function, with an existing entity, ", function(t) {
@@ -128,7 +146,7 @@ test("The updateApproved function, with a new entity, ", function(t) {
 				t.equal(entity["_2016_01"]._, "2016_01", "should have successfully created the object with the correct field");
 				t.end();
 			});
-		}, 1000);
+		}, 200);
 
 	});
 });

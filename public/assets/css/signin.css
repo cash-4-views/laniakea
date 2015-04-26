@@ -38,3 +38,11 @@ body {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
+.alert.alert-dismissible{
+	text-align: center;
+}
+
+.form-signin-heading {
+	text-align: center;
+}

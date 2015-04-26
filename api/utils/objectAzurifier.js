@@ -11,18 +11,16 @@
 *
 * @param {string}				 	PartitionKey					Optional			The partition key to use for the operation
 * @param {string}				 	RowKey1								Optional 			The key of the object to use as RowKey.
-																															Video ID is a special case for our purposes
-																															- if specified as RK1 but not found in the
-																															input object, Video_ID will be used instead.
-																															This can be generalised in the future as per
-																															the legal rules
+*																															Video ID is a special case for our purposes
+*																															- if specified as RK1 but not found in the
+*																															input object, Video_ID will be used instead.
 * @param {string}				 	RowKey2								Optional 			To concatenate with the first as RowKey
 * @param {object/array} 	objectToAzurify 			Required 			The object to contaminate
 *	@param {errorOrResult}	callback 							Required 			callback - contains error details
 * 																														or a decontaminated thing of the same type
 * 																														as was put in (array->array, obj->obj)
 *
-*/
+**/
 
 
 function objectAzurifier(PartitionKey, RowKey1, RowKey2, objectToAzurify, callback) {
@@ -39,12 +37,12 @@ function objectAzurifier(PartitionKey, RowKey1, RowKey2, objectToAzurify, callba
 			illegalCharacters1 	  = /[-?]/g,
 			illegalCharacters2		= /[()]/g;
 
-	var queueBarger = function(propName) {
+	function queueBarger(propName) {
 	    if(propName[0].search(/\d/) !== -1) {
 	        return "_" + propName;
 	    }
 	    else return propName;
-	};
+	}
 
 	var azurifiedObj = {};
 

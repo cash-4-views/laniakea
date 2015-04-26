@@ -2,17 +2,17 @@ var request = require("superagent");
 
 module.exports = {
 
-	uploadReport: function(reportCSV) {
-		"use strict";
+	// uploadReport: function(reportCSV) {
+	// 	"use strict";
 
-		request.post("/api/v1/reports")
-						.type("form")
-						.field("upload-report", reportCSV)
-						.end(function(err, res) {
-							console.log(err, res);
-						});
+	// 	request.post("/api/v1/reports")
+	// 					.type("form")
+	// 					.field("upload-report", reportCSV)
+	// 					.end(function(err, res) {
+	// 						console.log(err, res);
+	// 					});
 
-	},
+	// },
 
 	getReportList: function(onReceivingDataFn) {
 		"use strict";
@@ -24,17 +24,17 @@ module.exports = {
 						});
 	},
 
-	downloadReportForID: function(YYYY_MM, customid) {
-		"use strict";
+	// downloadReportForID: function(YYYY_MM, customid) {
+	// 	"use strict";
 
-		// Why is this not downloading? Response comes correctly but doesn't download
-		request.get("/api/v1/reports/" + YYYY_MM)
-						.query({customid: customid, csv: true})
-						.end(function(err, res) {
-							if(err) console.log(err);
-							else console.log(res);
-						});
-	},
+	// 	// Why is this not downloading? Response comes correctly but doesn't download
+	// 	request.get("/api/v1/reports/" + YYYY_MM)
+	// 					.query({customid: customid, csv: true})
+	// 					.end(function(err, res) {
+	// 						if(err) console.log(err);
+	// 						else console.log(res);
+	// 					});
+	// },
 
 	approveReportForID: function(YYYY_MM, customid, onSuccess) {
 		"use strict";
@@ -42,8 +42,8 @@ module.exports = {
 		request.put("/api/v1/approvedlist/" + customid)
 						.send({YYYY_MM: YYYY_MM})
 						.end(function(err, res) {
-							if(err) return onSuccess({type: "Error!", content: err});
-							else 		return onSuccess({type: "Success!", content: "Report approved. Email sent to user"});
+							if(err) return onSuccess({type: "Error!", content: "There was an error approving the report"});
+							else 		return onSuccess({type: "Success!", content: "Report approved. " +  (res.text && res.text.length ? res.text : "Emails sent.")});
 						});
 	},
 
@@ -51,13 +51,11 @@ module.exports = {
 		"use strict";
 
 		if(getTheRest) queryObject.getAll = true;
-		console.log(queryObject, getTheRest);
 
 		request.get("/api/v1/reports/" + YYYY_MM)
 						.query(queryObject)
 						.end(function(err, res) {
 							if(err) console.log("Error: " + err);
-							console.log(res.body.results.length);
 							onReceivingDataFn(res.body.results, res.body.token, queryObject);
 						});
 	},
@@ -68,8 +66,8 @@ module.exports = {
 		request.put("/api/v1/reports/" + YYYY_MM + "/" + rowkey)
 						.send({Custom_ID: customid})
 						.end(function(err, res) {
-							if(err) return onSuccess({type: "Error!", content: err});
-							else 		return onSuccess({type: "Success!", content: "Report approved"});
+							if(err) return onSuccess({type: "Error!", content: "There was an error submitting that Custom ID"});
+							else 		return onSuccess({type: "Success!", content: "Custom ID submitted"});
 						});
 	}
 

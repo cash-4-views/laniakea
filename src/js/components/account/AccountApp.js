@@ -16,18 +16,20 @@ var AccountApp = React.createClass({
 	componentDidMount: function() {
 		"use strict";
 
-		AccountAPIUtils.getAccountList(function(accountsFromServer) {
+		AccountAPIUtils.getAccountList(function(accountsOrAlert) {
 			if (this.isMounted()) {
-				this.setState({accounts: accountsFromServer});
+				if(accountsOrAlert.type) return this.setState({alert: accountsOrAlert});
+				this.setState({accounts: accountsOrAlert});
 			}
 		}.bind(this));
 
-		CommonAPIUtils.getCustomIDList(null, function(idsFromServer) {
+		CommonAPIUtils.getCustomIDList(null, function(idsOrAlert) {
 			if(this.isMounted()) {
-				if(idsFromServer) {
+				if(idsOrAlert.type) return this.setState({alert: idsOrAlert});
+				else if(idsOrAlert) {
 					var customidList = [];
-					for(var id in idsFromServer) {
-						customidList.push(idsFromServer[id]);
+					for(var id in idsOrAlert) {
+						customidList.push(idsOrAlert[id]);
 					}
 					this.setState({customidList: customidList });
 				}
@@ -57,10 +59,10 @@ var AccountApp = React.createClass({
 			if(alert.type === "Error!") return this.setState({alert: alert});
 			else {
 				var newAccounts = self.state.accounts.map(function(account) {
-					if(account.RowKey === RowKey) {
+					if(account.RowKey._ === RowKey) {
 						for(var field in updateObj) {
 							if(updateObj.hasOwnProperty(field) && updateObj[field])
-							account[field] = updateObj[field];
+							account[field]._ = updateObj[field];
 						}
 					}
 					return account;
@@ -77,7 +79,7 @@ var AccountApp = React.createClass({
 			if(alert.type === "Error!") return this.setState({alert: alert});
 			else {
 				var newAccounts = this.state.accounts.filter(function(account) {
-					return account.RowKey !== RowKey;
+					return account.RowKey._ !== RowKey;
 				});
 				this.setState({accounts: newAccounts, alert: alert});
 			}

@@ -52,7 +52,7 @@ var AccountRow = React.createClass({
 				<td className="col-md-1"><input className="form-control input-md" ref="password" type="text" /></td>
 				<td>
 					<div className="btn-group" role="group" aria-label="...">
-						<Button type="info glyphicon glyphicon-edit" value={this.props.RowKey} disabled={false} onClickCallback={this.onUpdate} isLoading={false}/>
+						<Button type="primary glyphicon glyphicon-edit" value={this.props.RowKey} disabled={false} onClickCallback={this.onUpdate} isLoading={false}/>
 						<Button type="danger glyphicon glyphicon-remove" value={this.props.RowKey} disabled={false} onClickCallback={this.onDelete} isLoading={false}/>
 					</div>
 				</td>

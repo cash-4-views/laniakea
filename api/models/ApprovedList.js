@@ -14,7 +14,6 @@ function ApprovedList(storageClient, tableName, partitionKey) {
 
 ApprovedList.prototype = {
 
-	// returns an array
 	getApproved: function(customid, YYYY_MM, callback) {
 		"use strict";
 		var self = this;
@@ -44,7 +43,10 @@ ApprovedList.prototype = {
 				newObj[YYYY_MM] = YYYY_MM;
 
 				objectAzurifier(self.partitionKey, "RowKeyPlaceholder", null, newObj, function(errAzure, processedObj) {
+					if(errAzure) return callback(errAzure);
+
 					delete processedObj.RowKeyPlaceholder;
+
 					self.storageClient.insertOrMergeEntity(self.tableName, processedObj, function entityInserted(errInsert) {
 						if(errInsert) return callback(errInsert);
 						else 					return callback(null);

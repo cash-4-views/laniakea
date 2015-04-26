@@ -47,12 +47,14 @@ var ReportApp = React.createClass({
 	selectReport: function(date) {
 		"use strict";
 
-		CommonAPIUtils.getCustomIDList(date, function(idsFromServer) {
+		CommonAPIUtils.getCustomIDList(date, function(idsOrAlert) {
 			if(this.isMounted()) {
-				if(this.state.YYYY_MM === date) {
-					this.setState({YYYY_MM: date, customidList: idsFromServer });
+				if(idsOrAlert.type) return this.setState({alert: idsOrAlert});
+
+				else if(this.state.YYYY_MM === date) {
+					this.setState({YYYY_MM: date, customidList: idsOrAlert });
 				} else {
-					this.setState({YYYY_MM: date, customidList: idsFromServer, report: [],
+					this.setState({YYYY_MM: date, customidList: idsOrAlert, report: [],
 													selectedID: null, panel: null, loadingPanel: null});
 				}
 			}

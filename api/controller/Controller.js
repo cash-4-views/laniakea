@@ -32,18 +32,21 @@ Controller.prototype = {
 		if(req.method.toUpperCase() === "GET") {
 			if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
 			else if(req.auth.isAuthenticated) return reply.redirect("/account");
-			else return reply.view("login");
+			else return reply.view("login", {alert: req.query.badlogin});
 		}
 
 		var deets = req.payload;
-		if(!deets.password || !deets.email) return reply("Missing email or password");
+		if(!deets.password || !deets.email) return reply.redirect("/login?badlogin=missing");
 
 		self.account.getSingleAccount(deets.email, function(err, returnedAccount) {
-			if(err) return reply(err);
+			if(err === 404) return reply.redirect("/login?badlogin=email");
+			else if(err) 		return reply(err);
+
 			var acc = deAzurifier(returnedAccount);
 
 			self.account.comparePassword(deets.password, acc.password, function(err) {
-				if(err) return reply(err);
+				if(err === 400) return reply.redirect("/login?badlogin=password");
+				else if(err) 		return reply(err);
 
 				var profile = {
 					email: acc.email,
@@ -438,13 +441,13 @@ Controller.prototype = {
 		} else {
 			self.report.approveAllOfCustomID(YYYY_MM, customid, function(errApprove) {
 				if(errApprove) {
-					return reply("There was an error approving" + errApprove);
+					return reply("There was an error approving").code(500);
 			 	} else {
 			 		self.approvedList.updateApproved(customid, YYYY_MM, function(errUpdate) {
 						if(errUpdate) return reply().code(500);
 						else self.messages.sendEmail("notify", null, customid, function(errSend) {
-							if (errSend) console.log("approval error: " + errSend);
-							return reply("Successfully approved the " + YYYY_MM + " report for " + customid);
+							if(errSend) return reply("No emails sent").code(200);
+							return reply().code(200);
 						});
 					});
 				}

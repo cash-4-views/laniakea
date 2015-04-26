@@ -57,7 +57,6 @@ Messages.prototype = {
 		"use strict";
 		var self = this;
 
-		console.log(account);
 		self.list.members().create(account, function(err, res) {
 			if(err) return onComplete(err);
 			else 		return onComplete(null);
@@ -78,7 +77,6 @@ Messages.prototype = {
 		"use strict";
 		var self = this;
 
-		console.log(updateMailObj);
 		self.list.members(email).update(updateMailObj, function(err, res) {
 			if(err) return onComplete(err);
 			else 		return onComplete(null);
@@ -91,6 +89,8 @@ Messages.prototype = {
 		var self = this;
 
 		self.createMessage(emailType, email, customid, function(err, message) {
+			if(err && err === 404) return onComplete(404);
+
 			self.mailgun.messages().send(message, function(senderror) {
 				if (senderror) {
 					console.log("SendError: " + senderror);
@@ -109,7 +109,7 @@ Messages.prototype = {
 
 		self.list.members().list(function(errList, body) {
 			if (errList) console.log("list err: " + errList);
-			console.log(body);
+
 			self.searchMailList(customid, body.items, function(err, memberEmail) {
 				if(err) return callback(err);
 				else 		return callback(null, memberEmail);
@@ -120,10 +120,16 @@ Messages.prototype = {
 	searchMailList: function(customid, members, callback) {
 		"use strict";
 		var self = this;
-		members.forEach(function(member) {
+
+		var foundone;
+
+		members.forEach(function(member, ind) {
+
 			if (customid === member.name) {
+				foundone = true;
 				callback(null, member.address);
-				return true;
+			} else if (ind === members.length-1 && !foundone) {
+				callback(404);
 			}
 		});
 	},
@@ -133,6 +139,8 @@ Messages.prototype = {
 		var self = this;
 		if(!email) {
 			self.getRecipient(customid, function(error, emailAddress) {
+
+				if(error && error === 404) return callback(404);
 
 				var message = {
 					from: "mail@" + self.domain,

@@ -12,7 +12,7 @@ module.exports = {
 		request.get("/api/v1/reports/customidlist")
 						.query(queryObject)
 						.end(function(err, res) {
-							if(err) console.log("Error: " + err);
+							if(err) return onReceivingDataFn({type: "Error!", content: "There was an error getting the list custom ids"});
 							return onReceivingDataFn(res.body);
 		});
 	}

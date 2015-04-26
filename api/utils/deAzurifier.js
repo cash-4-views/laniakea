@@ -2,7 +2,7 @@
 * DeAzurifies an object
 *
 * Merely trims off the azure value-wrapping
-* So turns {key: {_: "val", $: "type"}} into {key: val}
+* So turns {key: {_: val, $: Edm.datatype}} into {key: val}
 * Does not transform characters back into their illegal variants
 *
 * @param {object/array} 	thingToDeAzurify 			The object or set of objects to decontaminate
@@ -12,7 +12,7 @@
 * 																							as was put in (array->array, obj->obj)
 *
 * @return {object/array/callback}								As per input type, callback-contingent
-*/
+**/
 
 function deAzurifier(thingToDeAzurify, keepKeys, callback) {
 	"use strict";

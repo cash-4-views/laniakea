@@ -38,7 +38,7 @@ Account.prototype = {
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) 															return callback(err);
-			else if(result.entries.length === 0)	return callback("That account doesn't exist");
+			else if(result.entries.length === 0)	return callback(404);
 			else 																	return callback(null, result.entries[0]);
 		});
 	},
@@ -65,6 +65,7 @@ Account.prototype = {
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
+
 			var entity 	 = result.entries[0],
 					oldEmail = result.entries[0].email._,
 					field;
@@ -116,7 +117,7 @@ Account.prototype = {
 
 		bcrypt.compare(password1, password2, function(err, res) {
 			if(err) 			return callback(err);
-			else if(!res) return callback("dodgy password");
+			else if(!res) return callback(400);
 			else 					return callback(null);
 		});
 	},

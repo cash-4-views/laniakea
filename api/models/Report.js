@@ -125,22 +125,22 @@ Report.prototype = {
 							}
 							if(ind === holderLength-1) {
 								customidObject.RowKey = "y" + YYYY_MM;
-								objectAzurifier("customidlist", "RowKey", null, customidObject, function(err, azurifiedList) {
-									self.storageClient.insertOrMergeEntity(self.tableName, azurifiedList, function(err) {
-										if (err) {
+								objectAzurifier("customidlist", "RowKey", null, customidObject, function(errAzure, azurifiedList) {
+									self.storageClient.insertOrMergeEntity(self.tableName, azurifiedList, function(errInsert) {
+										if (errInsert || errAzure) {
 											errorCounter += 1;
 											errorArray.push({
 												ind: "customidlist",
-												err: err,
+												err: errInsert || errAzure,
 												rep: azurifiedList
 											});
 										}
-										self.updateReportList(YYYY_MM, function(err) {
-											if (err) {
+										self.updateReportList(YYYY_MM, function(errUpdate) {
+											if (errUpdate) {
 												errorCounter += 1;
 												errorArray.push({
-													ind: "customidlist",
-													err: err,
+													ind: "reportList",
+													err: errUpdate,
 													rep: azurifiedList
 												});
 											}
@@ -219,7 +219,7 @@ Report.prototype = {
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
-			var entity = result.entries;
+			var entity = result.entries[0];
 
 			if (result.entries.length === 0) {
 				entity = {};
@@ -230,6 +230,7 @@ Report.prototype = {
 
 			objectAzurifier("PartitionKey", "RowKey", null, entity, function(errAzure, azurifiedObj) {
 				if(errAzure) return callback(errAzure);
+
 				else self.storageClient.insertOrMergeEntity(self.tableName, azurifiedObj, function entityUpdated(errUpdate) {
 					if(err) return callback(errUpdate);
 					else 		return callback(null);
@@ -250,6 +251,34 @@ Report.prototype = {
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
 			else 		return callback(null, result.entries);
+		});
+	},
+
+	updateCustomIDList: function(YYYY_MM, customid, callback) {
+		"use strict";
+		var self = this;
+
+		var query = new azure.TableQuery()
+													.where("PartitionKey == ?", "customidlist")
+													.and("RowKey == ?", "y" + YYYY_MM);
+
+		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
+			if(err) return callback(err);
+			else 	{
+				var entity = result.entries[0];
+
+				entity[customid] = customid;
+
+				objectAzurifier(null, null, null, entity, function(errAzure, azurifiedObj) {
+					console.log(azurifiedObj);
+
+					if(errAzure) return callback(errAzure);
+					else self.storageClient.insertOrMergeEntity(self.tableName, azurifiedObj, function entityUpdated(errUpdate) {
+						if(errUpdate) return callback(errUpdate);
+						else 					return callback(null);
+					});
+				});
+			}
 		});
 	},
 

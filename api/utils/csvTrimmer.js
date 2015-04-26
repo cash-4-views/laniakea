@@ -35,6 +35,7 @@ function csvTrimmer(csvToTrim, startInclusive, endExclusive, callback) {
 			trimmedCSV = midTrimCSV 	 ? midTrimCSV : startTrim[1] + startTrim[2],
 			finalTrim  = trimmedCSV 	 ? trimmedCSV.trim() : startTrim[0];
 
+
 	if(finalTrim) return callback(null, finalTrim);
 	else  				return callback(new Error("Bad csv or arguments"));
 }

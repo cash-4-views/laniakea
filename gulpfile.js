@@ -1,9 +1,9 @@
-var gulp        = require("gulp"),
-	source      = require('vinyl-source-stream'),
-	browserify  = require('browserify'),
-	watchify    = require('watchify'),
-	reactify    = require('reactify');
-	require("harmonize")();
+var gulp      = require("gulp"),
+		source      = require('vinyl-source-stream'),
+		browserify  = require('browserify'),
+		watchify    = require('watchify'),
+		reactify    = require('reactify');
+		require("harmonize")();
 
 var paths = {
    scripts: "src/**/*.js",

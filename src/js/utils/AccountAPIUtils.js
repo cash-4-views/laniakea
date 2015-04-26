@@ -19,8 +19,8 @@ module.exports = {
 		request.post("/api/v1/accounts")
 						.send(accountData)
 						.end(function(err, res) {
-							if(err) return onSuccessfulCreationFn(err);
-							return onSuccessfulCreationFn(null);
+							if(err) return onSuccessfulCreationFn({type: "Error!", content: err});
+							return onSuccessfulCreationFn({type: "Success!", content: "Account created"});
 						});
 	},
 
@@ -38,8 +38,8 @@ module.exports = {
 		request.put("/api/v1/accounts/" + RowKey)
 						.send(accountObj)
 						.end(function(err, res) {
-							if(err) return onReceivingDataFn(err);
-							return onReceivingDataFn(null);
+							if(err) return onReceivingDataFn({type: "Error!", content: err});
+							return onReceivingDataFn({type: "Success!", content: "Account updated"});
 						});
 	},
 
@@ -48,8 +48,8 @@ module.exports = {
 
 		request.del("/api/v1/accounts/" + RowKey)
 						.end(function(err, res) {
-							if(err) return onReceivingDataFn(err);
-							return onReceivingDataFn(null);
+							if(err) return onReceivingDataFn({type: "Error!", content: err});
+							return onReceivingDataFn({type: "Success!", content: "Account deleted"});
 						});
 	}
 

@@ -52,7 +52,7 @@ Controller.prototype = {
 
 				req.auth.session.clear();
 
-				if(returnedAccount.admin) {
+				if(returnedAccount.admin._) {
 					profile.admin = true;
 					req.auth.session.set(profile);
 
@@ -83,7 +83,7 @@ Controller.prototype = {
 
 		var customid = req.auth.credentials.customid;
 
-		self.approvedList.getApproved(customid, function(err, approvedList) {
+		self.approvedList.getApproved(customid, null, function(err, approvedList) {
 			if(err) return reply(err);
 			else 		return reply.view("account", {user: req.auth.credentials, approvedList: deAzurifier(approvedList)});
 		});
@@ -183,9 +183,21 @@ Controller.prototype = {
 			return reply("You're not authorised to do that");
 		}
 
-		self.account.updateSingleAccount(email, function(err) {
+		self.account.updateSingleAccount(email, updateObj, function(err, updatedAccount, oldAccountEmail) {
 			if(err) 	return reply(err).code(404);
-			else 			return reply().code(204);
+			else  {
+				var updateMailObj = {};
+
+				updateMailObj.subscribed = "true";
+				if(updateObj.email) updateMailObj.address = req.payload.email;
+				if(updateObj.customid) updateMailObj.name = req.payload.customid;
+
+				console.log(updateMailObj, oldAccountEmail);
+				self.messages.updateMailingListAccount(oldAccountEmail, updateMailObj, function(err, res) {
+					if(err) return reply(err);
+					else 		return reply().code(204);
+				});
+			}
 		});
 	},
 
@@ -197,9 +209,14 @@ Controller.prototype = {
 
 		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
 
-		self.account.deleteSingleAccount(RowKey, function(err) {
+		self.account.deleteSingleAccount(RowKey, function(err, deletedAccount, accountEmail) {
 			if(err) 	return reply(err).code(404);
-			else 			return reply().code(204);
+			else  {
+				self.messages.deleteFromMailingList(accountEmail, function(err, res) {
+					if(err) return reply(err);
+					else 		return reply().code(204);
+				});
+			}
 		});
 	},
 
@@ -228,7 +245,7 @@ Controller.prototype = {
 			if(!creds.admin && customid !== creds.customid) {
 				return reply().code(403);
 			} else {
-				self.approvedList.getApproved(customid, function(err, approvedEntity) {
+				self.approvedList.getApproved(customid, null, function(err, approvedEntity) {
 
 					if(!creds.admin && !approvedEntity["_" + YYYY_MM]) {
 

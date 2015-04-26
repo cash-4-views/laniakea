@@ -33,7 +33,7 @@ body
 				.table-responsive.col-md-6
 					table.table.table-striped
 						tbody
-							if approvedList
+							if approvedList && approvedList.length
 								each YYYY_MM in approvedList
 									tr
 										form.form-horizontal(action="/api/v1/reports/"+YYYY_MM, method='GET')
@@ -44,6 +44,6 @@ body
 														div
 															input.shadow(type="text", name="customid", value=user.customid)
 															button.download#submit(name='csv', value='true', type='submit', class='btn btn-primary') Download
-								else
-									tr
-										td There are no reports available for download yet. An email will be sent to your inbox when one becomes available
+							else
+								tr
+									td There are no reports available for download yet. An email will be sent to your inbox when one becomes available

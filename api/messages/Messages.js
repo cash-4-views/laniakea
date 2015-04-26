@@ -5,16 +5,16 @@ var messageTemplates = {
   approve: function (message, customid) {
   	"use strict";
 
-  	message.subject = "Your account has been approved";
-  	message.text		= "Hi " + customid + ". \n\nThank you for signing up to receive online revenue reports from Laniakea. Please add this email address to your contacts to avoid further communication being filtered as spam.";
+  	message.subject = "Laniakea - Your account has been approved";
+  	message.text		= "Thank you for signing up to receive online revenue reports from Laniakea. Please add this email address to your contacts to avoid further communication being filtered as spam.";
   	return message;
   },
 
   notify: function (message, data) {
   	"use strict";
 
-    message.subject = "Monthly report available";
-    message.text    = "A new revenue report is now available. Please visit 'https://www.w00d_chipper/account' to download it.";
+    message.subject = "Laniakea - Monthly YouTube revenue report available";
+    message.text    = "A new revenue report is available. Please visit http://wood-chipper.azurewebsites.net/ to download it.";
     return message;
   }
 };
@@ -58,11 +58,30 @@ Messages.prototype = {
 		var self = this;
 
 		self.list.members().create(account, function(err, res) {
-			if (err) console.log("members err: " + err);
-			console.log("member added to mailing list: " + account.address);
+			if(err) return onComplete(err);
+			else 		return onComplete(null);
 		});
 	},
 
+	deleteFromMailingList: function(email, onComplete) {
+		"use strict";
+		var self = this;
+
+		self.list.members(email).delete(function(err, res) {
+			if(err) return onComplete(err);
+			else 		return onComplete(null);
+		});
+	},
+
+	updateMailingListAccount: function(email, updateMailObj, onComplete) {
+		"use strict";
+		var self = this;
+
+		self.list.members(email).update(updateMailObj, function(err, res) {
+			if(err) return onComplete(err);
+			else 		return onComplete(null);
+		});
+	},
 
 	// compose email components and send \\
 	sendEmail: function(emailType, email, customid, onComplete) {

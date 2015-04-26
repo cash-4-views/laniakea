@@ -11,7 +11,7 @@ var AccountViewer = React.createClass({
 			accounts = this.props.accounts.map(function(account) {
 				return (
 					<AccountRow key={account.RowKey._} RowKey={account.RowKey._} email={account.email}
-							customid={account.customid} updateAccount={this.props.updateAccount}
+							customid={account.customid} updateAccount={this.props.updateAccount} customidList={this.props.customidList}
 							deleteAccount={this.props.deleteAccount} />
 					);
 			}, this);

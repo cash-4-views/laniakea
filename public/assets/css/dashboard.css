@@ -150,3 +150,13 @@ ul.typeahead-selector>li {
 ul.typeahead-selector>li>a {
   color: rgb(249, 249, 249);
 }
+
+li.hover {
+   background-color: rgba(82, 51, 51, 0.25);
+}
+
+.counter {
+	float: right;
+	font-size: 15px;
+	color: grey;
+}

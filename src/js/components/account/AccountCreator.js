@@ -34,15 +34,6 @@ var AccountCreator = React.createClass({
 			results: "col-md-11"
 		};
 
-		var idArray = [];
-
-		if(this.props.customids) {
-			for(var id in this.props.customids) {
-				idArray.push(this.props.customids[id]);
-			}
-		}
-
-
 		return(
 				  <form className="form-horizontal" onSubmit={this.submitForm}>
 				    <fieldset>
@@ -59,8 +50,8 @@ var AccountCreator = React.createClass({
 				      <div className="form-group">
 				        <label className="col-md-1 control-label">Custom ID</label>
 				        <div className="col-md-3">
-				        	{idArray.length ?
-				        			<Typeahead ref="typeAhead" options={idArray} customClasses={customClasses} /> :
+				        	{this.props.customidList && this.props.customidList.length ?
+				        			<Typeahead ref="typeAhead" options={this.props.customidList} customClasses={customClasses} /> :
 						          <input required id="customid" ref="customid" type="text" placeholder="" className="form-control input-md"/>
 				        	}
 				        </div>

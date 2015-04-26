@@ -51,11 +51,13 @@ module.exports = {
 		"use strict";
 
 		if(getTheRest) queryObject.getAll = true;
+		console.log(queryObject, getTheRest);
 
 		request.get("/api/v1/reports/" + YYYY_MM)
 						.query(queryObject)
 						.end(function(err, res) {
 							if(err) console.log("Error: " + err);
+							console.log(res.body.results.length);
 							onReceivingDataFn(res.body.results, res.body.token, queryObject);
 						});
 	},

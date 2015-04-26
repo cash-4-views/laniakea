@@ -48,7 +48,7 @@ Account.prototype = {
 		var self = this;
 
 		objectAzurifier(self.partitionKey, "email", null, item, function(error, processedAccount) {
-			self.storageClient.insertOrMergeEntity(self.tableName, processedAccount, function entityInserted(err) {
+			self.storageClient.insertEntity(self.tableName, processedAccount, function entityInserted(err) {
  				if(err) return callback(err);
 				else 		return callback(null);
 			});
@@ -65,21 +65,30 @@ Account.prototype = {
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
-			var entity = result.entries[0],
+			var entity 	 = result.entries[0],
+					oldEmail = result.entries[0].email._,
 					field;
 
-			for(field in updateObj) {
-				if(updateObj.hasOwnProperty(field)){
-					entity[field] = updateObj[field];
+			function updateUserInDB() {
+				for(field in updateObj) {
+					if(updateObj.hasOwnProperty(field)){
+						entity[field] = updateObj[field];
+					}
 				}
+
+				objectAzurifier(null, null, null, entity, function(err, azurifiedObj) {
+					self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(err) {
+						if(err) return callback(err);
+						else 		return callback(null, azurifiedObj, oldEmail);
+					});
+				});
 			}
 
-			objectAzurifier(null, null, null, entity, function(err, azurifiedObj) {
-				self.storageClient.updateEntity(self.tableName, azurifiedObj, function entityUpdated(err) {
-					if(err) return callback(err);
-					else 		return callback(null);
-				});
+			if(updateObj.password) self.hashPassword(updateObj.password, function(err, hash) {
+				updateObj.password = hash;
+				return updateUserInDB();
 			});
+			else return updateUserInDB();
 		});
 	},
 
@@ -97,7 +106,7 @@ Account.prototype = {
 
 			self.storageClient.deleteEntity(self.tableName, entity, function entityDeleted(errDel, res) {
 				if(err) return callback(err);
-				else 		return callback(null);
+				else 		return callback(null, entity, entity.email._);
 			});
 		});
 	},

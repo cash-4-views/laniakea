@@ -130,3 +130,23 @@ button.btn.btn-primary {
 	background-color: #204d74;
 	border-color: #204d74;
 }
+
+ul.typeahead-selector {
+	position: absolute;
+  background-color: rgba(32, 77, 116, 0.75);
+  text-align: left;
+  border-radius: 5px;
+  color: white;
+  z-index: 99999;
+  list-style:non;
+}
+
+ul.typeahead-selector>li {
+  border-bottom: 1px solid rgba(224, 245, 245, 0.16);
+  overflow:hidden;
+  padding-top: 5px;
+}
+
+ul.typeahead-selector>li>a {
+  color: rgb(249, 249, 249);
+}

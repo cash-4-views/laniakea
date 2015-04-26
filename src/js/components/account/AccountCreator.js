@@ -1,4 +1,5 @@
-var React = require("react");
+var React = require("react"),
+		Typeahead = require('react-typeahead').Typeahead;
 
 var AccountCreator = React.createClass({
 
@@ -9,9 +10,14 @@ var AccountCreator = React.createClass({
 
 		var accountObj = {
 			email: React.findDOMNode(this.refs.email).value,
-			password: React.findDOMNode(this.refs.password).value,
-			customid: React.findDOMNode(this.refs.customid).value,
+			password: React.findDOMNode(this.refs.password).value
 		};
+
+		if(React.findDOMNode(this.refs.customid)) {
+			accountObj.customid = React.findDOMNode(this.refs.customid).value;
+		} else if(React.findDOMNode(this.refs.typeAhead.refs.entry)) {
+			accountObj.customid = React.findDOMNode(this.refs.typeAhead.refs.entry).value;
+		}
 
 		if(React.findDOMNode(this.refs.phone).value) {
 			accountObj.phone = React.findDOMNode(this.refs.phone).value;
@@ -22,6 +28,20 @@ var AccountCreator = React.createClass({
 
 	render: function() {
 		"use strict";
+
+		var customClasses = {
+			input: "form-control input-md",
+			results: "col-md-11"
+		};
+
+		var idArray = [];
+
+		if(this.props.customids) {
+			for(var id in this.props.customids) {
+				idArray.push(this.props.customids[id]);
+			}
+		}
+
 
 		return(
 				  <form className="form-horizontal" onSubmit={this.submitForm}>
@@ -39,7 +59,10 @@ var AccountCreator = React.createClass({
 				      <div className="form-group">
 				        <label className="col-md-1 control-label">Custom ID</label>
 				        <div className="col-md-3">
-				          <input required id="customid" ref="customid" type="text" placeholder="" className="form-control input-md"/>
+				        	{idArray.length ?
+				        			<Typeahead ref="typeAhead" options={idArray} customClasses={customClasses} /> :
+						          <input required id="customid" ref="customid" type="text" placeholder="" className="form-control input-md"/>
+				        	}
 				        </div>
 				        <label className="col-md-1 control-label">Phone #</label>
 				        <div className="col-md-2">

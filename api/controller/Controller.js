@@ -1,10 +1,12 @@
+"use strict";
+
 var fs 					 = require("fs"),
 		Path 				 = require('path'),
 		Baby 				 = require("babyparse"),
 		deAzurifier  = require("../utils/deAzurifier");
 
 function Controller(models, toolbox) {
-	"use strict";
+
 	this.account 			= models.account;
 	this.approvedList = models.approvedList;
 	this.report 			= models.report;
@@ -20,19 +22,19 @@ Controller.prototype = {
 	},
 
 	home: function(req, reply) {
-		"use strict";
-
 		return reply.redirect("/login");
 	},
 
 	login: function(req, reply) {
-		"use strict";
 		var self = this;
 
 		if(req.method.toUpperCase() === "GET") {
-			if(req.auth.isAuthenticated && req.auth.credentials.admin) return reply.redirect("/admin");
-			else if(req.auth.isAuthenticated) return reply.redirect("/account");
-			else return reply.view("login", {alert: req.query.badlogin});
+			var isAuth 	= req.auth.isAuthenticated,
+					isAdmin = req.auth.credentials && req.auth.credentials.admin;
+
+			if(isAuth && isAdmin) return reply.redirect("/admin");
+			else if(isAuth)  			return reply.redirect("/account");
+			else 									return reply.view("login", {alert: req.query.badlogin});
 		}
 
 		var deets = req.payload;
@@ -49,20 +51,18 @@ Controller.prototype = {
 				else if(err) 		return reply(err);
 
 				var profile = {
-					email: acc.email,
+					email 	: acc.email,
 					customid: acc.customid
 				};
 
 				req.auth.session.clear();
 
-				if(returnedAccount.admin._) {
+				if(acc.admin === "true") {
 					profile.admin = true;
 					req.auth.session.set(profile);
-
 					return reply.redirect("/admin");
 				} else {
 					req.auth.session.set(profile);
-
 					return reply.redirect("/account");
 				}
 
@@ -72,17 +72,15 @@ Controller.prototype = {
 	},
 
 	logout: function(req, reply) {
-		"use strict";
-
 		req.auth.session.clear();
 		return reply.redirect('/');
 	},
 
 	myAccount: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
+				isAdmin  = req.auth.credentials && req.auth.credentials.admin;
 
-		if(req.auth.credentials.admin) return reply.redirect("/admin");
+		if(isAdmin) return reply.redirect("/admin");
 
 		var customid = req.auth.credentials.customid;
 
@@ -93,21 +91,20 @@ Controller.prototype = {
 	},
 
 	admin: function(req, reply) {
-		"use strict";
-		var self = this;
+		var isAdmin = req.auth.credentials && req.auth.credentials.admin;
 
-		if(!req.auth.credentials.admin) return reply.redirect("/account");
-
-		return reply.view("admin");
+		if(!isAdmin) return reply.redirect("/account");
+		else 			 	 return reply.view("admin");
 	},
 
 // API
 // Accounts
 	getAccounts: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
+				isAdmin = req.auth.credentials && req.auth.credentials.admin;
 
-		if(!req.auth.credentials.admin) return reply("You're not authorised to do that").code(403);
+		if(!isAdmin) return reply("You're not authorised to do that").code(403);
+
 		var csv = req.query.csv;
 
 		self.account.getAccounts(function(err, accounts) {
@@ -118,36 +115,39 @@ Controller.prototype = {
 	},
 
 	createSingleAccount: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
+				isAdmin = req.auth.credentials && req.auth.credentials.admin,
 
-		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+				submitted = req.payload;
 
-		// Use JOI for validation
-		self.account.hashPassword(req.payload.password, function(err, hash) {
+		if(!isAdmin) return reply("You're not authorised to do that").code(403);
+
+		self.account.hashPassword(submitted.password, function(err, hash) {
 			if(err) return reply("error hashing password");
 
 			var newAccount = {
-				customid : req.payload.customid,
+				customid : submitted.customid,
 				password : hash,
-				email 	 : req.payload.email,
+				email 	 : submitted.email,
 				admin 	 : false
 			};
 
-			if(req.payload.phone) newAccount.phone = req.payload.phone;
+			if(submitted.phone) newAccount.phone = submitted.phone;
 
 			var mailAccount = {
 				subscribed: true,
-				address 	: req.payload.email,
-				name 			: req.payload.customid,
+				address 	: submitted.email,
+				name 			: submitted.customid,
 			};
 
 			self.account.createSingleAccount(newAccount, function(createAccountError) {
 				if(createAccountError) return reply(createAccountError.statusCode + ": " + createAccountError.code);
 				else {
+
 					self.messages.addToMailingList(mailAccount, function(mailListError) {
 						if(mailListError) console.log("list error: ", mailListError);
 					});
+
 					self.messages.sendEmail("approve", newAccount.email, newAccount.customid, function(sendEmailError) {
 						if(sendEmailError) console.log("list error: ", sendEmailError);
 						return reply().code(200);
@@ -158,15 +158,15 @@ Controller.prototype = {
 	},
 
 	getSingleAccount: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		var email = req.params.email,
-				csv   = req.query.csv;
+				email = req.params.email,
+				csv   = req.query.csv,
 
-		if(!req.auth.credentials.admin && req.params.email !== req.auth.credentials.email) {
-			return reply("You're not authorised to do that");
-		}
+				isAdmin = req.auth.credentials && req.auth.credentials.admin,
+				isOwn 	= email === req.auth.credentials.email;
+
+		if(!isAdmin && !isOwn) return reply("You're not authorised to do that").code(403);
 
 		self.account.getSingleAccount(email, function(err, account) {
 			if(err) 			return reply(err).code(404);
@@ -176,14 +176,18 @@ Controller.prototype = {
 	},
 
 	updateSingleAccount: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		var email 		= req.params.email,
-				updateObj = req.payload;
+		 		email 		= req.params.email,
+				updateObj = req.payload,
+
+				isAdmin = req.auth.credentials && req.auth.credentials.admin,
+				isOwn 	= email === req.auth.credentials.email;
+
+		if(!isAdmin && !isOwn) return reply("You're not authorised to do that").code(403);
 
 		if(!req.auth.credentials.admin && req.params.email !== req.auth.credentials.email) {
-			return reply("You're not authorised to do that");
+			return reply("You're not authorised to do that").code(403);
 		}
 
 		self.account.updateSingleAccount(email, updateObj, function(err, updatedAccount, oldAccountEmail) {
@@ -195,7 +199,6 @@ Controller.prototype = {
 				if(updateObj.email) updateMailObj.address = req.payload.email;
 				if(updateObj.customid) updateMailObj.name = req.payload.customid;
 
-				console.log(updateMailObj, oldAccountEmail);
 				self.messages.updateMailingListAccount(oldAccountEmail, updateMailObj, function(err, res) {
 					if(err) return reply(err);
 					else 		return reply().code(204);
@@ -205,12 +208,13 @@ Controller.prototype = {
 	},
 
 	deleteSingleAccount: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		var RowKey 		= req.params.email;
+				RowKey = req.params.email,
 
-		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+				isAdmin = req.auth.credentials && req.auth.credentials.admin;
+
+		if(!isAdmin) return reply("You're not authorised to do that").code(403);
 
 		self.account.deleteSingleAccount(RowKey, function(err, deletedAccount, accountEmail) {
 			if(err) 	return reply(err).code(404);
@@ -234,44 +238,42 @@ Controller.prototype = {
 
 	// This one needs some tidying up am i right yes i am
 	getReport: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		var creds 			= req.auth.credentials,
 				YYYY_MM 		= req.params.YYYY_MM,
 				customid 		= (req.query.customid === "true") ? true : (req.query.customid === "false") ? false : req.query.customid,
 				csv 			 	= req.query.csv,
 				approved 		= (req.query.approved === "true") ? true : (req.query.approved === "false") ? false : null,
-				getAll 			= req.query.getAll;
+				getAll 			= req.query.getAll,
+
+				isAdmin = req.auth.credentials && req.auth.credentials.admin,
+				isOwn 	= customid === req.auth.credentials.customid;
+
+		if(!isAdmin && !isOwn) return reply("You're not authorised to do that").code(403);
 
 		if(customid && customid !== true) {
-			if(!creds.admin && customid !== creds.customid) {
-				return reply().code(403);
-			} else {
-				self.approvedList.getApproved(customid, YYYY_MM, function(err, approvedEntity) {
-					console.log(approvedEntity, YYYY_MM);
-					if(!creds.admin && !approvedEntity.length) {
+			self.approvedList.getApproved(customid, YYYY_MM, function(err, approvedEntity) {
+				if(!isAdmin && !approvedEntity.length) return reply("That report is not available to you yet");
+				else {
+					var filename = "YoutubeRevenueReport_" + YYYY_MM.slice(0, 4) + YYYY_MM.slice(5) + "01_" + customid;
 
-						return reply("That report is not available to you yet");
-					} else {
+					// if(!isAdmin) approved = true;
+					self.report.getReport(YYYY_MM, customid, approved, true, function(err, reportResults) {
+						if(err) return reply(err);
 
-						var filename = "YoutubeRevenueReport_" + YYYY_MM.slice(0, 4) + YYYY_MM.slice(5) + "01_" + customid;
-						self.report.getReport(YYYY_MM, customid, approved, true, function(err, reportResults) {
-							if(err) return reply(err);
-							return deAzurifier(reportResults, false, function(err, formattedArray) {
-								if(csv) return reply(Baby.unparse(formattedArray))
-																	.type("text/csv")
-																	.header("Content-Disposition", "attachment; filename="+ filename + ".csv");
-								else 		return reply(formattedArray);
-							});
-
+						return deAzurifier(reportResults, false, function(err, formattedArray) {
+							if(csv) return reply(Baby.unparse(formattedArray))
+																.type("text/csv")
+																.header("Content-Disposition", "attachment; filename="+ filename + ".csv");
+							else 		return reply(formattedArray);
 						});
-					}
-				});
-			}
+
+					});
+				}
+			});
 		} else {
 
-			if(!creds.admin) return reply().code(403);
+			if(!isAdmin) return reply().code(403);
 			else if(!req.query.nextRowKey) {
 				self.report.getReport(YYYY_MM, customid, approved, getAll, function(errGet, totalResults, contToken) {
 					if(errGet) return reply(errGet);
@@ -314,10 +316,11 @@ Controller.prototype = {
 	},
 
 	createReport: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+				isAdmin = req.auth.credentials && req.auth.credentials.admin;
+
+		if(!isAdmin) return reply("You're not authorised to do that").code(403);
 		if(!req.payload["upload-report"]) return reply("No file sent").code(400);
 
 		var uploadInfo = req.payload['upload-report'].hapi;
@@ -348,10 +351,11 @@ Controller.prototype = {
 
 
 	updateReportRow: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+				isAdmin = req.auth.credentials && req.auth.credentials.admin;
+
+		if(!isAdmin) return reply("You're not authorised to do that").code(403);
 
 		var PKey 		  = req.params.YYYY_MM,
 				RKey		 	= req.params.videoid_policy;
@@ -369,10 +373,11 @@ Controller.prototype = {
 	},
 
 	getReportList: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+				isAdmin = req.auth.credentials && req.auth.credentials.admin;
+
+		if(!isAdmin) return reply("You're not authorised to do that").code(403);
 
 		self.report.getReportList(function(err, list) {
 			if(err) return reply(err);
@@ -382,10 +387,11 @@ Controller.prototype = {
 	},
 
 	getCustomIDList: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		if(!req.auth.credentials.admin) return reply("You're not authorised to do that");
+				isAdmin = req.auth.credentials && req.auth.credentials.admin;
+
+		if(!isAdmin) return reply("You're not authorised to do that").code(403);
 
 		var date = req.query.date;
 
@@ -398,7 +404,9 @@ Controller.prototype = {
 					var id;
 
 					for(id in year) {
-						uniqueIDObj[id] = year[id];
+						if(year.hasOwnProperty(id)) {
+	 						uniqueIDObj[id] = year[id];
+						}
 					}
 				});
 
@@ -413,46 +421,45 @@ Controller.prototype = {
 
 // Approved
 	getApproved: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		var customid = req.params.customid,
-				YYYY_MM  = req.params[YYYY_MM];
+				customid = req.params.customid,
+				YYYY_MM  = req.params[YYYY_MM],
 
-		if(!req.auth.credentials.admin && customid !== req.auth.credentials.customid) {
-			return reply("You're not authorised to do that");
-		} else {
-			self.approvedList.getApproved(customid, YYYY_MM, function(err, approvedEntity) {
-				if(err) return reply(err);
-				else 		return reply(approvedEntity);
-			});
-		}
+				isAdmin = req.auth.credentials && req.auth.credentials.admin,
+				isOwn 	= customid === req.auth.credentials.customid;
+
+		if(!isAdmin && !isOwn) return reply("You're not authorised to do that").code(403);
+
+		self.approvedList.getApproved(customid, YYYY_MM, function(err, approvedEntity) {
+			if(err) return reply(err);
+			else 		return reply(approvedEntity);
+		});
 	},
 
 	updateApproved: function(req, reply) {
-		"use strict";
-		var self = this;
+		var self = this,
 
-		var customid = req.params.customid,
-				YYYY_MM  = req.payload.YYYY_MM;
+				customid = req.params.customid,
+				YYYY_MM  = req.payload.YYYY_MM,
 
-		if(!req.auth.credentials.admin) {
-			return reply("You're not authorised to do that");
-		} else {
-			self.report.approveAllOfCustomID(YYYY_MM, customid, function(errApprove) {
-				if(errApprove) {
-					return reply("There was an error approving").code(500);
-			 	} else {
-			 		self.approvedList.updateApproved(customid, YYYY_MM, function(errUpdate) {
-						if(errUpdate) return reply().code(500);
-						else self.messages.sendEmail("notify", null, customid, function(errSend) {
-							if(errSend) return reply("No emails sent").code(200);
-							return reply().code(200);
-						});
+				isAdmin = req.auth.credentials && req.auth.credentials.admin;
+
+		if(!isAdmin) return reply("You're not authorised to do that").code(403);
+
+		self.report.approveAllOfCustomID(YYYY_MM, customid, function(errApprove) {
+			if(errApprove) {
+				return reply("There was an error approving").code(500);
+		 	} else {
+		 		self.approvedList.updateApproved(customid, YYYY_MM, function(errUpdate) {
+					if(errUpdate) return reply().code(500);
+					else self.messages.sendEmail("notify", null, customid, function(errSend) {
+						if(errSend) return reply("No emails sent").code(200);
+						return reply().code(200);
 					});
-				}
-			});
-		}
+				});
+			}
+		});
 	}
 
 };

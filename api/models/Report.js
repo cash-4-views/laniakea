@@ -1,12 +1,14 @@
+"use strict";
+
 var azure  					= require("azure-storage"),
 		Baby 					  = require("babyparse"),
-		fs 							= require("fs"),
 		objectAzurifier = require("../utils/objectAzurifier"),
-		csvTrimmer 			= require("../utils/csvTrimmer");
+		csvTrimmer 			= require("../utils/csvTrimmer"),
+		Stopwatch 			= require("../utils/Stopwatch"),
+		ErrorLogger 		= require("../utils/ErrorLogger");
 
 
 function Report(storageClient, tableName) {
-	"use strict";
 
 	this.storageClient = storageClient;
 	this.tableName 		 = tableName;
@@ -18,7 +20,6 @@ function Report(storageClient, tableName) {
 Report.prototype = {
 
 	getReport: function(YYYY_MM, customid, approved, getAll, callback) {
-		"use strict";
 		var self = this;
 
 		var query = reportQueryMaker(YYYY_MM, customid, approved);
@@ -38,7 +39,6 @@ Report.prototype = {
 	},
 
 	getNextBatch: function(queryOrOptions, continuationToken, batchOfRows, getAll, callback) {
-		"use strict";
 		var self = this;
 
 		var q 		= queryOrOptions,
@@ -58,17 +58,15 @@ Report.prototype = {
 	},
 
 	createReport: function(YYYY_MM, csvReport, callback) {
-		"use strict";
 		var self = this;
 
 		var azurifiedReportHolder = [],
 				customidObject 				= {},
-				timestampPrep					= Date.now(),
+				stopwatch							= new Stopwatch(),
 				bloodyTwice 					= false;
 
 		csvTrimmer(csvReport, null, null, function(err, trimmedCSV) {
 			if(err) return callback(err);
-			console.log("Parsing started");
 
 			Baby.parse(trimmedCSV, {
 				header: true,
@@ -90,64 +88,44 @@ Report.prototype = {
 					bloodyTwice = true;
 
 					console.log("Parsing complete! Errors: ", results.errors);
-					console.log("Trimming, parsing and batching took ", Date.now()-timestampPrep, "/ms");
+					console.log("Trimming, parsing and batching took ", stopwatch.lap(), "/ms");
 
-					var errorCounter  = 0,
-							holderLength  = azurifiedReportHolder.length,
-							base  	 		  = Math.ceil(holderLength/100)*100,
-							errorArray 	  = [],
-							tForUpload1,
+					var holderLength  = azurifiedReportHolder.length,
 							bigBatch      = holderLength > 1000,
+							base  	 		  = Math.ceil(holderLength/100)*100,
+							errorLogger 	= new ErrorLogger(),
 							n;
 
 					azurifiedReportHolder.forEach(function(rep, ind) {
+
 						self.storageClient.insertOrReplaceEntity(self.tableName, rep, function(err) {
+							if (err) errorLogger.addError("AzureUpload" + ind, err, rep);
+
 							if ((ind*100)%base === 0) {
 								var percentCompleted = ((ind)/base)*100;
-
 								console.log(percentCompleted + "% completed");
+
 								if(bigBatch) {
-									if(percentCompleted === 1) tForUpload1 = Date.now();
-									if(percentCompleted === 2) {
-										var msTimeForOnePercent = Date.now() - tForUpload1;
-										return callback(null, msTimeForOnePercent*100);
-									}
+									if(percentCompleted === 1) stopwatch.lap();
+									if(percentCompleted === 2) callback(null, stopwatch.lap().lapSum()*100);
 								}
 							}
-							if (err) {
-								errorCounter += 1;
-								errorArray.push({
-									ind: ind,
-									err: err,
-									rep: rep
-								});
-							}
+
+
 							if(ind === holderLength-1) {
 								customidObject.RowKey = "y" + YYYY_MM;
+
 								objectAzurifier("customidlist", "RowKey", null, customidObject, function(errAzure, azurifiedList) {
+
 									self.storageClient.insertOrMergeEntity(self.tableName, azurifiedList, function(errInsert) {
-										if (errInsert || errAzure) {
-											errorCounter += 1;
-											errorArray.push({
-												ind: "customidlist",
-												err: errInsert || errAzure,
-												rep: azurifiedList
-											});
-										}
+										if (errInsert || errAzure) errorLogger.addError("customidlist", errInsert || errAzure, azurifiedList);
+
 										self.updateReportList(YYYY_MM, function(errUpdate) {
-											if (errUpdate) {
-												errorCounter += 1;
-												errorArray.push({
-													ind: "reportList",
-													err: errUpdate,
-													rep: azurifiedList
-												});
-											}
-											console.log("Done, that took ", Date.now() - timestampPrep, "/ms to upload " + holderLength + " rows and there were " + errorCounter, " errors");
-											if(errorCounter) {
-												console.log("Check errorlog.json for details");
-												fs.appendFile("errorlog.json", JSON.stringify(errorArray));
-											}
+											if (errUpdate) errorLogger.addError("reportlist", errUpdate, azurifiedList);
+
+											console.log("Done, that took ", stopwatch.stop().total, "/ms to upload " + holderLength + " rows");
+
+											errorLogger.conclude();
 											if(!bigBatch) return callback(null, true);
 										});
 									});
@@ -163,7 +141,6 @@ Report.prototype = {
 	},
 
 	createReportRow: function(YYYY_MM, report, callback) {
-		"use strict";
 		var self = this;
 
 		objectAzurifier(YYYY_MM, "Video ID", "Policy", report, function(error, azurifiedObj) {
@@ -176,7 +153,6 @@ Report.prototype = {
 
 
 	updateReportRow: function(YYYY_MM, rKey, updateObj, callback) {
-		"use strict";
 		var self = this;
 
 		self.storageClient.retrieveEntity(self.tableName, YYYY_MM, rKey, function entityQueried(err, entity) {
@@ -199,7 +175,6 @@ Report.prototype = {
 	},
 
 	getReportList: function(callback) {
-		"use strict";
 		var self = this;
 
 		self.storageClient.retrieveEntity(self.tableName, "reportlist", "reports", function entityQueried(err, entity) {
@@ -209,7 +184,6 @@ Report.prototype = {
 	},
 
 	updateReportList: function(YYYY_MM, callback) {
-		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
@@ -239,7 +213,6 @@ Report.prototype = {
 	},
 
 	getCustomIDList: function(YYYY_MM, callback) {
-		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
@@ -254,7 +227,6 @@ Report.prototype = {
 	},
 
 	updateCustomIDList: function(YYYY_MM, customid, callback) {
-		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
@@ -281,9 +253,7 @@ Report.prototype = {
 	},
 
 	approveAllOfCustomID: function(YYYY_MM, customid, callback) {
-		"use strict";
 		var self = this;
-
 
 		self.getReport(YYYY_MM, customid, null, true, function entitiesQueried(error, arrayOfResults) {
 			if(error) return callback(error);
@@ -319,7 +289,6 @@ Report.prototype = {
 module.exports = Report;
 
 function reportQueryMaker(YYYY_MM, customid, approved) {
-	"use strict";
 
 	var query = new azure.TableQuery()
 	  										.where("PartitionKey == ?", YYYY_MM);

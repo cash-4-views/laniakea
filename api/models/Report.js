@@ -92,7 +92,7 @@ Report.prototype = {
 
 					var holderLength  = azurifiedReportHolder.length,
 							bigBatch      = holderLength > 1000,
-							base  	 		  = Math.ceil(holderLength/100)*100,
+							base 					= ~~(holderLength/100),
 							errorLogger 	= new ErrorLogger(),
 							n;
 
@@ -101,14 +101,12 @@ Report.prototype = {
 						self.storageClient.insertOrReplaceEntity(self.tableName, rep, function(err) {
 							if (err) errorLogger.addError("AzureUpload" + ind, err, rep);
 
-							if ((ind*100)%base === 0) {
-								var percentCompleted = ((ind)/base)*100;
+								var percentCompleted = ((ind)/base);
 								console.log(percentCompleted + "% completed");
 
 								if(bigBatch) {
 									if(percentCompleted === 1) stopwatch.lap();
-									if(percentCompleted === 2) callback(null, stopwatch.lap().lapSum()*100);
-								}
+									if(percentCompleted === 2) callback(null, stopwatch.lap().lapSum());
 							}
 
 

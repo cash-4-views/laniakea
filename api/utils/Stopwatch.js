@@ -1,5 +1,6 @@
 /**
 * A simple stopwatch for simple people
+*	Prototype because simple people sometimes need to tamper with times
 *
 **/
 

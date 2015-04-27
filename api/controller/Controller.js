@@ -424,7 +424,7 @@ Controller.prototype = {
 		var self = this,
 
 				customid = req.params.customid,
-				YYYY_MM  = req.params[YYYY_MM],
+				YYYY_MM  = req.params.YYYY_MM,
 
 				isAdmin = req.auth.credentials && req.auth.credentials.admin,
 				isOwn 	= customid === req.auth.credentials.customid;

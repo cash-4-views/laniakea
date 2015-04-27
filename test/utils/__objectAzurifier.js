@@ -1,8 +1,9 @@
+"use strict";
+
 var test 	  				= require("tape"),
 		objectAzurifier = require("../../api/utils/objectAzurifier");
 
 test("The objectAzurifier function - a legal-character input object", function(t) {
-	"use strict";
 
 	var objectToAzurify = {
 		username: "timmy",
@@ -27,7 +28,6 @@ test("The objectAzurifier function - a legal-character input object", function(t
 });
 
 test("The objectAzurifier function - an illegal-character input object", function(t) {
-	"use strict";
 
 	var objectToAzurify = {
 		username: "timmy",
@@ -58,7 +58,6 @@ test("The objectAzurifier function - an illegal-character input object", functio
 });
 
 test("The objectAzurifier function - an input object with inheritance", function(t) {
-	"use strict";
 
 	function ObjectSchmobject(username) {
 		this.username = username;
@@ -88,7 +87,6 @@ test("The objectAzurifier function - an input object with inheritance", function
 });
 
 test("The objectAzurifier function - an input object without partition or row keys", function(t) {
-	"use strict";
 
 	var objectToAzurify = {
 		Custom_ID: "a901masi9",
@@ -107,7 +105,6 @@ test("The objectAzurifier function - an input object without partition or row ke
 });
 
 test("The objectAzurifier function - a wonky input object with pre-existing partition or row keys", function(t) {
-	"use strict";
 
 	var objectToAzurify = {
 		PartitionKey: { "$": "Edm.String", _: "users" },
@@ -130,7 +127,6 @@ test("The objectAzurifier function - a wonky input object with pre-existing part
 });
 
 test("The objectAzurifier function - an input object with only one row key", function(t) {
-	"use strict";
 
 	var objectToAzurify = {
 		username: "timmy",

@@ -1,9 +1,10 @@
+"use strict";
+
 var test 	  		= require("tape"),
 		fs 					= require("fs"),
 		csvTrimmer  = require("../../api/utils/csvTrimmer");
 
 test("The csvTrimmer function, without trim arguments", function(t) {
-	"use strict";
 
 	var stringWeWant =
 	"Video ID,first_name,last_name,email,phone_number,admin_rights\n" +
@@ -38,7 +39,6 @@ test("The csvTrimmer function, without trim arguments", function(t) {
 });
 
 test("The csvTrimmer function, without trim arguments, no matches", function(t) {
-	"use strict";
 
 	var stringWeWant =
 	"Video id,first_name,last_name,email,phone_number,admin_rights\n" +
@@ -56,7 +56,6 @@ test("The csvTrimmer function, without trim arguments, no matches", function(t) 
 });
 
 test("The csvTrimmer function, with a start trim argument", function(t) {
-	"use strict";
 
 	var stringWeWant =
 	"france,moo\n\n" +
@@ -80,7 +79,6 @@ test("The csvTrimmer function, with a start trim argument", function(t) {
 });
 
 test("The csvTrimmer function, with an end trim argument", function(t) {
-	"use strict";
 
 	var stringWeWant =
 	"Video ID,first_name,last_name,email,phone_number,admin_rights\n" +
@@ -104,7 +102,6 @@ test("The csvTrimmer function, with an end trim argument", function(t) {
 });
 
 test("The csvTrimmer function, with both trim arguments", function(t) {
-	"use strict";
 
 	var stringWeWant =
 	"france,moo\n\n" +
@@ -126,7 +123,6 @@ test("The csvTrimmer function, with both trim arguments", function(t) {
 
 
 test("The csvTrimmer function, no arguments, leading and trailing newline", function(t) {
-	"use strict";
 
 	var stringWeWant =
 	"Video ID,Content Type,Policy,Video Title,Video Duration (sec),Username,Uploader,Channel Display Name,Channel ID,Claim Type," +
@@ -172,7 +168,6 @@ test("The csvTrimmer function, no arguments, leading and trailing newline", func
 });
 
 test("The csvTrimmer function, no arguments, Video ID not at the start of the line", function(t) {
-	"use strict";
 
 
 	fs.readFile(__dirname + "/../testdata/trimcsv6.csv", function(err, result) {

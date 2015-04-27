@@ -1,8 +1,10 @@
+"use strict";
+
 // var Test 		= require("tape"),
 // 		server  = require("../api/server.js");
 
 // Test("/, unauthenticated", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url	   : "/",
@@ -30,7 +32,7 @@
 
 // // Authenticated route tests
 // Test("/, authenticated", function(t) {
-// 	"use strict";
+//
 // 	t.plan(2);
 
 // 	var opts = {
@@ -62,7 +64,7 @@
 // });
 
 // Test("/login posting, unauthenticated, incorrect details", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url	   : "/login",
@@ -82,7 +84,7 @@
 // });
 
 // Test("/login posting, unauthenticated, correct details, non-admin", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url	   : "/login",
@@ -102,7 +104,7 @@
 // });
 
 // Test("/login posting, unauthenticated, correct details, admin", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url	   : "/login",
@@ -122,7 +124,7 @@
 // });
 
 // Test("/logout, without auth", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url	   : "/logout",
@@ -139,7 +141,7 @@
 
 
 // Test("/logout, with auth", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url: "/logout",
@@ -161,7 +163,7 @@
 
 // // Admin testing
 // Test("/addAccount posting, unauthenticated", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url: "/addAccount",
@@ -198,7 +200,7 @@
 
 
 // Test("/addAccount posting, authenticated, non-admin", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url: "/addAccount",
@@ -239,7 +241,7 @@
 
 
 // Test("/addAccount posting, authenticated, admin", function(t) {
-// 	"use strict";
+//
 
 // 	var opts = {
 // 		url: "/addAccount",

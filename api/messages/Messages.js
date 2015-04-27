@@ -1,9 +1,10 @@
+"use strict";
+
 var mailgun   = require("mailgun-js");
 
 var messageTemplates = {
 
   approve: function (message, customid) {
-  	"use strict";
 
   	message.subject = "Laniakea - Your account has been approved";
   	message.text		= "Thank you for signing up to receive online revenue reports from Laniakea. Please add this email address to your contacts to avoid further communication being filtered as spam.";
@@ -11,7 +12,6 @@ var messageTemplates = {
   },
 
   notify: function (message, data) {
-  	"use strict";
 
     message.subject = "Laniakea - Monthly YouTube revenue report available";
     message.text    = "A new revenue report is available. Please visit http://wood-chipper.azurewebsites.net/ to download it.";
@@ -20,7 +20,6 @@ var messageTemplates = {
 };
 
 function getMessageTemplates(emailType, message, customid, callback) {
-	"use strict";
 
 			var templatedMessage;
 
@@ -42,7 +41,6 @@ function getMessageTemplates(emailType, message, customid, callback) {
 }
 
 function Messages(mailConfig) {
-	"use strict";
 
 
 	this.mailgun 					= mailgun({ apiKey : mailConfig.apiKey, domain : mailConfig.domain });
@@ -54,7 +52,6 @@ function Messages(mailConfig) {
 Messages.prototype = {
 
 	addToMailingList: function(account, onComplete) {
-		"use strict";
 		var self = this;
 
 		self.list.members().create(account, function(err, res) {
@@ -64,7 +61,6 @@ Messages.prototype = {
 	},
 
 	deleteFromMailingList: function(email, onComplete) {
-		"use strict";
 		var self = this;
 
 		self.list.members(email).delete(function(err, res) {
@@ -74,7 +70,6 @@ Messages.prototype = {
 	},
 
 	updateMailingListAccount: function(email, updateMailObj, onComplete) {
-		"use strict";
 		var self = this;
 
 		self.list.members(email).update(updateMailObj, function(err, res) {
@@ -85,7 +80,6 @@ Messages.prototype = {
 
 	// compose email components and send \\
 	sendEmail: function(emailType, email, customid, onComplete) {
-		"use strict";
 		var self = this;
 
 		self.createMessage(emailType, email, customid, function(err, message) {
@@ -104,7 +98,6 @@ Messages.prototype = {
 	},
 
 	getRecipient: function(customid, callback) {
-		"use strict";
 		var self = this;
 
 		self.list.members().list(function(errList, body) {
@@ -118,7 +111,6 @@ Messages.prototype = {
 	},
 
 	searchMailList: function(customid, members, callback) {
-		"use strict";
 		var self = this;
 
 		var foundone;
@@ -135,7 +127,6 @@ Messages.prototype = {
 	},
 
 	createMessage: function(emailType, email, customid, callback) {
-		"use strict";
 		var self = this;
 		if(!email) {
 			self.getRecipient(customid, function(error, emailAddress) {

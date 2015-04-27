@@ -1,8 +1,9 @@
+"use strict";
+
 var azure  					= require("azure-storage"),
 		objectAzurifier = require("../utils/objectAzurifier");
 
 function ApprovedList(storageClient, tableName, partitionKey) {
-	"use strict";
 
 	this.storageClient = storageClient;
 	this.tableName 		 = tableName;
@@ -15,7 +16,6 @@ function ApprovedList(storageClient, tableName, partitionKey) {
 ApprovedList.prototype = {
 
 	getApproved: function(customid, YYYY_MM, callback) {
-		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
@@ -31,7 +31,6 @@ ApprovedList.prototype = {
 	},
 
 	updateApproved: function(customid, YYYY_MM, callback) {
-		"use strict";
 		var self = this;
 
 		self.storageClient.retrieveEntity(self.tableName, self.partitionKey, customid, function entityQueried(errFind, entity) {

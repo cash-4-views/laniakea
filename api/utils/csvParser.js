@@ -2,7 +2,7 @@ function csvParser(YYYY_MM, trimmedCSV, callback) {
 	"use strict";
 
 	var Baby 						= require("babyparse"),
-			objectAzurifier = require("../utils/objectAzurifier");
+			objectAzurifier = require("./objectAzurifier");
 
 	var reportHolder = [],
 			customidObj  = {},

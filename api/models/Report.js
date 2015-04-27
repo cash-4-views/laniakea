@@ -1,7 +1,7 @@
 "use strict";
 
 var azure  					= require("azure-storage"),
-		csvParser 			= require("./csvParser"),
+		csvParser 			= require("../utils/csvParser"),
 		objectAzurifier = require("../utils/objectAzurifier"),
 		csvTrimmer 			= require("../utils/csvTrimmer"),
 		Stopwatch 			= require("../utils/Stopwatch"),

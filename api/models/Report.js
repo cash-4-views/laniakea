@@ -88,7 +88,7 @@ Report.prototype = {
 					bloodyTwice = true;
 
 					console.log("Parsing complete! Errors: ", results.errors);
-					console.log("Trimming, parsing and batching took ", stopwatch.lap(), "/ms");
+					console.log("Trimming, parsing and batching took ", stopwatch.lap().lapSum(), "/ms");
 
 					var holderLength  = azurifiedReportHolder.length,
 							bigBatch      = holderLength > 1000,
@@ -125,7 +125,7 @@ Report.prototype = {
 
 											console.log("Done, that took ", stopwatch.stop().total, "/ms to upload " + holderLength + " rows");
 
-											errorLogger.conclude();
+											errorLogger.conclude("append", "errorlog.json");
 											if(!bigBatch) return callback(null, true);
 										});
 									});

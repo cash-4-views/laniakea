@@ -1,3 +1,5 @@
+"use strict";
+
 var azure 		 = require("azure-storage"),
 		bcrypt 		 = require("bcrypt-nodejs"),
 		config 		 = require("./config/testconfig").database,
@@ -10,7 +12,6 @@ var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey),
 		account;
 
 test("Preparation", function(t) {
-	"use strict";
 
 	tableSvc.doesTableExist(tableName, function(errPing, res) {
 		if(res) {
@@ -27,7 +28,6 @@ test("Preparation", function(t) {
 });
 
 test("The Account constructor ", function(t) {
-	"use strict";
 
 	t.equal(account.storageClient, tableSvc, "should return an object with the storage client we specified");
 	t.equal(account.tableName, tableName, "should return an object with the table name specified");
@@ -40,7 +40,6 @@ test("The Account constructor ", function(t) {
 });
 
 test("The getAccounts function", function(t) {
-	"use strict";
 
 	var newAccount1 = {
 		PartitionKey: {_: "users"},
@@ -87,7 +86,6 @@ test("The getAccounts function", function(t) {
 });
 
 test("The getSingleAccount function", function(t) {
-	"use strict";
 
 	var newAccount1 = {
 		PartitionKey: {_: "users"},
@@ -123,7 +121,6 @@ test("The getSingleAccount function", function(t) {
 });
 
 test("The createSingleAccount function", function(t) {
-	"use strict";
 
 	var accountWeWant = {
 		customid 		: "SINNER",
@@ -151,7 +148,6 @@ test("The createSingleAccount function", function(t) {
 });
 
 test("The updateSingleAccount function ", function(t) {
-	"use strict";
 
 	var newAccount1 = {
 		PartitionKey: {_: "users"},
@@ -186,7 +182,6 @@ test("The updateSingleAccount function ", function(t) {
 });
 
 test("The comparePassword function", function(t) {
-	"use strict";
 
 		var password  = "password",
 				hashed 	  = "$2a$10$OZ9cHnpw.rAPwKExp5kiOuaDY/evHxGK1NdAV7f8vW2/AjDRXieNe",
@@ -209,7 +204,6 @@ test("The comparePassword function", function(t) {
 });
 
 test("The hashPassword function", function(t) {
-	"use strict";
 
 	var password   = "password",
 			hashWeWant = "$2a$10$OZ9cHnpw.rAPwKExp5kiOuaDY/evHxGK1NdAV7f8vW2/AjDRXieNe";
@@ -225,7 +219,6 @@ test("The hashPassword function", function(t) {
 });
 
 test("Cleaning up after ourselves - deleting the table, ", function(t) {
-	"use strict";
 
 	tableSvc.deleteTable(tableName, function(err) {
 		t.notOk(err, "should successfully delete the table");

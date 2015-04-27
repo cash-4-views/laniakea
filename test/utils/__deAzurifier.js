@@ -1,8 +1,9 @@
+"use strict";
+
 var test 	  		= require("tape"),
 		deAzurifier = require("../../api/utils/deAzurifier");
 
 test("The deAzurifier function - a well-formatted azure object, false key parameter ", function(t) {
-	"use strict";
 
 	var objectToDeAzurify = {
 		PartitionKey: { "$": "Edm.String", _: "users" },
@@ -36,7 +37,6 @@ test("The deAzurifier function - a well-formatted azure object, false key parame
 });
 
 test("The deAzurifier function - a well-formatted azure object, true key parameter ", function(t) {
-	"use strict";
 
 	var objectToDeAzurify = {
 		PartitionKey: { "$": "Edm.String", _: "users" },
@@ -71,7 +71,6 @@ test("The deAzurifier function - a well-formatted azure object, true key paramet
 
 
 test("The deAzurifier function - a well-formatted azure object with falsy values", function(t) {
-	"use strict";
 
 	var objectToDeAzurify = {
 		PartitionKey: { "$": "Edm.String", _: "users" },
@@ -97,7 +96,6 @@ test("The deAzurifier function - a well-formatted azure object with falsy values
 });
 
 test("The deAzurifier function - a well-formatted azure object with inheritance", function(t) {
-	"use strict";
 
 	function AzureSchmazure(username) {
 		this.PartitionKey = { "$": "Edm.String", _: "users" };
@@ -124,7 +122,6 @@ test("The deAzurifier function - a well-formatted azure object with inheritance"
 });
 
 test("The deAzurifier function - a badly-formatted azure object", function(t) {
-	"use strict";
 
 	var objectToDeAzurify = {
 		PartitionKey: { "$": "Edm.String", _: "users" },
@@ -149,7 +146,6 @@ test("The deAzurifier function - a badly-formatted azure object", function(t) {
 });
 
 test("The deAzurifier function - an array of well-formatted azure objects", function(t) {
-	"use strict";
 
 	var arrayToDeAzurify = [
 		{ PartitionKey: {_: "users"}, RowKey: {_: "timmy_tester"}, username: {_: "timmy tester"} },
@@ -170,7 +166,6 @@ test("The deAzurifier function - an array of well-formatted azure objects", func
 });
 
 test("The deAzurifier function - an object, no callback", function(t) {
-	"use strict";
 
 	var objectToDeAzurify = {
 		PartitionKey: {_: "users"},
@@ -187,7 +182,6 @@ test("The deAzurifier function - an object, no callback", function(t) {
 });
 
 test("The deAzurifier function - an array, no callback", function(t) {
-	"use strict";
 
 	var arrayToDeAzurify = [
 		{ PartitionKey: {_: "users"}, RowKey: {_: "timmy_tester"}, username: {_: "timmy tester"} },
@@ -206,7 +200,6 @@ test("The deAzurifier function - an array, no callback", function(t) {
 });
 
 test("The deAzurifier function - a string", function(t) {
-	"use strict";
 
 	deAzurifier("hi m80", false, function(err, iWonderWhatWeWillGet) {
 		t.ok(err, "should return an error message");
@@ -217,7 +210,6 @@ test("The deAzurifier function - a string", function(t) {
 });
 
 test("The deAzurifier function - an array of strings", function(t) {
-	"use strict";
 
 	deAzurifier(["hi m80", "cats", "mahatma gandhi"], false, function(err, iWonderWhatWeWillGet) {
 		t.notOk(err, "should not return an error message");
@@ -228,7 +220,6 @@ test("The deAzurifier function - an array of strings", function(t) {
 });
 
 test("The deAzurifier function - an array of mixed tings, some good some bad ", function(t) {
-	"use strict";
 
 	var arrayToDeAzurify = [
 		{ PartitionKey: {_: "users"}, RowKey: {_: "timmy_tester"}, username: {_: "timmy tester"} },

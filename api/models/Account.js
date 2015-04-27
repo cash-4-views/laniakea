@@ -1,9 +1,10 @@
+"use strict";
+
 var azure  					= require("azure-storage"),
 		bcrypt 					= require("bcrypt-nodejs"),
 		objectAzurifier = require("../utils/objectAzurifier");
 
 function Account(storageClient, tableName) {
-	"use strict";
 
 	this.storageClient = storageClient;
 	this.tableName = tableName;
@@ -16,7 +17,6 @@ function Account(storageClient, tableName) {
 Account.prototype = {
 
 	getAccounts: function(callback) {
-		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
@@ -29,7 +29,6 @@ Account.prototype = {
 	},
 
 	getSingleAccount: function(email, callback) {
-		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
@@ -44,7 +43,6 @@ Account.prototype = {
 	},
 
 	createSingleAccount: function(item, callback) {
-		"use strict";
 		var self = this;
 
 		objectAzurifier(self.partitionKey, "email", null, item, function(error, processedAccount) {
@@ -56,7 +54,6 @@ Account.prototype = {
 	},
 
 	updateSingleAccount: function(RowKey, updateObj, callback) {
-		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
@@ -94,7 +91,6 @@ Account.prototype = {
 	},
 
 	deleteSingleAccount: function(RowKey, callback) {
-		"use strict";
 		var self = this;
 
 		var query = new azure.TableQuery()
@@ -113,7 +109,6 @@ Account.prototype = {
 	},
 
 	comparePassword: function(password1, password2, callback) {
-		"use strict";
 
 		bcrypt.compare(password1, password2, function(err, res) {
 			if(err) 			return callback(err);
@@ -123,7 +118,6 @@ Account.prototype = {
 	},
 
 	hashPassword: function(password, callback) {
-		"use strict";
 
 		bcrypt.hash(password, null, null, function(err, hash) {
 			if(err) return callback(err);

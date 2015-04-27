@@ -1,3 +1,4 @@
+"use strict";
 
 var Hapi 				 = require('hapi'),
 		config 			 = require("./config"),
@@ -28,7 +29,6 @@ server.connection({
 });
 
 server.register(require("hapi-auth-cookie"), function(err) {
-	"use strict";
 
 	server.auth.strategy("session", "cookie", {
 		password: config.cookie.password,

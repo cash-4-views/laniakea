@@ -1,3 +1,5 @@
+"use strict";
+
 var azure 		 		= require("azure-storage"),
 		config 		 		= require("./config/testconfig").database,
 		ApprovedList 	= require("../api/models/ApprovedList"),
@@ -8,7 +10,6 @@ var tableSvc 		 = azure.createTableService(config.dbacc, config.dbkey),
 		approvedList;
 
 test("Preparation", function(t) {
-	"use strict";
 
 	tableSvc.doesTableExist(tableName, function(errPing, res) {
 		if(res) {
@@ -26,7 +27,6 @@ test("Preparation", function(t) {
 
 
 test("The ApprovedList constructer ", function(t) {
-	"use strict";
 
 	t.equal(approvedList.storageClient, tableSvc, "should return an object with the storage client we specified");
 	t.equal(approvedList.tableName, tableName, "should return an object with the table name specified");
@@ -39,7 +39,6 @@ test("The ApprovedList constructer ", function(t) {
 });
 
 test("The getApproved function ", function(t) {
-	"use strict";
 
 	var approvedTing = {
 		PartitionKey: {_: "approvedlist"},
@@ -82,7 +81,6 @@ test("The getApproved function ", function(t) {
 });
 
 test("The updateApproved function, with an existing entity, ", function(t) {
-	"use strict";
 
 	var objectWePutIn = {
 		PartitionKey: {_: "approvedlist"},
@@ -107,7 +105,6 @@ test("The updateApproved function, with an existing entity, ", function(t) {
 });
 
 test("The updateApproved function, with an existing entity and field, ", function(t) {
-	"use strict";
 
 	var objectWePutIn = {
 		PartitionKey: {_: "approvedlist"},
@@ -133,7 +130,6 @@ test("The updateApproved function, with an existing entity and field, ", functio
 });
 
 test("The updateApproved function, with a new entity, ", function(t) {
-	"use strict";
 
 	approvedList.updateApproved("timmy and the crew", "2016_01", function(err) {
 		t.notOk(err, "should not return an error");
@@ -152,7 +148,6 @@ test("The updateApproved function, with a new entity, ", function(t) {
 });
 
 test("Cleaning up after ourselves - deleting the table, ", function(t) {
-	"use strict";
 
 	tableSvc.deleteTableIfExists(tableName, function(err) {
 		t.notOk(err, "should successfully delete the table");

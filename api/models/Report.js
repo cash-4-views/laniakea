@@ -1,7 +1,7 @@
 "use strict";
 
 var azure  					= require("azure-storage"),
-		Baby 					  = require("babyparse"),
+		csvParser 			= require("./csvParser"),
 		objectAzurifier = require("../utils/objectAzurifier"),
 		csvTrimmer 			= require("../utils/csvTrimmer"),
 		Stopwatch 			= require("../utils/Stopwatch"),
@@ -60,80 +60,58 @@ Report.prototype = {
 	createReport: function(YYYY_MM, csvReport, callback) {
 		var self = this;
 
-		var azurifiedReportHolder = [],
-				customidObject 				= {},
-				stopwatch							= new Stopwatch(),
-				bloodyTwice 					= false;
+		var stopwatch = new Stopwatch();
 
 		csvTrimmer(csvReport, null, null, function(err, trimmedCSV) {
 			if(err) return callback(err);
 
-			Baby.parse(trimmedCSV, {
-				header: true,
+			csvParser(YYYY_MM, trimmedCSV, function(results, reportHolder, customidObj) {
 
-				step: function(row) {
-					objectAzurifier(YYYY_MM, "Video ID", "Policy", row.data[0], function(err, azurifiedObj) {
-						azurifiedObj.approved = {_: false, $: "Edm.Boolean"};
-						azurifiedReportHolder.push(azurifiedObj);
-						customidObject[azurifiedObj["Custom_ID"]._] = azurifiedObj["Custom_ID"]._;
-						return;
-					});
-				},
+				console.log("Parsing complete! Errors: ", results.errors);
+				console.log("Trimming, parsing and batching took ", stopwatch.lap().lapSum(), "/ms");
 
-				complete: function(results) {
-					// This complete callback runs twice for some reason
-					if(bloodyTwice) {
-						return;
-					}
-					bloodyTwice = true;
+				var holderLength  = reportHolder.length,
+						bigBatch      = holderLength > 1000,
+						base 					= ~~(holderLength/100),
+						errorLogger 	= new ErrorLogger(),
+						n;
 
-					console.log("Parsing complete! Errors: ", results.errors);
-					console.log("Trimming, parsing and batching took ", stopwatch.lap().lapSum(), "/ms");
+				reportHolder.forEach(function(rep, ind) {
 
-					var holderLength  = azurifiedReportHolder.length,
-							bigBatch      = holderLength > 1000,
-							base 					= ~~(holderLength/100),
-							errorLogger 	= new ErrorLogger(),
-							n;
+					self.storageClient.insertOrReplaceEntity(self.tableName, rep, function(err) {
+						if (err) errorLogger.addError("AzureUpload" + ind, err, rep);
 
-					azurifiedReportHolder.forEach(function(rep, ind) {
+						var percentCompleted = ((ind)/base);
 
-						self.storageClient.insertOrReplaceEntity(self.tableName, rep, function(err) {
-							if (err) errorLogger.addError("AzureUpload" + ind, err, rep);
-
-								var percentCompleted = ((ind)/base);
-								console.log(percentCompleted + "% completed");
-
-								if(bigBatch) {
-									if(percentCompleted === 1) stopwatch.lap();
-									if(percentCompleted === 2) callback(null, stopwatch.lap().lapSum());
-							}
+						if(bigBatch) {
+							console.log(percentCompleted + "% completed");
+							if(percentCompleted === 1) stopwatch.lap();
+							if(percentCompleted === 2) callback(null, stopwatch.lap().lapSum());
+						}
 
 
-							if(ind === holderLength-1) {
-								customidObject.RowKey = "y" + YYYY_MM;
+						if(ind === holderLength-1) {
+							customidObj.RowKey = "y" + YYYY_MM;
 
-								objectAzurifier("customidlist", "RowKey", null, customidObject, function(errAzure, azurifiedList) {
+							objectAzurifier("customidlist", "RowKey", null, customidObj, function(errAzure, azurifiedList) {
 
-									self.storageClient.insertOrMergeEntity(self.tableName, azurifiedList, function(errInsert) {
-										if (errInsert || errAzure) errorLogger.addError("customidlist", errInsert || errAzure, azurifiedList);
+								self.storageClient.insertOrMergeEntity(self.tableName, azurifiedList, function(errInsert) {
+									if (errInsert || errAzure) errorLogger.addError("customidlist", errInsert || errAzure, azurifiedList);
 
-										self.updateReportList(YYYY_MM, function(errUpdate) {
-											if (errUpdate) errorLogger.addError("reportlist", errUpdate, azurifiedList);
+									self.updateReportList(YYYY_MM, function(errUpdate) {
+										if (errUpdate) errorLogger.addError("reportlist", errUpdate, azurifiedList);
 
-											console.log("Done, that took ", stopwatch.stop().total, "/ms to upload " + holderLength + " rows");
+										console.log("Done, that took ", stopwatch.stop().total, "/ms to upload " + holderLength + " rows");
 
-											errorLogger.conclude("append", "errorlog.json");
-											if(!bigBatch) return callback(null, true);
-										});
+										errorLogger.conclude("append", "errorlog");
+										if(!bigBatch) return callback(null, true);
 									});
 								});
-							}
-						});
-
+							});
+						}
 					});
 
-				}
+				});
 			});
 		});
 	},

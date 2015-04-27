@@ -1,9 +1,9 @@
 /**
 * DeAzurifies an object
 *
-* Merely trims off the azure value-wrapping
+* Merely peels off the azure wrapping
 * So turns {key: {_: val, $: Edm.datatype}} into {key: val}
-* Does not transform characters back into their illegal variants
+* Does not transform characters back into their illegal form
 *
 * @param {object/array} 	thingToDeAzurify 			The object or set of objects to decontaminate
 * @param {boolean}				keepKeys							Whether we should keep the PKey & RKey

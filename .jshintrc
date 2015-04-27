@@ -1,4 +1,7 @@
 {
+	"node" 					: true,
+	"forin"         : true,
+	"globalstrict" 	: true,
 	"strict" 			  : true,
 	"sub"           : true,
 	"plusplus"      : false

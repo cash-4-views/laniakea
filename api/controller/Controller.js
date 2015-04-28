@@ -228,15 +228,12 @@ Controller.prototype = {
 	},
 
 // Reports
-
 	/*
 	*	If a customid is included as part of the query, it can be:
 	*		true 	 		: request for any report row with customid 								(admin)
 	*		false  	  : request for any report row without a customid 					(admin)
 	*		{other}   : request for any report row with the specified customid 	(admin, approved for user)
 	*/
-
-	// This one needs some tidying up am i right yes i am
 	getReport: function(req, reply) {
 		var self = this,
 
@@ -257,7 +254,8 @@ Controller.prototype = {
 				else {
 
 					var filename = "YoutubeRevenueReport_" + YYYY_MM.slice(0, 4) + YYYY_MM.slice(5) + "01_" + customid;
-					// if(!isAdmin) approved = true;
+					if(!isAdmin) approved = true;
+
 					self.report.getReport(YYYY_MM, customid, approved, true, function(err, reportResults) {
 						if(err) return reply(err);
 

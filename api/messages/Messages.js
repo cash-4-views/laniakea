@@ -84,7 +84,8 @@ Messages.prototype = {
 
 		self.createMessage(emailType, email, customid, function(err, message) {
 			if(err && err === 404) return onComplete(404);
-
+			// Non-critical bug: 'send' will call the onComplete callback
+			// once for each receipient, hence 'reply interfact called twice'
 			self.mailgun.messages().send(message, function(senderror) {
 				if (senderror) {
 					console.log("SendError: " + senderror);

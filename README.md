@@ -42,7 +42,7 @@ node app.js
 npm test
 ```
 
-Note: Azure table storage currently has a bug with 'createTableIfNotExists'. You can either ignore it (and the create table tests will fail), or you can go to `node_modules/azure-storage/lib/services/table/tableservice` and add the following line:
+Note: Azure table storage currently has a bug with 'createTableIfNotExists'. You can either ignore it (and the create table tests will fail), or you can go to `node_modules/azure-storage/lib/services/table/tableservice` and add the following line at 673:
 ```js
 created = false;
 if(!createResponse) createResponse = {}; <--- add this line

@@ -28,6 +28,7 @@ var AccountApp = React.createClass({
 				if(idsOrAlert.type) return this.setState({alert: idsOrAlert});
 				else if(idsOrAlert) {
 					var customidList = [];
+
 					for(var id in idsOrAlert) {
 						if(idsOrAlert.hasOwnProperty(id)) {
 							customidList.push(idsOrAlert[id]);

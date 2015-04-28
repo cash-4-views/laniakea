@@ -11,7 +11,7 @@
 * 																							or a decontaminated thing of the same type
 * 																							as was put in (array->array, obj->obj)
 *
-* @return {object/array/callback}								As per input type, callback-contingent
+* @return {object/array}												As per input type, callback-contingent
 **/
 
 function deAzurifier(thingToDeAzurify, keepKeys, callback) {

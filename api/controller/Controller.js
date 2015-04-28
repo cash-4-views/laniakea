@@ -255,8 +255,8 @@ Controller.prototype = {
 			self.approvedList.getApproved(customid, YYYY_MM, function(err, approvedEntity) {
 				if(!isAdmin && !approvedEntity.length) return reply("That report is not available to you yet");
 				else {
-					var filename = "YoutubeRevenueReport_" + YYYY_MM.slice(0, 4) + YYYY_MM.slice(5) + "01_" + customid;
 
+					var filename = "YoutubeRevenueReport_" + YYYY_MM.slice(0, 4) + YYYY_MM.slice(5) + "01_" + customid;
 					// if(!isAdmin) approved = true;
 					self.report.getReport(YYYY_MM, customid, approved, true, function(err, reportResults) {
 						if(err) return reply(err);
@@ -320,7 +320,7 @@ Controller.prototype = {
 
 				isAdmin = req.auth.credentials && req.auth.credentials.admin;
 
-		if(!isAdmin) return reply("You're not authorised to do that").code(403);
+		if(!isAdmin)  return reply("You're not authorised to do that").code(403);
 		if(!req.payload["upload-report"]) return reply("No file sent").code(400);
 
 		var uploadInfo = req.payload['upload-report'].hapi;

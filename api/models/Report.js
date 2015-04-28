@@ -32,6 +32,7 @@ Report.prototype = {
 
         if(getAll) 	return self.getNextBatch(query, results.continuationToken, batchOfRows, true, callback);
         else 				return callback(null, batchOfRows, results.continuationToken);
+
       } else {
 				return callback(null, results.entries);
 			}
@@ -53,7 +54,6 @@ Report.prototype = {
 
 			if(getAll) 	return self.getNextBatch(query, nextContinuationToken, totalResults, true, callback);
 			else 				return callback(null, totalResults, nextContinuationToken);
-
 		});
 	},
 
@@ -88,7 +88,6 @@ Report.prototype = {
 							if(percentCompleted === 1) stopwatch.lap();
 							if(percentCompleted === 2) callback(null, stopwatch.lap().lapSum());
 						}
-
 
 						if(ind === holderLength-1) {
 							customidObj.RowKey = "y" + YYYY_MM;

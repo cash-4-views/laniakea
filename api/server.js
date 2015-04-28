@@ -2,9 +2,9 @@
 
 var Hapi 				 = require('hapi'),
 		config 			 = require("./config"),
-		Messages 		 = require("./messages/Messages"),
 		router 			 = require("./router/router"),
 		Controller 	 = require("./controller/Controller"),
+		Messages 		 = require("./messages/Messages"),
 		Account 		 = require("./models/Account"),
 		Report 			 = require("./models/Report"),
 		ApprovedList = require("./models/ApprovedList");

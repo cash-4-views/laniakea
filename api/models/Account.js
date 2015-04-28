@@ -7,8 +7,8 @@ var azure  					= require("azure-storage"),
 function Account(storageClient, tableName) {
 
 	this.storageClient = storageClient;
-	this.tableName = tableName;
-	this.partitionKey = "users";
+	this.tableName 		 = tableName;
+	this.partitionKey  = "users";
 	this.storageClient.createTableIfNotExists(tableName, function tableCreated(err) {
 		if(err) throw err;
 	});
@@ -19,8 +19,7 @@ Account.prototype = {
 	getAccounts: function(callback) {
 		var self = this;
 
-		var query = new azure.TableQuery()
-													.where("PartitionKey == ?", self.partitionKey);
+		var query = accountQueryMaker(self.partitionKey, null, null);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
@@ -31,9 +30,7 @@ Account.prototype = {
 	getSingleAccount: function(email, callback) {
 		var self = this;
 
-		var query = new azure.TableQuery()
-													.where("PartitionKey == ?", self.partitionKey)
-													.and("email == ?", email);
+		var query = accountQueryMaker(self.partitionKey, email, null);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) 															return callback(err);
@@ -56,9 +53,7 @@ Account.prototype = {
 	updateSingleAccount: function(RowKey, updateObj, callback) {
 		var self = this;
 
-		var query = new azure.TableQuery()
-													.where("PartitionKey == ?", self.partitionKey)
-													.and("RowKey == ?", RowKey);
+		var query = accountQueryMaker(self.partitionKey, null, RowKey);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
@@ -93,9 +88,7 @@ Account.prototype = {
 	deleteSingleAccount: function(RowKey, callback) {
 		var self = this;
 
-		var query = new azure.TableQuery()
-													.where("PartitionKey == ?", self.partitionKey)
-													.and("RowKey == ?", RowKey);
+		var query = accountQueryMaker(self.partitionKey, null, RowKey);
 
 		self.storageClient.queryEntities(self.tableName, query, null, function entitiesQueried(err, result) {
 			if(err) return callback(err);
@@ -128,3 +121,15 @@ Account.prototype = {
 };
 
 module.exports = Account;
+
+function accountQueryMaker(PKey, email, RowKey) {
+
+	var query = new azure.TableQuery()
+												.where("PartitionKey == ?", PKey);
+
+	if(email)  query = query.and("email == ?", email);
+	if(RowKey) query = query.and("RowKey == ?", RowKey);
+
+	return query;
+
+}
